@@ -10,7 +10,7 @@ export class Mxp {
     private openTags: Array<string> = [];
     private tagHandlers: Array<(tag: string) => boolean> = [];
 
-    constructor(private outputManager: OutputManager, private chatWin: OutWinBase) {
+    constructor(private outputManager: OutputManager, private chatWin: OutWinBase, private clientName: string) {
         this.makeTagHandlers();
     }
 
@@ -20,7 +20,7 @@ export class Mxp {
             let match = re.exec(tag);
             if (match) {
                 this.EvtEmitCmd.fire({
-                    value: "\x1b[1z<VERSION CLIENT=Mudslinger MXP=0.01>", // using closing line tag makes it print twice...
+                    value: "\x1b[1z<VERSION CLIENT=" + this.clientName + " MXP=0.01>", // using closing line tag makes it print twice...
                     noPrint: true});
                 return true;
             }

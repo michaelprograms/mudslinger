@@ -50,6 +50,7 @@ export class Client {
 
     constructor(private connectionTarget: ConnectionTarget) {
         let isAarchon: boolean = connectionTarget?.host == "aarchonmud.com";
+        let clientName: string = (isAarchon ? "ArcSlinger" : "Mudslinger");
 
         let chatWin: OutWinBase;
         let mapWin: MapWin;
@@ -126,7 +127,7 @@ export class Client {
 
         this.outputManager = new OutputManager(this.outputWin, UserConfig);
 
-        this.mxp = new Mxp(this.outputManager, chatWin);
+        this.mxp = new Mxp(this.outputManager, chatWin, clientName);
         this.socket = new Socket(this.outputManager, this.mxp);
         this.connectWin = new ConnectWin(this.socket);
         this.menuBar = new MenuBar(this.aliasEditor, this.triggerEditor, this.jsScriptWin, this.aboutWin);
