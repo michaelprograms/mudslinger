@@ -5,7 +5,7 @@ import { ansiColorTuple} from "../../src/ts/color";
 import { utf8encode } from "../../src/ts/util";
 
 let fakeMgrConfig = {
-    set: (key: "defaultAnsiFg" | "defaultAnsiBg", val: ansiColorTuple): void => {
+    set: (key: "defaultAnsiFg" | "defaultAnsiBg" | "fontSize", val: ansiColorTuple | string): void => {
 
     },
     get: (key: string): any => {
