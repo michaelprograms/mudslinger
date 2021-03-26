@@ -19,6 +19,9 @@ import { ConnectWin } from "./connectWin";
 import { ContactWin } from "./contactWin";
 import { StatusWin } from "./statusWin";
 import * as apiUtil from "./apiUtil";
+import { OutWinBase } from "./outWinBase";
+import { MapWin } from "./mapWin";
+import { GaugeWin } from "./gaugeWin";
 
 
 interface ConnectionTarget {
@@ -46,6 +49,64 @@ export class Client {
     private serverEcho = false;
 
     constructor(private connectionTarget: ConnectionTarget) {
+        let isAarchon: boolean = connectionTarget?.host == "aarchonmud.com";
+
+        let chatWin: OutWinBase;
+        let mapWin: MapWin;
+        let gaugeWin: GaugeWin;
+
+        if (isAarchon) {
+            let mainWin = document.getElementById("mainWin");
+            mainWin.id = "mainVertSplit";
+            mainWin.innerHTML = `
+            <div>
+                <div id="leftPanel">
+                    <pre id="winOutput" class="outputText"></pre>
+                    <!--<br>-->
+                    <div id="cmdCont">
+                    <textarea rows="1" id="cmdInput"></textarea>
+                    <div class="chkCmdInputCmdStackCont" style="border:1px solid green">
+                        <span class="toolTipText">Toggle command stacking</span>
+                        <input id="chkCmdStack" type="checkbox" checked>
+                        ;
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div id = "rightPanel">
+                    <div id="winMap" >
+                        <center><div id=winMap-roomName></div>
+                            <div id="winMap-svgCont" style="width:125px;height:100px"></div>
+                        </center>
+                        <center>
+                            <div id="winMap-olcStatus"></div>
+                        </center>
+                    </div>
+                    <div id="winGauge" >
+                        <div id='winGauge-hpBar' class='gaugeBar'></div>
+                        <div id='winGauge-manaBar' class='gaugeBar'></div>
+                        <div id='winGauge-moveBar' class='gaugeBar'></div>
+                        <div id='winGauge-tnlBar' class='gaugeBar'></div>
+                        <div id='winGauge-enemyBar' class='gaugeBar'></div>
+                    </div>
+                    <center><span>CHAT</span></center>
+                    <pre id="winChat" class="outputText"></pre>
+                </div>
+            </div>
+            `;
+            (<any>$("#mainVertSplit")).jqxSplitter({
+                width: "100%",
+                height: "100%",
+                orientation: "vertical",
+                panels: [{size: "75%"}, {size: "25%"}]
+            });
+
+            chatWin = new OutWinBase($("#winChat"), UserConfig);
+            mapWin = new MapWin();
+            gaugeWin = new GaugeWin();
+        }
+
         this.aboutWin = new AboutWin();
         this.jsScript = new JsScript();
         this.contactWin = new ContactWin();
@@ -65,7 +126,7 @@ export class Client {
 
         this.outputManager = new OutputManager(this.outputWin, UserConfig);
 
-        this.mxp = new Mxp(this.outputManager);
+        this.mxp = new Mxp(this.outputManager, chatWin);
         this.socket = new Socket(this.outputManager, this.mxp);
         this.connectWin = new ConnectWin(this.socket);
         this.menuBar = new MenuBar(this.aliasEditor, this.triggerEditor, this.jsScriptWin, this.aboutWin);
@@ -151,6 +212,18 @@ export class Client {
         this.socket.EvtSetClientIp.handle((ip: string) => {
             apiUtil.clientInfo.clientIp = ip;
         });
+
+        if (mapWin) {
+            this.socket.EvtMsdpVar.handle((data) => {
+                mapWin.handleMsdpVar(data[0], data[1]);
+            });
+        }
+
+        if (gaugeWin) {
+            this.socket.EvtMsdpVar.handle((data) => {
+                gaugeWin.handleMsdpVar(data[0], data[1]);
+            });
+        }
 
         // CommandInput events
         this.commandInput.EvtEmitCmd.handle((data: string) => {

@@ -4,7 +4,7 @@ import * as io from "socket.io-client";
 import { Mxp } from "./mxp";
 import { OutputManager } from "./outputManager";
 import { IoEvent } from "../../../common/src/ts/ioevent";
-import { TelnetClient } from "./telnetClient";
+import { TelnetClient, MsdpVarName, MsdpVal } from "./telnetClient";
 import { utf8decode, utf8encode } from "./util";
 import { UserConfig } from "./userConfig";
 import * as apiUtil from "./apiUtil";
@@ -20,6 +20,7 @@ export class Socket {
     public EvtWsConnect = new EventHook<{sid: string}>();
     public EvtWsDisconnect = new EventHook<void>();
     public EvtSetClientIp = new EventHook<string>();
+    public EvtMsdpVar = new EventHook<[MsdpVarName, MsdpVal]>();
 
     private ioConn: SocketIOClient.Socket;
     private ioEvt: IoEvent;
@@ -65,9 +66,11 @@ export class Socket {
         this.ioEvt = new IoEvent(this.ioConn);
 
         this.ioEvt.srvTelnetOpened.handle((val: [string, number]) => {
+            let isAarchon = (val[0] === "aarchonmud.com");
             this.telnetClient = new TelnetClient((data) => {
                 this.ioEvt.clReqTelnetWrite.fire(data);
-            });
+            }, isAarchon);
+
             this.telnetClient.clientIp = this.clientIp;
 
             this.telnetClient.EvtData.handle((data) => {
@@ -77,6 +80,10 @@ export class Socket {
 
             this.telnetClient.EvtServerEcho.handle((data) => {
                 this.EvtServerEcho.fire(data);
+            });
+
+            this.telnetClient.EvtMsdpVar.handle((data) => {
+                this.EvtMsdpVar.fire(data);
             });
 
             this.EvtTelnetConnect.fire(val);

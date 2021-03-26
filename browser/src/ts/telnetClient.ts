@@ -24,16 +24,25 @@ export class TelnetClient extends Telnet {
     private msdpEnabled: boolean = false;
     private supportedMsdpVars: string[] = [];
 
-    constructor(writeFunc: (data: ArrayBuffer) => void) {
+    constructor(writeFunc: (data: ArrayBuffer) => void, private isAarchon: boolean) {
         super(writeFunc);
 
-        this.EvtNegotiation.handle((data) => { this.onNegotiation(data); });
-    }
+        if (isAarchon) {
+            this.msdpEnabled = true;
+            TTYPES[0] = "ArcSlinger";
+            this.supportedMsdpVars = [
+                "HEALTH", "HEALTH_MAX",
+                "MANA", "MANA_MAX",
+                "MOVEMENT", "MOVEMENT_MAX",
+                "EXPERIENCE_TNL", "EXPERIENCE_MAX",
+                "OPPONENT_HEALTH", "OPPONENT_HEALTH_MAX",
+                "OPPONENT_NAME",
+                "ROOM_NAME", "ROOM_EXITS", "ROOM_VNUM", "ROOM_SECTOR",
+                "EDIT_MODE", "EDIT_VNUM",
+            ]
+        }
 
-    // Should generally be called right after constructor, before connection is opened
-    public enableMsdp(supportedVars: string[]) {
-        this.msdpEnabled = true;
-        this.supportedMsdpVars = supportedVars;
+        this.EvtNegotiation.handle((data) => { this.onNegotiation(data); });
     }
 
     private writeMsdpVar(varName: string, value: string) {
@@ -271,7 +280,7 @@ export function parseNewEnvSeq(seq: number[]): [number, number, string][] {
     return rtn;
 }
 
-type MsdpVarName = string;
+export type MsdpVarName = string;
 type MsdpObj = {[k: string]: MsdpVal};
 type MsdpArr = Array<any>;
 
