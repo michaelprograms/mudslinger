@@ -7,7 +7,7 @@ let build = process.argv[2];
 
 let txt = `export namespace AppInfo {
     export let AppTitle: string = "Mudslinger Client";
-    export let RepoUrl: string = "https://github.com/Odoth/mudslinger";
+    export let RepoUrl: string = "https://github.com/rabidt/mudslinger";
     export let Version: string = "${pjson.version}";
     export let Build: string = "${build}";
 }`;

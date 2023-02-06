@@ -15,6 +15,7 @@ import { Socket } from "./socket";
 import { TriggerEditor } from "./triggerEditor";
 import { TriggerManager } from "./triggerManager";
 import { AboutWin } from "./aboutWin";
+import { DonateWin } from "./donateWin";
 import { ConnectWin } from "./connectWin";
 import { ContactWin } from "./contactWin";
 import { StatusWin } from "./statusWin";
@@ -43,6 +44,7 @@ export class Client {
     private triggerEditor: TriggerEditor;
     private triggerManager: TriggerManager;
     private aboutWin: AboutWin;
+    private donateWin: DonateWin;
     private connectWin: ConnectWin;
     private contactWin: ContactWin;
 
@@ -109,6 +111,7 @@ export class Client {
         }
 
         this.aboutWin = new AboutWin();
+        this.donateWin = new DonateWin();
         this.jsScript = new JsScript();
         this.contactWin = new ContactWin();
 
@@ -316,6 +319,8 @@ export class Client {
             } else {
                 this.connectWin.show();
             }
+
+            this.donateWin.show();
         });
     }
 
