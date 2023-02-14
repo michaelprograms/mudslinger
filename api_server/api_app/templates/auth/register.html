@@ -1,8 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}Register{% endblock %}
+{% block header %}
+  <h1>{% block title %}Register{% endblock %}</h1>
+{% endblock %}
 
-{% block app_content %}
+{% block content %}
     <p>Begin registration by submitting your email address below. Once submitted, you will be sent an email with a link to complete your registration.</p>
     <form action="" method="post">
         {{ form.hidden_tag() }}

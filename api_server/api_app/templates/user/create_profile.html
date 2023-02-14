@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
 
-{% block app_content %}
+{% block header %}
   <h1>{% block title %}New Profile{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
   <form method="post">
     <label for="name">Profile Name</label>
     <input name="name" id="name" value="{{ request.form['name'] }}" required>

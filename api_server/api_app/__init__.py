@@ -3,11 +3,9 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from flask_mail import Mail
-from flask_bootstrap import Bootstrap
 
 
 mail = Mail()
-bootstrap = Bootstrap()
 
 
 def create_app(test_config=None):
@@ -53,6 +51,5 @@ def create_app(test_config=None):
 
     CORS(app)
     mail.init_app(app)
-    bootstrap.init_app(app)
 
     return app

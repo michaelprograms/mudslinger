@@ -1,18 +1,21 @@
 {% extends 'base.html' %}
 
-{% block app_content %}
+{% block header %}
   <h1>{% block title %}Profiles{% endblock %}</h1>
   {% if g.user %}
-    <a class="action btn btn-primary" href="{{ url_for('user.create_profile') }}">New</a>
+    <a class="action" href="{{ url_for('user.create_profile') }}">New</a>
   {% endif %}
+{% endblock %}
+
+{% block content %}
   <div style="display:none" class='profile-local'>
-    <h2>Local Profile</h2>
+    <h1>Local Profile</h1>
     <p>
       These are settings that you saved while playing without a profile.
       These settings are saved to the browser <b>localStorage</b>, so won't be available when playing from other devices.
     </p>
     <div>
-      <a class="btn btn-primary"  href="/play/">Connect</a>
+      <a href="/play/">Connect</a>
     </div>
     <form action="{{ url_for('user.convert_local') }}" method=POST>
       <input type="hidden" name="user_config" id="user_config" >
@@ -22,11 +25,11 @@
   </div>
   {% for profile in profiles %}
   <div class='profile'>
-    <h2>{{ profile['name'] }}</h2>
+    <h1>{{ profile['name'] }}</h1>
     <div>{{ profile['host'] }}:{{ profile['port'] }}</div>
     <div>
-      <a class="btn btn-primary" href="/play/?profile={{profile['id']}}">Connect</a>
-      <a class="btn btn-primary" href="{{ url_for('user.edit_profile', pr_id=profile['id']) }}">Edit</a>
+      <a href="/play/?profile={{profile['id']}}">Connect</a>
+      <a href="{{ url_for('user.edit_profile', pr_id=profile['id']) }}">Edit</a>
     </div>
   </div>
     {% if not loop.last %}
