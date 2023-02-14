@@ -16,7 +16,7 @@ idna==2.9
 importlib-metadata==1.6.0
 itsdangerous==1.1.0
 Jinja2==2.11.2
-MarkupSafe==1.1.1
+MarkupSafe==2.0.1
 more-itertools==8.3.0
 packaging==20.4
 pluggy==0.13.1
@@ -29,5 +29,5 @@ six==1.15.0
 urllib3==1.25.9
 wcwidth==0.2.3
 Werkzeug==1.0.1
-WTForms==2.3.1
+WTForms==3.0.0
 zipp==3.1.0
