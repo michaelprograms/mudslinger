@@ -11,7 +11,6 @@ export class MenuBar {
     public EvtChangeDefaultColor = new EventHook<[string, string]>();
     public EvtChangeDefaultBgColor = new EventHook<[string, string]>();
     public EvtChangeFontSize = new EventHook<string>();
-    public EvtContactClicked = new EventHook<void>();
     public EvtConnectClicked = new EventHook<void>();
     public EvtDisconnectClicked = new EventHook<void>();
 
@@ -119,10 +118,6 @@ export class MenuBar {
 
         this.clickFuncs["About"] = () => {
             this.aboutWin.show();
-        };
-
-        this.clickFuncs["Contact"] = () => {
-            this.EvtContactClicked.fire(null);
         };
     }
 

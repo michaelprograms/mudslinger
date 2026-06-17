@@ -15,11 +15,7 @@ import { Socket } from "./socket";
 import { TriggerEditor } from "./triggerEditor";
 import { TriggerManager } from "./triggerManager";
 import { AboutWin } from "./aboutWin";
-import { DonateWin } from "./donateWin";
-import { ContactWin } from "./contactWin";
 import { getConfig } from "./clientConfig";
-import { StatusWin } from "./statusWin";
-import * as apiUtil from "./apiUtil";
 import { OutWinBase } from "./outWinBase";
 import { MapWin } from "./mapWin";
 import { GaugeWin } from "./gaugeWin";
@@ -44,8 +40,6 @@ export class Client {
     private triggerEditor: TriggerEditor;
     private triggerManager: TriggerManager;
     private aboutWin: AboutWin;
-    private donateWin: DonateWin;
-    private contactWin: ContactWin;
 
     private serverEcho = false;
 
@@ -110,9 +104,7 @@ export class Client {
         }
 
         this.aboutWin = new AboutWin();
-        this.donateWin = new DonateWin();
         this.jsScript = new JsScript();
-        this.contactWin = new ContactWin();
 
         this.jsScriptWin = new JsScriptWin(this.jsScript);
         this.triggerManager = new TriggerManager(
@@ -146,10 +138,6 @@ export class Client {
             this.outputManager.handleChangeFontSize(sz);
         });
 
-        this.menuBar.EvtContactClicked.handle(() => {
-            this.contactWin.show();
-        });
-
         this.menuBar.EvtConnectClicked.handle(() => {
             this.socket.openTelnet(
                 this.connectionTarget.host,
@@ -171,21 +159,15 @@ export class Client {
            this.outputWin.handleTelnetTryConnect(val[0], val[1]); 
         });
 
-        this.socket.EvtTelnetConnect.handle((val: [string, number]) => {
+        this.socket.EvtTelnetConnect.handle((_val: [string, number]) => {
             this.serverEcho = false;
             this.menuBar.handleTelnetConnect();
             this.outputWin.handleTelnetConnect();
-            apiUtil.clientInfo.telnetHost = val[0];
-            apiUtil.clientInfo.telnetPort = val[1];
-
-            apiUtil.apiPostClientConn();
         });
 
         this.socket.EvtTelnetDisconnect.handle(() => {
             this.menuBar.handleTelnetDisconnect();
             this.outputWin.handleTelnetDisconnect();
-            apiUtil.clientInfo.telnetHost = null;
-            apiUtil.clientInfo.telnetPort = null;
         });
 
         this.socket.EvtTelnetError.handle((data: string) => {
@@ -196,19 +178,13 @@ export class Client {
             this.outputWin.handleWsError();
         });
 
-        this.socket.EvtWsConnect.handle((val: {sid: string}) => {
-            apiUtil.clientInfo.sid = val.sid;
+        this.socket.EvtWsConnect.handle((_val: {sid: string}) => {
             this.outputWin.handleWsConnect();
         });
 
         this.socket.EvtWsDisconnect.handle(() => {
-            apiUtil.clientInfo.sid = null;
             this.menuBar.handleTelnetDisconnect();
             this.outputWin.handleWsDisconnect();
-        });
-
-        this.socket.EvtSetClientIp.handle((ip: string) => {
-            apiUtil.clientInfo.clientIp = ip;
         });
 
         if (mapWin) {
@@ -244,11 +220,6 @@ export class Client {
                 this.outputWin.handleSendCommand(data.value);
             }
             this.socket.sendCmd(data.value);
-
-            // noPrint is used only for MXP <version>, which we don't want to track
-            if (data.noPrint !== true) {
-                apiUtil.apiPostMxpSend();
-            }
         });
 
         // JsScript events
@@ -313,22 +284,6 @@ export class Client {
 
     public readonly UserConfig = UserConfig;
     public readonly AppInfo = AppInfo;
-}
-
-function profileConfigSave(profileId: string, val:string) {
-    let statusWin = new StatusWin();
-    statusWin.setContent('Saving profile...')
-    statusWin.show();
-    
-    (async () => {
-        try {
-            await apiUtil.apiPostProfileConfig(profileId, val);
-            statusWin.destroy();
-        } catch(err) {
-            // TODO: handle not logged in 
-            statusWin.setContent('Could not save profile.\n\n' + err);
-        }
-    })();
 }
 
 function makeCbLocalConfigSave(): (val: string) => void {
