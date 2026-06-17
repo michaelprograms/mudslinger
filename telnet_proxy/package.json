@@ -4,7 +4,7 @@
   "scripts": {
     "start": "node dist/telnet_proxy/src/app.js",
     "build": "tsc -p tsconfig.json",
-    "test": "tsc -p tsconfig.json && node dist/telnet_proxy/src/connectionTarget.test.js",
+    "test": "tsc -p tsconfig.json && node dist/telnet_proxy/src/connectionTarget.test.js && node test/integration.test.js",
     "postinstall": "node tools/postinstall.js"
   },
   "dependencies": {
@@ -15,5 +15,8 @@
     "fs-extra": "^2.0.0",
     "socket.io": "^1.7.2",
     "typescript": "^3.9.5"
+  },
+  "devDependencies": {
+    "socket.io-client": "^1.7.4"
   }
 }
