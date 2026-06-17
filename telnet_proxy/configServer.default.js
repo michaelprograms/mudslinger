@@ -10,10 +10,4 @@ config.mudPort = 4000;
 // e.g. "https://mud.example.com".
 config.corsOrigin = "*";
 
-config.adminHost = "localhost";
-config.adminPort = 8001;
-
-config.adminWebHost = "localhost";
-config.adminWebPort = 9001;
-
 module.exports = config;

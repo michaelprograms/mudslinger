@@ -1,8 +1,6 @@
 import * as http from "http";
 import { Server, Socket, Namespace } from "socket.io";
 import * as net from "net";
-import * as readline from "readline";
-import express from "express";
 
 import { IoEvent } from "../../common/src/ts/ioevent";
 import { getMudTarget } from "./connectionTarget";
@@ -12,17 +10,6 @@ let serverConfig = require(configPath);
 console.log(serverConfig);
 
 let telnetIdNext: number = 0;
-
-interface connInfo {
-    telnetId: number;
-    uuid: string;
-    userIp: string;
-    host: string;
-    port: number;
-    startTime: Date;
-};
-
-let openConns: {[k: number]: connInfo} = {};
 
 let server: http.Server = http.createServer();
 let io = new Server(server, { cors: { origin: serverConfig.corsOrigin || "*" } });
@@ -67,20 +54,10 @@ telnetNs.on("connection", (client: Socket) => {
 
         let { host, port } = getMudTarget(serverConfig);
 
-        openConns[telnetId] = {
-            telnetId: telnetId,
-            uuid: null,
-            userIp: remoteAddr,
-            host: host,
-            port: port,
-            startTime: null
-        };
-
         telnet.on("data", (data: Buffer) => {
             ioEvt.srvTelnetData.fire(data as any);
         });
         telnet.on("close", (had_error: boolean) => {
-            delete openConns[telnetId];
             ioEvt.srvTelnetClosed.fire(had_error);
             telnet = null;
             let connEndTime = new Date();
@@ -101,11 +78,9 @@ telnetNs.on("connection", (client: Socket) => {
             telnet.connect(port, host, () => {
                 ioEvt.srvTelnetOpened.fire([host, port]);
                 conStartTime = new Date();
-                openConns[telnetId].startTime = conStartTime;
             });
         }
         catch (err) {
-            delete openConns[telnetId];
             tlog(telnetId, "::", "ERROR CONNECTING TELNET:", err);
             ioEvt.srvTelnetError.fire(err.message);
         }
@@ -136,107 +111,3 @@ server.listen(serverConfig.serverPort, serverConfig.serverHost, () => {
 function tlog(...args: any[]) {
     console.log("[[", new Date().toLocaleString(), "]]", ...args);
 }
-
-// Admin CLI
-let adminIdNext: number = 0;
-
-type adminFunc = (sock: net.Socket, args: string[]) => void;
-
-let adminFuncs: {[k: string]: adminFunc} =  {};
-adminFuncs["help"] = (sock: net.Socket, args: string[]) => {
-    sock.write("Available commands:\n\n");
-    for (let cmd in adminFuncs) {
-        sock.write(cmd + "\n");
-    }
-    sock.write("\n");
-};
-
-adminFuncs["ls"] = (sock: net.Socket, args: string[]) => {
-    sock.write("Open connections:\n\n");
-    for (let tnId in openConns) {
-        let o = openConns[tnId];
-        sock.write( o.telnetId.toString() + 
-                    ": " + o.userIp  +
-                    " => " + o.host + "," + o.port.toString() +
-                    "\n");
-    }
-};
-
-let adminServer = net.createServer((socket: net.Socket) => {
-    let adminId: number = adminIdNext++;
-
-    tlog("{{", adminId, "}}", "{{admin connection opened}}");
-
-    let rl = readline.createInterface({
-        input: socket
-    });
-
-    rl.on("line", (line: string) => {
-        let words = line.split(" ");
-
-        if (words.length > 0) {
-            let funcName = words[0];
-            if (funcName === "exit") {
-                socket.end();
-                return;
-            }
-
-            let afunc = adminFuncs[words[0]];
-
-            if (!afunc) {
-                socket.write("No such command. Try 'help'.\n");
-            } else {
-                try {
-                    afunc(socket, words.slice(1));
-                }
-                catch (err) {
-                    tlog("{{", adminId, "}}", "{{admin error '" + line + "':", err, "}}");
-                    socket.write("COMMAND ERROR\n");
-                }
-            }
-        }
-
-        socket.write("admin> ");
-    });
-
-    socket.on("close", () => {
-        tlog("{{", adminId, "}}", "{{admin closed}}");
-    });
-
-    socket.on("error", (err: Error) => {
-        tlog("{{", adminId, "}}", "{{admin error: " + err);
-    });
-
-    socket.write("admin> ");
-});
-
-if (serverConfig.adminHost !== "localhost") {
-    throw "Auth for Admin CLI is not implemented. Must use localhost.";
-}
-
-adminServer.listen(serverConfig.adminPort, serverConfig.adminHost, () => {
-    tlog("Admin CLI server is running on " + serverConfig.adminHost + ":" + serverConfig.adminPort);
-});
-
-// Admin Web API
-let adminApp = express();
-
-adminApp.get('/conns', (req, res) => {
-    let conns = [];
-    for (let id in openConns) {
-        let c = openConns[id];
-        conns.push({
-            ...c,
-            startUTC: c.startTime.getTime()
-        })
-    }
-    res.send(conns);
-});
-
-if (serverConfig.adminWebHost !== "localhost") {
-    throw "Auth for Admin Web API is not implemented. Must use localhost.";
-}
-
-adminApp.listen(serverConfig.adminWebPort, serverConfig.adminWebHost, () => {
-    tlog("Admin API server is running on " + serverConfig.adminWebHost + ":" + serverConfig.adminWebPort);
-});
