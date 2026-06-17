@@ -1,6 +1,9 @@
 {
   "name": "mudslinger-telnet-proxy",
   "version": "0.3.0",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node dist/telnet_proxy/src/app.js",
     "build": "tsc -p tsconfig.json",

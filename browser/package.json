@@ -1,6 +1,9 @@
 {
   "name": "mudslinger-browser",
   "version": "0.3.0",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "postinstall": "node tools/postinstall.js",
     "build": "node tools/genAppInfo.js `git rev-parse HEAD` && tsc -p tsconfig.json && webpack",
