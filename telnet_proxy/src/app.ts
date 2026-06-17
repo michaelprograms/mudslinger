@@ -2,7 +2,7 @@ import * as http from "http";
 import { Server, Socket, Namespace } from "socket.io";
 import * as net from "net";
 import * as readline from "readline";
-import express, { Request, Response } from "express";
+import express from "express";
 
 import { IoEvent } from "../../common/src/ts/ioevent";
 import { getMudTarget } from "./connectionTarget";
@@ -77,7 +77,7 @@ telnetNs.on("connection", (client: Socket) => {
         };
 
         telnet.on("data", (data: Buffer) => {
-            ioEvt.srvTelnetData.fire(data as unknown as ArrayBuffer);
+            ioEvt.srvTelnetData.fire(data as any);
         });
         telnet.on("close", (had_error: boolean) => {
             delete openConns[telnetId];
@@ -221,7 +221,7 @@ adminServer.listen(serverConfig.adminPort, serverConfig.adminHost, () => {
 // Admin Web API
 let adminApp = express();
 
-adminApp.get('/conns', (req: Request, res: Response) => {
+adminApp.get('/conns', (req, res) => {
     let conns = [];
     for (let id in openConns) {
         let c = openConns[id];
