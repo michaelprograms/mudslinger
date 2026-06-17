@@ -4,6 +4,7 @@ markdown_extensions:
 theme: readthedocs
 # site_url: https://mudslinger.net
 repo_url: https://github.com/rabidt/mudslinger
+docs_dir: userdocs
 site_dir: browser/static/docs
 
 nav:
