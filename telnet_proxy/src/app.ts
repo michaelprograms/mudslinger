@@ -77,7 +77,7 @@ telnetNs.on("connection", (client: SocketIO.Socket) => {
         };
 
         telnet.on("data", (data: Buffer) => {
-            ioEvt.srvTelnetData.fire(data.buffer);
+            ioEvt.srvTelnetData.fire(data);
         });
         telnet.on("close", (had_error: boolean) => {
             delete openConns[telnetId];
