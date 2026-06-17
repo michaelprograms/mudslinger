@@ -24,12 +24,12 @@ export class TelnetClient extends Telnet {
     private msdpEnabled: boolean = false;
     private supportedMsdpVars: string[] = [];
 
-    constructor(writeFunc: (data: ArrayBuffer) => void, private isAarchon: boolean) {
+    constructor(writeFunc: (data: ArrayBuffer) => void, private enableMsdp: boolean) {
         super(writeFunc);
 
-        if (isAarchon) {
+        if (enableMsdp) {
             this.msdpEnabled = true;
-            TTYPES[0] = "ArcSlinger";
+            TTYPES[0] = "Mudslinger";
             this.supportedMsdpVars = [
                 "HEALTH", "HEALTH_MAX",
                 "MANA", "MANA_MAX",

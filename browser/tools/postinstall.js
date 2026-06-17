@@ -14,3 +14,10 @@ fs.copySync("node_modules/codemirror/theme", "static/public/codemirror/theme");
 fs.copySync("node_modules/codemirror/LICENSE", 'static/public/codemirror/LICENSE');
 
 fs.copySync("node_modules/qunit/qunit", 'static/test/qunit');
+
+let flConfig = "static/public/config.js";
+let flConfigDefault = "static/public/config.default.js";
+if (!fs.existsSync(flConfig)) {
+    fs.createReadStream(flConfigDefault).pipe(fs.createWriteStream(flConfig));
+    console.log("Copying " + flConfigDefault + " to " + flConfig);
+}

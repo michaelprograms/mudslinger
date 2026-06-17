@@ -7,7 +7,7 @@ import { IoEvent } from "../../../common/src/ts/ioevent";
 import { TelnetClient, MsdpVarName, MsdpVal } from "./telnetClient";
 import { utf8decode, utf8encode } from "./util";
 import { UserConfig } from "./userConfig";
-import * as apiUtil from "./apiUtil";
+import { getConfig } from "./clientConfig";
 
 
 export class Socket {
@@ -31,19 +31,7 @@ export class Socket {
     }
 
     public async open() {
-        let res;
-        try {
-            res = await apiUtil.apiGetClientConfig();
-        } catch (err) {
-            this.EvtWsError.fire(err);
-            return false;
-        }
-
-        let ioUrl = location.protocol + "//" +
-            (res.data.socket_io_host) +
-            ":" +
-            (res.data.socket_io_port || location.port) +
-            "/telnet";
+        let ioUrl = getConfig().socketIoUrl;
         console.log("Connecting to telnet proxy server at", ioUrl);
         this.ioConn = io.connect(ioUrl);
 
@@ -66,10 +54,10 @@ export class Socket {
         this.ioEvt = new IoEvent(this.ioConn);
 
         this.ioEvt.srvTelnetOpened.handle((val: [string, number]) => {
-            let isAarchon = (val[0] === "aarchonmud.com");
+            let enableMsdp = getConfig().msdp;
             this.telnetClient = new TelnetClient((data) => {
                 this.ioEvt.clReqTelnetWrite.fire(data);
-            }, isAarchon);
+            }, enableMsdp);
 
             this.telnetClient.clientIp = this.clientIp;
 

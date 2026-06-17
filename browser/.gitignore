@@ -3,6 +3,7 @@
 
 /src/ts/appInfo.ts
 
+/static/public/config.js
 /static/public/codemirror/
 /static/public/index.html
 /static/public/jquery.min.js
