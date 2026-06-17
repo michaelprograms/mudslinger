@@ -16,8 +16,8 @@ import { TriggerEditor } from "./triggerEditor";
 import { TriggerManager } from "./triggerManager";
 import { AboutWin } from "./aboutWin";
 import { DonateWin } from "./donateWin";
-import { ConnectWin } from "./connectWin";
 import { ContactWin } from "./contactWin";
+import { getConfig } from "./clientConfig";
 import { StatusWin } from "./statusWin";
 import * as apiUtil from "./apiUtil";
 import { OutWinBase } from "./outWinBase";
@@ -45,20 +45,19 @@ export class Client {
     private triggerManager: TriggerManager;
     private aboutWin: AboutWin;
     private donateWin: DonateWin;
-    private connectWin: ConnectWin;
     private contactWin: ContactWin;
 
     private serverEcho = false;
 
     constructor(private connectionTarget: ConnectionTarget) {
-        let isAarchon: boolean = connectionTarget?.host == "aarchonmud.com";
-        let clientName: string = (isAarchon ? "ArcSlinger" : "Mudslinger");
+        let enableMsdp: boolean = getConfig().msdp;
+        let clientName: string = "Mudslinger";
 
         let chatWin: OutWinBase;
         let mapWin: MapWin;
         let gaugeWin: GaugeWin;
 
-        if (isAarchon) {
+        if (enableMsdp) {
             let mainWin = document.getElementById("mainWin");
             mainWin.id = "mainVertSplit";
             mainWin.innerHTML = `
@@ -132,7 +131,6 @@ export class Client {
 
         this.mxp = new Mxp(this.outputManager, chatWin, clientName);
         this.socket = new Socket(this.outputManager, this.mxp);
-        this.connectWin = new ConnectWin(this.socket);
         this.menuBar = new MenuBar(this.aliasEditor, this.triggerEditor, this.jsScriptWin, this.aboutWin);
 
         // MenuBar events
@@ -153,14 +151,10 @@ export class Client {
         });
 
         this.menuBar.EvtConnectClicked.handle(() => {
-            if (this.connectionTarget) {
-                this.socket.openTelnet(
-                    this.connectionTarget.host,
-                    this.connectionTarget.port
-                );
-            } else {
-                this.connectWin.show();
-            }
+            this.socket.openTelnet(
+                this.connectionTarget.host,
+                this.connectionTarget.port
+            );
         });
 
         this.menuBar.EvtDisconnectClicked.handle(() => {
@@ -310,17 +304,10 @@ export class Client {
 
         this.socket.open().then((success) => {
             if (!success) { return; }
-            
-            if (this.connectionTarget) {
-                this.socket.openTelnet(
-                    this.connectionTarget.host,
-                    this.connectionTarget.port);
 
-            } else {
-                this.connectWin.show();
-            }
-
-            this.donateWin.show();
+            this.socket.openTelnet(
+                this.connectionTarget.host,
+                this.connectionTarget.port);
         });
     }
 
@@ -381,56 +368,16 @@ function makeCbLocalConfigSave(): (val: string) => void {
 export namespace Mudslinger {
     export let client: Client;
     export async function init() {
-        let connectionTarget: ConnectionTarget;
-        let params = new URLSearchParams(location.search);
-        let profileId = params.get('profile');
-        let profile;
-        if (profileId) {
-            let statusWin = new StatusWin();
-            statusWin.setContent('Loading profile...')
-            statusWin.show();
-            try {
-                let resp = await apiUtil.apiGetProfile(profileId);
-                profile = resp.data;
-                statusWin.destroy();
-            } catch(err) {
-                if (err.response.status == 403) {
-                    statusWin.setContent(
-                        'Must log in.' +
-                        '<br>' +
-                        '<br>' +
-                        '<a href="/auth/login">CLICK HERE TO LOG IN</a>');
-                } else {
-                    statusWin.setContent('Could not load profile.\n\n' + err);
-                }
-                return;
-            }
-            connectionTarget = {
-                host: profile.host.trim(),
-                port: profile.port
-            }
-        }
-        
-        if (!profile && params.has('host') && params.has('port')) {
-            connectionTarget = {
-                host: params.get('host').trim(),
-                port: Number(params.get('port').trim())
-            }
-        }
+        let cfg = getConfig();
+        let connectionTarget: ConnectionTarget = {
+            host: cfg.mudHost,
+            port: cfg.mudPort
+        };
 
-        if (profile) {
-            UserConfig.init(profile.config, (val: string): void => {
-                profileConfigSave(profileId, val)
-            });
-        } else {
-            UserConfig.init(localStorage.getItem("userConfig"), makeCbLocalConfigSave());
-        }
+        UserConfig.init(localStorage.getItem("userConfig"), makeCbLocalConfigSave());
 
         client = new Client(connectionTarget);
-        document.title = client.AppInfo.AppTitle;
-        if (profile) {
-            document.title += ` - ${profile.name}`;
-        }
+        document.title = client.AppInfo.AppTitle + " - " + cfg.mudName;
     }
 }
 
