@@ -4,6 +4,7 @@
   "scripts": {
     "start": "node dist/telnet_proxy/src/app.js",
     "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node dist/telnet_proxy/src/connectionTarget.test.js",
     "postinstall": "node tools/postinstall.js"
   },
   "dependencies": {
