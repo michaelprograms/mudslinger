@@ -1,7 +1,7 @@
 Mudslinger is a web-based MUD client.
 
-Open the page in your browser and it connects you to the MUD automatically —
-there is nothing to install. A small Node.js / Socket.IO proxy runs the telnet
+Open the page in your browser and it connects you to the MUD automatically.
+There is nothing to install. A small Node.js / Socket.IO proxy runs the telnet
 connection to the game on your behalf and relays it to the browser.
 
 # Features

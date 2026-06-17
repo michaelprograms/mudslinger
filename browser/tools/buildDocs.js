@@ -70,7 +70,7 @@ function main() {
         const title =
             base.toLowerCase() === "readme"
                 ? "Mudslinger Docs"
-                : base + " — Mudslinger Docs";
+                : base + " - Mudslinger Docs";
 
         const html =
             "<!DOCTYPE html>\n" +
