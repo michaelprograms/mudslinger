@@ -8,8 +8,8 @@
     "postinstall": "node tools/postinstall.js"
   },
   "dependencies": {
-    "@types/node": "^20",
-    "fs-extra": "^2.0.0",
+    "@types/node": "^24",
+    "fs-extra": "^11",
     "socket.io": "^4",
     "typescript": "^5"
   },
