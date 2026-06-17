@@ -2,7 +2,6 @@ import * as http from "http";
 import * as socketio from "socket.io";
 import * as net from "net";
 import * as readline from "readline";
-import axios from "axios";
 import * as express from "express";
 
 import { IoEvent } from "../../common/src/ts/ioevent";
@@ -80,27 +79,12 @@ telnetNs.on("connection", (client: SocketIO.Socket) => {
             ioEvt.srvTelnetData.fire(data.buffer);
         });
         telnet.on("close", (had_error: boolean) => {
-            let conn = openConns[telnetId];
             delete openConns[telnetId];
             ioEvt.srvTelnetClosed.fire(had_error);
             telnet = null;
             let connEndTime = new Date();
             let elapsed: number = conStartTime && (<any>connEndTime - <any>conStartTime);
             tlog(telnetId, "::", remoteAddr, "->", host, port, "::closed after", elapsed && (elapsed/1000), "seconds");
-
-            if (conn) {
-                axinst.post('/usage/disconnect', {
-                    'uuid': conn.uuid,
-                    'sid': client.id,
-                    'from_addr': remoteAddr,
-                    'to_addr': host,
-                    'to_port': port,
-                    'time_stamp': connEndTime,
-                    'elapsed_ms': elapsed
-                }).catch((o) => {
-                    console.error("/usage/disconnect error:", o);
-                });
-            }
         });
         telnet.on("drain", () => {
             canWrite = true;
@@ -117,21 +101,6 @@ telnetNs.on("connection", (client: SocketIO.Socket) => {
                 ioEvt.srvTelnetOpened.fire([host, port]);
                 conStartTime = new Date();
                 openConns[telnetId].startTime = conStartTime;
-
-                axinst.post('/usage/connect', {
-                    'sid': client.id,
-                    'from_addr': remoteAddr,
-                    'to_addr': host,
-                    'to_port': port,
-                    'time_stamp': conStartTime
-                }).then((resp) => {
-                    let conn = openConns[telnetId];
-                    if (conn) {
-                        conn.uuid = resp.data.uuid;
-                    }
-                }).catch((o) => {
-                    console.error("/usage/connect error:", o);
-                });
             });
         }
         catch (err) {
@@ -168,14 +137,6 @@ server.listen(serverConfig.serverPort, serverConfig.serverHost, () => {
 function tlog(...args: any[]) {
     console.log("[[", new Date().toLocaleString(), "]]", ...args);
 }
-
-let axinst = axios.create({
-    baseURL: serverConfig.apiBaseUrl,
-    auth: {
-        username: serverConfig.apiKey,
-        password: ':none'
-    }
-});
 
 // Admin CLI
 let adminIdNext: number = 0;
