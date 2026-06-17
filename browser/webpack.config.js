@@ -5,7 +5,7 @@ module.exports = {
   entry: './build/browser/src/ts/client.js',
   output: {
     path: path.resolve(__dirname, "static/public"),
-    filename: 'mudslinger-[contentHash].js'
+    filename: 'mudslinger-[contenthash].js'
   },
   plugins: [new HtmlWebpackPlugin({
       template: "./src/html/template.html",

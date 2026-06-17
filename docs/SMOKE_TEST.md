@@ -18,7 +18,7 @@ Expect: `Server is running on 0.0.0.0:8080` (no admin CLI/API lines).
 
 ```bash
 cd ~/projects/mudslinger/browser
-NODE_OPTIONS=--openssl-legacy-provider npm run build
+npm run build
 npx http-server static/public -p 5000
 ```
 
