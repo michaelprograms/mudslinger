@@ -7,7 +7,8 @@ import * as express from "express";
 import { IoEvent } from "../../common/src/ts/ioevent";
 import { getMudTarget } from "./connectionTarget";
 
-let serverConfig = require("../../../configServer.js");
+let configPath = process.env.MUDSLINGER_PROXY_CONFIG || "../../../configServer.js";
+let serverConfig = require(configPath);
 console.log(serverConfig);
 
 let telnetIdNext: number = 0;
