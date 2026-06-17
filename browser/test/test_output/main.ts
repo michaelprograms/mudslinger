@@ -1,4 +1,5 @@
 import { OutputWin } from "../../src/ts/outputWin";
+import { OutWinBase } from "../../src/ts/outWinBase";
 import { OutputManager, ConfigIf } from "../../src/ts/outputManager";
 import { Mxp } from "../../src/ts/mxp";
 import { ansiColorTuple} from "../../src/ts/color";
@@ -22,7 +23,8 @@ let fakeWinConfig = {
 function run() {
     let outputWin = new OutputWin(fakeWinConfig);
     let outputManager = new OutputManager(outputWin, fakeMgrConfig);
-    let mxp = new Mxp(outputManager);
+    let chatWin = new OutWinBase($("<div>"), fakeWinConfig);
+    let mxp = new Mxp(outputManager, chatWin, "MudslingerTest");
     outputManager.EvtMxpTag.handle((tag: string) => {
         mxp.handleMxpTag(tag);
     });
@@ -34,7 +36,7 @@ function run() {
     });
 
     let write = (msg: string) => {
-        outputManager.handleTelnetData(utf8encode(msg));
+        outputManager.handleTelnetData(utf8encode(msg).buffer as ArrayBuffer);
     }
 
     write(
