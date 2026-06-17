@@ -10,15 +10,17 @@
     "build-migrate": "tsc -p migrate/tsconfig.json && webpack --config migrate/webpack.config.migrateFrom.js && webpack --config migrate/webpack.config.migrateTo.js"
   },
   "dependencies": {
-    "@types/jquery": "^2.0.54",
-    "@types/qunit": "^2.5.0",
     "codemirror": "^5.24.2",
-    "fs-extra": "^2.0.0",
-    "html-webpack-plugin": "^4.3.0",
+    "fs-extra": "^11",
     "jquery": "^2.2.4",
     "jqwidgets-framework": "^9.1.6",
-    "qunit": "^2.6.0",
-    "socket.io-client": "^4",
+    "socket.io-client": "^4"
+  },
+  "devDependencies": {
+    "@types/jquery": "^2.0.68",
+    "@types/qunit": "^2.19.14",
+    "html-webpack-plugin": "^4.3.0",
+    "qunit": "^2.26.0",
     "typescript": "^5",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11"

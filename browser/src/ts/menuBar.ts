@@ -43,27 +43,27 @@ export class MenuBar {
         this.$menuBar.on("itemclick", (event: any) => { this.handleClick(event); });
 
         this.$chkEnableColor.change(function() {
-            UserConfig.set("colorsEnabled", this.checked);
+            UserConfig.set("colorsEnabled", (this as HTMLInputElement).checked);
         });
         (this.$chkEnableColor[0] as HTMLInputElement).checked = UserConfig.getDef("colorsEnabled", true);
 
         this.$chkEnableUtf8.change(function() {
-            UserConfig.set("utf8Enabled", this.checked);
+            UserConfig.set("utf8Enabled", (this as HTMLInputElement).checked);
         });
         (this.$chkEnableUtf8[0] as HTMLInputElement).checked = UserConfig.getDef("utf8Enabled", false);
 
         this.$chkEnableMxp.change(function() {
-            UserConfig.set("mxpEnabled", this.checked);
+            UserConfig.set("mxpEnabled", (this as HTMLInputElement).checked);
         });
         (this.$chkEnableMxp[0] as HTMLInputElement).checked = UserConfig.getDef("mxpEnabled", true);
 
         this.$chkEnableTrig.change(function() {
-            UserConfig.set("triggersEnabled", this.checked);
+            UserConfig.set("triggersEnabled", (this as HTMLInputElement).checked);
         });
         (this.$chkEnableTrig[0] as HTMLInputElement).checked = UserConfig.getDef("triggersEnabled", true);
 
         this.$chkEnableAlias.change(function() {
-            UserConfig.set("aliasesEnabled", this.checked);
+            UserConfig.set("aliasesEnabled", (this as HTMLInputElement).checked);
         });
         (this.$chkEnableAlias[0] as HTMLInputElement).checked = UserConfig.getDef("aliasesEnabled", true);
     }
