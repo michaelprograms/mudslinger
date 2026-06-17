@@ -6,6 +6,7 @@ import axios from "axios";
 import * as express from "express";
 
 import { IoEvent } from "../../common/src/ts/ioevent";
+import { getMudTarget } from "./connectionTarget";
 
 let serverConfig = require("../../../configServer.js");
 console.log(serverConfig);
@@ -62,13 +63,9 @@ telnetNs.on("connection", (client: SocketIO.Socket) => {
 
         let telnetId: number = telnetIdNext++;
 
-        let host: string;
-        let port: number;
-
         let conStartTime: Date;
 
-        host = args[0];
-        port = args[1];
+        let { host, port } = getMudTarget(serverConfig);
 
         openConns[telnetId] = {
             telnetId: telnetId,
