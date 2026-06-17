@@ -1,8 +1,8 @@
 import * as http from "http";
-import * as socketio from "socket.io";
+import { Server, Socket, Namespace } from "socket.io";
 import * as net from "net";
 import * as readline from "readline";
-import * as express from "express";
+import express, { Request, Response } from "express";
 
 import { IoEvent } from "../../common/src/ts/ioevent";
 import { getMudTarget } from "./connectionTarget";
@@ -25,13 +25,13 @@ interface connInfo {
 let openConns: {[k: number]: connInfo} = {};
 
 let server: http.Server = http.createServer();
-let io: SocketIO.Server = socketio();
+let io = new Server(server, { cors: { origin: serverConfig.corsOrigin || "*" } });
 
-let telnetNs: SocketIO.Namespace = io.of("/telnet");
-telnetNs.on("connection", (client: SocketIO.Socket) => {
+let telnetNs: Namespace = io.of("/telnet");
+telnetNs.on("connection", (client: Socket) => {
     let telnet: net.Socket;
     let ioEvt = new IoEvent(client);
-    let remoteAddr = client.request.headers['x-real-ip'] || client.request.connection.remoteAddress;
+    let remoteAddr: string = (client.request.headers['x-real-ip'] as string) || client.handshake.address;
 
     let writeQueue: any[] = [];
     let canWrite: boolean =  true;
@@ -77,7 +77,7 @@ telnetNs.on("connection", (client: SocketIO.Socket) => {
         };
 
         telnet.on("data", (data: Buffer) => {
-            ioEvt.srvTelnetData.fire(data);
+            ioEvt.srvTelnetData.fire(data as unknown as ArrayBuffer);
         });
         telnet.on("close", (had_error: boolean) => {
             delete openConns[telnetId];
@@ -124,8 +124,6 @@ telnetNs.on("connection", (client: SocketIO.Socket) => {
 
     ioEvt.srvSetClientIp.fire(remoteAddr);
 });
-
-io.attach(server);
 
 server.on("error", (err: Error) => {
     tlog("Server error:", err);
@@ -223,7 +221,7 @@ adminServer.listen(serverConfig.adminPort, serverConfig.adminHost, () => {
 // Admin Web API
 let adminApp = express();
 
-adminApp.get('/conns', (req, res) => {
+adminApp.get('/conns', (req: Request, res: Response) => {
     let conns = [];
     for (let id in openConns) {
         let c = openConns[id];
