@@ -299,15 +299,12 @@ function makeCbLocalConfigSave(): (val: string) => void {
                 <!--content-->
                 <div>
                 <p>
-                    Your settings are being saved to the browser <b>localStorage</b>,
-                    so won't be available when playing from other devices.
+                    Your settings are saved to this browser's <b>localStorage</b>,
+                    so they are specific to this device and browser.
                 </p>
                 <p>
-                    You can convert this to a permanent profile from the
-                    <a target="_blank" href="/user/profiles">Profiles</a> page after
-                    registering and logging in.
+                    Use the export/import options to move settings between browsers.
                 </p>
-
                 </div>
             `;
             (<any>$(win)).jqxWindow({
