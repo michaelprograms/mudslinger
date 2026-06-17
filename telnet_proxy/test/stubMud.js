@@ -18,7 +18,7 @@ function startStubMud() {
           sock.write("you said: " + line + "\r\n");
         }
       });
-      sock.on("error", () => {});
+      sock.on("error", (e) => console.error("[stubMud] socket error:", e.message));
     });
     server.listen(0, "127.0.0.1", () => {
       resolve({

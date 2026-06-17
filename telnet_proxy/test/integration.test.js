@@ -46,7 +46,11 @@ async function main() {
     env: Object.assign({}, process.env, { MUDSLINGER_PROXY_CONFIG: cfgPath }),
     stdio: ["ignore", "pipe", "pipe"],
   });
-  proxy.stderr.on("data", (b) => process.stderr.write("[proxy] " + b));
+  let stderrBuf = "";
+  proxy.stderr.on("data", (b) => {
+    stderrBuf += b.toString();
+    process.stderr.write("[proxy] " + b);
+  });
 
   let finished = false;
   async function cleanup(code, msg) {
@@ -59,13 +63,24 @@ async function main() {
     process.exit(code);
   }
 
+  // Surface an early proxy exit (e.g. port already in use) instead of a 8s timeout.
+  proxy.on("exit", (code, signal) => {
+    if (finished) return;
+    cleanup(1, "FAIL: proxy exited early (code=" + code + ", signal=" + signal + ")\n" +
+      stderrBuf.slice(-500));
+  });
+
   const timer = setTimeout(() => cleanup(1, "FAIL: timeout"), 8000);
 
   // Wait for the proxy to be listening.
   await new Promise((resolve) => {
-    proxy.stdout.on("data", (b) => {
-      if (b.toString().includes("Server is running")) resolve();
-    });
+    const onReady = (b) => {
+      if (b.toString().includes("Server is running")) {
+        proxy.stdout.removeListener("data", onReady);
+        resolve();
+      }
+    };
+    proxy.stdout.on("data", onReady);
   });
 
   const io = require("socket.io-client");
@@ -111,6 +126,7 @@ async function main() {
 
   sock.on("connect_error", (e) => {
     clearTimeout(timer);
+    sock.close();
     cleanup(1, "FAIL: connect_error: " + (e && e.message ? e.message : e));
   });
 }
