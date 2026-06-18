@@ -61,6 +61,17 @@ Each entry: **current → target**, why it's worth doing, and rough effort/risk.
   doesn't natively understand, so this likely needs a custom addon or a hybrid.
   Keep `test_output.html` as the visual regression check while evaluating.
 
+### Known renderer gaps (small, pre-existing, transport-agnostic)
+- **Unimplemented SGR codes**: `handleAnsiGraphicCodes` in `outputManager.ts`
+  skips italic (3), underline (4), blink (6), alt-font (11) — they log
+  "Unsupported ANSI code" and `continue`, so surrounding colors still render.
+  Cosmetic only. Add cases if a MUD relies on them.
+- **Noisy `IAC 249 not recognized`**: `telnetlib.ts` logs this for GA (Go
+  Ahead), which is consumed correctly — the message is just console noise.
+  Silence GA specifically if the log gets annoying.
+- Both surfaced during the websocket-transport work but affect the proxy
+  renderer identically; they are not transport bugs.
+
 ### CodeMirror 5 → 6
 - **Current**: `codemirror` `^5.24.2`.
 - **Why**: CM5 is in maintenance only; CM6 is the actively developed line.
