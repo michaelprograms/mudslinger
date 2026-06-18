@@ -1,13 +1,12 @@
 import { EventHook } from "./event";
 
-import { io, Socket as IoSocket } from "socket.io-client";
 import { Mxp } from "./mxp";
 import { OutputManager } from "./outputManager";
-import { IoEvent } from "../../../common/src/ts/ioevent";
 import { TelnetClient, MsdpVarName, MsdpVal } from "./telnetClient";
-import { utf8decode, utf8encode } from "./util";
+import { utf8encode } from "./util";
 import { UserConfig } from "./userConfig";
 import { getConfig } from "./clientConfig";
+import { Transport, makeTransport } from "./transport";
 
 
 export class Socket {
@@ -22,8 +21,7 @@ export class Socket {
     public EvtSetClientIp = new EventHook<string>();
     public EvtMsdpVar = new EventHook<[MsdpVarName, MsdpVal]>();
 
-    private ioConn: IoSocket;
-    private ioEvt: IoEvent;
+    private transport: Transport;
     private telnetClient: TelnetClient;
     private clientIp: string;
 
@@ -31,38 +29,29 @@ export class Socket {
     }
 
     public async open() {
-        let ioUrl = getConfig().socketIoUrl;
-        console.log("Connecting to telnet proxy server at", ioUrl);
-        this.ioConn = io(ioUrl);
+        this.transport = makeTransport(getConfig());
 
-        this.ioConn.on("connect", () => {
-            this.EvtWsConnect.fire({sid: this.ioConn.id});
+        this.transport.EvtLinkConnect.handle((data) => {
+            this.EvtWsConnect.fire(data);
         });
 
-        this.ioConn.on("disconnect", () => {
+        this.transport.EvtLinkDisconnect.handle(() => {
             this.EvtWsDisconnect.fire(null);
         });
 
-        this.ioConn.on("error", (msg: any) => {
+        this.transport.EvtLinkError.handle((msg: any) => {
             this.EvtWsError.fire(msg);
         });
 
-        this.ioConn.on("connect_error", (msg: any) => {
-            this.EvtWsError.fire(msg);
-        });
-
-        this.ioEvt = new IoEvent(this.ioConn);
-
-        this.ioEvt.srvTelnetOpened.handle((val: [string, number]) => {
+        this.transport.EvtMudConnect.handle((val: [string, number]) => {
             let enableMsdp = getConfig().msdp;
             this.telnetClient = new TelnetClient((data) => {
-                this.ioEvt.clReqTelnetWrite.fire(data);
+                this.transport.write(data);
             }, enableMsdp);
 
             this.telnetClient.clientIp = this.clientIp;
 
             this.telnetClient.EvtData.handle((data) => {
-                // this.handleTelnetData(data);
                 this.outputManager.handleTelnetData(data);
             });
 
@@ -77,45 +66,48 @@ export class Socket {
             this.EvtTelnetConnect.fire(val);
         });
 
-        this.ioEvt.srvTelnetClosed.handle(() => {
+        this.transport.EvtMudDisconnect.handle(() => {
             this.telnetClient = null;
             this.EvtTelnetDisconnect.fire(null);
         });
 
-        this.ioEvt.srvTelnetError.handle((data) => {
+        this.transport.EvtMudError.handle((data) => {
             this.EvtTelnetError.fire(data);
         });
 
-        this.ioEvt.srvTelnetData.handle((data) => {
+        this.transport.EvtData.handle((data) => {
             if (this.telnetClient) {
                 this.telnetClient.handleData(data);
             }
         });
 
-        this.ioEvt.srvSetClientIp.handle((ipAddr: string) => {
-            let re = /::ffff:(\d+\.\d+\.\d+\.\d+)/;
-            let match = re.exec(ipAddr);
-            if (match) {
-                ipAddr = match[1];
-            }
+        let ipHook = this.transport.EvtSetClientIp;
+        if (ipHook) {
+            ipHook.handle((ipAddr: string) => {
+                let re = /::ffff:(\d+\.\d+\.\d+\.\d+)/;
+                let match = re.exec(ipAddr);
+                if (match) {
+                    ipAddr = match[1];
+                }
 
-            this.clientIp = ipAddr;
-            if (this.telnetClient) {
-                this.telnetClient.clientIp = ipAddr;
-            }
-            this.EvtSetClientIp.fire(this.clientIp);
-        });
+                this.clientIp = ipAddr;
+                if (this.telnetClient) {
+                    this.telnetClient.clientIp = ipAddr;
+                }
+                this.EvtSetClientIp.fire(this.clientIp);
+            });
+        }
 
-        return true;
+        return this.transport.open();
     }
 
     public openTelnet(host: string, port: number) {
         this.EvtTelnetTryConnect.fire([host, port]);
-        this.ioEvt.clReqTelnetOpen.fire([host, port]);
+        this.transport.openMud(host, port);
     }
 
     public closeTelnet() {
-        this.ioEvt.clReqTelnetClose.fire(null);
+        this.transport.closeMud();
     }
 
     sendCmd(cmd: string) {
@@ -130,6 +122,6 @@ export class Socket {
             }
         }
 
-        this.ioEvt.clReqTelnetWrite.fire(arr.buffer);
+        this.transport.write(arr.buffer);
     }
 }
