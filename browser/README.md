@@ -49,10 +49,10 @@ npm run build-dev      # unminified bundle for debugging
 
 The build runs in three stages: `tsc` compiles TypeScript to `build/`, `webpack`
 bundles it into `static/public/`, and `buildDocs.js` renders the product docs.
-Serve the `static/public/` directory with any static file server, for example:
+Then serve the built `static/public/` directory on port 5000:
 
 ```bash
-npx http-server static/public -p 5000
+npm start
 ```
 
 ## Docs

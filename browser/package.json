@@ -9,6 +9,7 @@
     "build": "node tools/genAppInfo.js `git rev-parse HEAD` && tsc -p tsconfig.json && webpack && node tools/buildDocs.js",
     "build-dev": "node tools/genAppInfo.js `git rev-parse HEAD` && tsc -p tsconfig.json && webpack --mode=development && node tools/buildDocs.js",
     "build-docs": "node tools/buildDocs.js",
+    "start": "npx http-server static/public -p 5000",
     "build-test": "tsc -p tsconfig.test.json && webpack --config webpack.config.test.js",
     "build-test-output": "tsc -p tsconfig.test.json && webpack --config webpack.config.test_output.js"
   },

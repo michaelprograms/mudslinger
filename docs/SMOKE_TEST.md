@@ -18,8 +18,7 @@ Expect: `Server is running on 0.0.0.0:8080` (no admin CLI/API lines).
 
 ```bash
 cd ~/projects/mudslinger/browser
-npm run build
-npx http-server static/public -p 5000
+npm run build && npm start
 ```
 
 Then open <http://localhost:5000> in the browser.
