@@ -1,5 +1,11 @@
 export interface MudslingerConfig {
+    // "proxy" (default) routes through telnet_proxy over socket.io.
+    // "websocket" connects directly to a MUD websocket port (mudWsUrl).
+    transport?: "proxy" | "websocket";
+    // Used in proxy mode: URL of the proxy's socket.io /telnet namespace.
     socketIoUrl: string;
+    // Used in websocket mode: full ws:// or wss:// URL of the MUD websocket port.
+    mudWsUrl?: string;
     mudName: string;
     mudHost: string;
     mudPort: number;
