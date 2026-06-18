@@ -41,8 +41,9 @@ a:link, a:visited {
 .outputText {
     font-size: small;
     background-color:black;
-    font-family:"Courier", monospace;
+    font-family:"Consolas", "DejaVu Sans Mono", "Courier New", monospace;
     color:rgb(0,187,0); /* low green */
+    line-height: 1.1;
     white-space: pre-wrap;
     overflow-y:scroll;
     overflow-x:scroll;
@@ -57,14 +58,14 @@ a:link, a:visited {
 
 #cmdInput {
     resize: none;
-    font-family:"Courier", monospace;
+    font-family:"Consolas", "DejaVu Sans Mono", "Courier New", monospace;
     font-size: small;
     display: inline;
 }
 
 .chkCmdInputCmdStackCont .toolTipText {
     display: none;
-    font-family:"Courier", monospace;
+    font-family:"Consolas", "DejaVu Sans Mono", "Courier New", monospace;
     font-size: small;
 }
 
