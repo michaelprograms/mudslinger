@@ -1,6 +1,5 @@
 import { EventHook } from "./event";
 import { Transport } from "./transport";
-import { utf8encode } from "./util";
 
 export class WebSocketTransport implements Transport {
     public EvtLinkConnect = new EventHook<{ sid: string }>();
@@ -42,7 +41,7 @@ export class WebSocketTransport implements Transport {
                 this.EvtData.fire(data);
             } else if (typeof data === "string") {
                 // Unexpected for FluffOS (binary), but handle text frames best-effort.
-                this.EvtData.fire(utf8encode(data).buffer);
+                this.EvtData.fire(new TextEncoder().encode(data).buffer);
             } else if (data instanceof Blob) {
                 data.arrayBuffer().then((ab) => this.EvtData.fire(ab));
             }

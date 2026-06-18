@@ -3,7 +3,6 @@ import { OutWinBase } from "../../src/ts/outWinBase";
 import { OutputManager, ConfigIf } from "../../src/ts/outputManager";
 import { Mxp } from "../../src/ts/mxp";
 import { ansiColorTuple} from "../../src/ts/color";
-import { utf8encode } from "../../src/ts/util";
 
 let fakeMgrConfig = {
     set: (key: "defaultAnsiFg" | "defaultAnsiBg" | "fontSize", val: ansiColorTuple | string): void => {
@@ -36,7 +35,7 @@ function run() {
     });
 
     let write = (msg: string) => {
-        outputManager.handleTelnetData(utf8encode(msg).buffer as ArrayBuffer);
+        outputManager.handleTelnetData(new TextEncoder().encode(msg).buffer as ArrayBuffer);
     }
 
     write(

@@ -3,7 +3,6 @@ import { EventHook } from "./event";
 import { Mxp } from "./mxp";
 import { OutputManager } from "./outputManager";
 import { TelnetClient, MsdpVarName, MsdpVal } from "./telnetClient";
-import { utf8encode } from "./util";
 import { UserConfig } from "./userConfig";
 import { getConfig } from "./clientConfig";
 import { Transport, makeTransport } from "./transport";
@@ -116,7 +115,7 @@ export class Socket {
         cmd += "\r\n";
         let arr: Uint8Array;
         if (UserConfig.get("utf8Enabled") === true) {
-            arr = utf8encode(cmd);
+            arr = new TextEncoder().encode(cmd);
         } else {
             arr = new Uint8Array(cmd.length);
             for (let i = 0; i < cmd.length; i++) {
