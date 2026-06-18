@@ -23,7 +23,11 @@ export class WebSocketTransport implements Transport {
 
     public openMud(host: string, port: number): void {
         console.log("Connecting directly to MUD websocket at", this.mudWsUrl);
-        this.ws = new WebSocket(this.mudWsUrl);
+        // ponytail: FluffOS requires a ws subprotocol to bind the telnet handler
+        // (else the :port www HTTP server answers and the upgrade fails with 200).
+        // "telnet" is the FluffOS driver's terminal protocol; switch to "binary"
+        // if a deployment's driver registers a different name.
+        this.ws = new WebSocket(this.mudWsUrl, "telnet");
         this.ws.binaryType = "arraybuffer";
 
         this.ws.onopen = () => {

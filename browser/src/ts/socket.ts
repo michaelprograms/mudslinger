@@ -49,7 +49,9 @@ export class Socket {
                 this.transport.write(data);
             }, enableMsdp);
 
-            this.telnetClient.clientIp = this.clientIp;
+            // websocket mode has no proxy to report the IP, so clientIp is
+            // unset; default to "" so NEW_ENVIRON IPADDRESS doesn't crash.
+            this.telnetClient.clientIp = this.clientIp || "";
 
             this.telnetClient.EvtData.handle((data) => {
                 this.outputManager.handleTelnetData(data);
