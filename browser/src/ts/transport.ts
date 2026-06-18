@@ -1,4 +1,7 @@
 import { EventHook } from "./event";
+import { MudslingerConfig } from "./clientConfig";
+import { ProxyTransport } from "./proxyTransport";
+import { WebSocketTransport } from "./webSocketTransport";
 
 // Abstraction over "move bytes to/from the MUD".
 // Implementations: ProxyTransport (socket.io -> telnet_proxy) and
@@ -29,4 +32,14 @@ export interface Transport {
 
     // Proxy only: the player's IP as reported by the proxy. Absent in websocket mode.
     EvtSetClientIp?: EventHook<string>;
+}
+
+export function makeTransport(config: MudslingerConfig): Transport {
+    if (config.transport === "websocket") {
+        if (!config.mudWsUrl) {
+            throw new Error("transport is 'websocket' but mudWsUrl is not set in config");
+        }
+        return new WebSocketTransport(config.mudWsUrl);
+    }
+    return new ProxyTransport(config.socketIoUrl);
 }
