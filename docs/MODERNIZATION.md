@@ -22,8 +22,6 @@ Ongoing work to remove legacy dependencies and simplify the stack.
 ## Backlog
 
 - **GMCP support**
-- **Unimplemented SGR codes** — italic (3), underline (4), blink (6), alt-font (11) silently
-  skipped in `outputManager.ts`; surrounding colors render fine. Low priority unless a MUD needs them.
 
 ## Dependency status
 
