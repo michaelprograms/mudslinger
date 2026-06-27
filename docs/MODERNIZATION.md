@@ -15,6 +15,7 @@ Ongoing work to remove legacy dependencies and simplify the stack.
 - **jQuery → removed** — `outWinBase.ts`, `outputManager.ts`, `mxp.ts`, `commandInput.ts`, `outputWin.ts` converted to vanilla DOM; `jquery` and `@types/jquery` removed from `package.json`; `<script src="jquery.min.js">` removed from `index.html`; jQuery copy removed from `postinstall.js`
 - **CodeMirror 5 → 6** — `panelEditorBase.ts` and `jsScriptWin.ts` migrated to CM6 ESM (`basicSetup` + `@codemirror/lang-javascript` + `@codemirror/theme-one-dark`); gains history, bracketMatching, closeBrackets, one-dark theme; CM5 `<script>`/`<link>` tags removed from `index.html`; `static/public/codemirror/` vendored tree deleted; `tools/postinstall.js` deleted; `fs-extra` removed; postinstall replaced with shell one-liner
 - **client.css → component CSS** — monolithic `static/public/client.css` split into 6 co-located CSS files imported by their components (`base.css`, `menuBar.css`, `outputWin.css`, `commandInput.css`, `panel/base.css`, `panel/about.css`); `<link>` tag removed from `index.html`; Vite bundles them automatically; dead `#leftPanel`/`#rightPanel` rules dropped
+- **xterm.js** — replaced bespoke output renderer (`outputWin.ts`, `outputBase.ts`, `outputManager.ts`, `mxp.ts`, `color.ts`) with xterm.js (`MudTerminal` + `StreamManager`); ANSI/SGR/xterm-256 rendered natively; italic/underline/blink now work; MXP disabled
 
 ## In Progress
 
@@ -23,10 +24,6 @@ Ongoing work to remove legacy dependencies and simplify the stack.
 - **GMCP support**
 - **Unimplemented SGR codes** — italic (3), underline (4), blink (6), alt-font (11) silently
   skipped in `outputManager.ts`; surrounding colors render fine. Low priority unless a MUD needs them.
-- **xterm.js** — replace the bespoke output renderer (`outputWin.ts`, `outWinBase.ts`,
-  `outputManager.ts`, `mxp.ts`, `color.ts`). High effort; MXP support is non-trivial since
-  xterm.js has no MUD protocol awareness. Keep `static/test/test_output.html` as the visual
-  regression harness while evaluating.
 
 ## Dependency status
 
@@ -38,3 +35,4 @@ Ongoing work to remove legacy dependencies and simplify the stack.
 | `jqwidgets-framework` v9.1.6 | removed (native CSS nav) | ✅ done |
 | `jquery` v2.2.4 + `@types/jquery` v2.0.68 | removed (vanilla DOM throughout) | ✅ done |
 | `codemirror` v5 + `fs-extra` + `postinstall.js` | `codemirror` v6 + `@codemirror/lang-javascript` + `@codemirror/theme-one-dark` | ✅ done |
+| bespoke DOM renderer | `@xterm/xterm` v6.0.0 + `@xterm/addon-fit` v0.11.0 | ✅ done |
