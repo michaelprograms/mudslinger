@@ -64,11 +64,12 @@ export class OutputManager {
     }
 
     getFontSize(): string {
-        return $(".outputText").css("font-size");
+        const el = document.querySelector<HTMLElement>(".outputText");
+        return el ? el.style.fontSize : "";
     }
 
     private setFontSize(sz: string) {
-        $(".outputText").css("font-size", sz);
+        document.querySelectorAll<HTMLElement>(".outputText").forEach(el => el.style.fontSize = sz);
         this.EvtFontSizeChanged.fire(sz);
     }
 
@@ -89,7 +90,7 @@ export class OutputManager {
     }
 
     // propagate MXP elements to target
-    public pushMxpElem(elem: JQuery) {
+    public pushMxpElem(elem: HTMLElement) {
         this.target.pushElem(elem);
     }
 
@@ -271,7 +272,7 @@ export class OutputManager {
 
         this.defaultAnsiFg = [colorName, level];
         this.defaultFgId = colorName + "-" + level;
-        $(".outputText").css("color", colorIdToHtml[this.defaultFgId]);
+        document.querySelectorAll<HTMLElement>(".outputText").forEach(el => el.style.color = colorIdToHtml[this.defaultFgId]);
     }
 
     private setDefaultAnsiBg(colorName: ansiName, level: ansiLevel) {
@@ -287,7 +288,7 @@ export class OutputManager {
 
         this.defaultAnsiBg = [colorName, level];
         this.defaultBgId = colorName + "-" + level;
-        $(".outputText").css("background-color", colorIdToHtml[this.defaultBgId]);
+        document.querySelectorAll<HTMLElement>(".outputText").forEach(el => el.style.backgroundColor = colorIdToHtml[this.defaultBgId]);
     }
 
     handleChangeDefaultColor(name: string, level: string) {

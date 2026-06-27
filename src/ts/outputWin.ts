@@ -3,72 +3,53 @@ import * as Util from "./util";
 
 export class OutputWin extends OutWinBase {
     constructor(config: ConfigIf) {
-        super($("#winOutput"), config);
+        super(document.getElementById("winOutput")!, config);
+        window.onerror = this.handleWindowError.bind(this);
+    }
 
-        $(document).ready(() => {
-            window.onerror = this.handleWindowError.bind(this);
-        });
+    private appendLine(color: string, text: string) {
+        const span = document.createElement("span");
+        span.style.color = color;
+        span.textContent = text + "\n";
+        this.target.appendChild(span);
     }
 
     handleScriptPrint(data: string) {
-        let message = data;
-        let output = JSON.stringify(message);
-        this.$target.append(
-            "<span style=\"color:orange\">"
-            + Util.rawToHtml(output)
-            + "<br>"
-            + "</span>");
+        this.appendLine("orange", JSON.stringify(data));
         this.scrollBottom(true);
     }
 
     handleSendCommand(cmd: string) {
-        this.$target.append(
-            "<span style=\"color:yellow\">"
-            + Util.rawToHtml(cmd)
-            + "<br>"
-            + "</span>");
+        this.appendLine("yellow", cmd);
         this.scrollBottom(true);
     }
 
     handleScriptSendCommand(cmd: string) {
-        this.$target.append(
-            "<span style=\"color:cyan\">"
-            + Util.rawToHtml(cmd)
-            + "<br>"
-            + "</span>");
+        this.appendLine("cyan", cmd);
         this.scrollBottom(true);
     }
 
     handleTriggerSendCommands(data: string[]) {
-        let html = "<span style=\"color:cyan\">";
-
-        for (let i = 0; i < data.length; i++) {
-            if (i >= 5) {
-                html += "...<br>";
-                break;
-            } else {
-                html += Util.rawToHtml(data[i]) + "<br>";
-            }
-        }
-        this.$target.append(html);
+        const span = document.createElement("span");
+        span.style.color = "cyan";
+        const visible = data.slice(0, 5);
+        span.textContent = visible.join("\n") + (data.length > 5 ? "\n..." : "") + "\n";
+        this.target.appendChild(span);
         this.scrollBottom(false);
     }
 
     handleAliasSendCommands(orig: string, cmds: string[]) {
-        let html = "<span style=\"color:yellow\">";
-        html += Util.rawToHtml(orig);
-        html += "</span><span style=\"color:cyan\"> --> ";
+        const yellow = document.createElement("span");
+        yellow.style.color = "yellow";
+        yellow.textContent = orig;
 
-        for (let i = 0; i < cmds.length; i++) {
-            if (i >= 5) {
-                html += "...<br>";
-                break;
-            } else {
-                html += Util.rawToHtml(cmds[i]) + "<br>";
-            }
-        }
+        const cyan = document.createElement("span");
+        cyan.style.color = "cyan";
+        const visible = cmds.slice(0, 5);
+        cyan.textContent = " --> " + visible.join("\n") + (cmds.length > 5 ? "\n..." : "") + "\n";
 
-        this.$target.append(html);
+        this.target.appendChild(yellow);
+        this.target.appendChild(cyan);
         this.scrollBottom(true);
     }
 
@@ -80,17 +61,16 @@ export class OutputWin extends OutWinBase {
             this.connIntervalId = null;
         }
 
-        let elem = document.createElement("span");
-        elem.innerHTML = "<span style='color:cyan'>"
-            + "[[Connecting to " + host + ":" + port.toString()
-            + "<span class='conn-dots'></span>"
-            + "]]<br>";
-
-        let dots = elem.getElementsByClassName('conn-dots')[0] as HTMLSpanElement;
+        const outer = document.createElement("span");
+        outer.style.color = "cyan";
+        outer.appendChild(document.createTextNode("[[Connecting to " + host + ":" + port));
+        const dots = document.createElement("span");
+        dots.className = "conn-dots";
+        outer.appendChild(dots);
+        outer.appendChild(document.createTextNode("]]\n"));
 
         this.connIntervalId = setInterval(() => dots.textContent += '.', 1000);
-
-        this.$target.append(elem);
+        this.target.appendChild(outer);
         this.scrollBottom(true);
     }
 
@@ -99,11 +79,7 @@ export class OutputWin extends OutWinBase {
             clearInterval(this.connIntervalId);
             this.connIntervalId = null;
         }
-        this.$target.append(
-            "<span style=\"color:cyan\">"
-            + "[[Connected]]"
-            + "<br>"
-            + "</span>");
+        this.appendLine("cyan", "[[Connected]]");
         this.scrollBottom(true);
     }
 
@@ -112,20 +88,12 @@ export class OutputWin extends OutWinBase {
             clearInterval(this.connIntervalId);
             this.connIntervalId = null;
         }
-        this.$target.append(
-            "<span style=\"color:cyan\">"
-            + "[[Disconnected]]"
-            + "<br>"
-        + "</span>");
+        this.appendLine("cyan", "[[Disconnected]]");
         this.scrollBottom(true);
     }
 
     handleWsConnect() {
-        this.$target.append(
-            "<span style=\"color:cyan\">"
-            + "[[Websocket connected]]"
-            + "<br>"
-            + "</span>");
+        this.appendLine("cyan", "[[Websocket connected]]");
         this.scrollBottom(false);
     }
 
@@ -134,80 +102,34 @@ export class OutputWin extends OutWinBase {
             clearInterval(this.connIntervalId);
             this.connIntervalId = null;
         }
-        this.$target.append(
-            "<span style=\"color:cyan\">"
-            + "[[Websocket disconnected]]"
-            + "<br>"
-            + "</span>");
+        this.appendLine("cyan", "[[Websocket disconnected]]");
         this.scrollBottom(false);
     }
 
     handleTelnetError(data: string) {
-        this.$target.append(
-            "<span style=\"color:red\">"
-            + "[[Telnet error" + "<br>"
-            + data + "<br>"
-            + "]]"
-            + "<br>"
-            + "</span>");
+        this.appendLine("red", "[[" + data + "]]");
         this.scrollBottom(true);
     }
 
     handleWsError() {
-        this.$target.append(
-            "<span style=\"color:red\">"
-            + "[[Websocket error]]"
-            + "<br>"
-            + "</span>");
+        this.appendLine("red", "[[Websocket error]]");
         this.scrollBottom(true);
     }
 
-    private handleWindowError(message: any, source: any, lineno: any, colno: any, error: any) {
-        this.$target.append(
-            "<span style=\"color:red\">"
-            + "[[Web Client Error<br>"
-            + message + "<br>"
-            + source + "<br>"
-            + lineno + "<br>"
-            + colno + "<br>"
-            + "]]"
-            + "<br>"
-            + "</span>"
+    private handleWindowError(message: any, source: any, lineno: any, colno: any, _error: any) {
+        this.appendLine("red",
+            "[[Web Client Error\n" + message + "\n" + source + "\n" + lineno + "\n" + colno + "\n]]"
         );
         this.scrollBottom(true);
     }
 
     handleScriptEvalError(err: any) {
-        let msg = Util.rawToHtml(err.toString());
-        let stack = Util.rawToHtml(err.stack);
-
-        this.$target.append(
-            "<span style=\"color:red\">"
-            + "[[Script eval error<br>"
-            + err.toString() + "<br>"
-            + "<br>"
-            + stack + "<br>"
-            + "]]"
-            + "<br>"
-            + "</span>"
-        );
+        this.appendLine("red", "[[Script eval error\n" + err + "\n\n" + err.stack + "\n]]");
         this.scrollBottom(true);
     }
 
     handleScriptError(err: any) {
-        let msg = Util.rawToHtml(err.toString());
-        let stack = Util.rawToHtml(err.stack);
-
-        this.$target.append(
-            "<span style=\"color:red\">"
-            + "[[Script error<br>"
-            + err.toString() + "<br>"
-            + "<br>"
-            + stack + "<br>"
-            + "]]"
-            + "<br>"
-            + "</span>"
-        );
+        this.appendLine("red", "[[Script error\n" + err + "\n\n" + err.stack + "\n]]");
         this.scrollBottom(true);
     }
 }

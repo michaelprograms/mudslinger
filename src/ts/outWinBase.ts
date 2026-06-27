@@ -15,15 +15,15 @@ export class OutWinBase {
     private lineCount: number = 0;
     private maxLines: number = 5000;
 
-    constructor(rootElem: JQuery, private config: ConfigIf) {
-        this.$rootElem = rootElem;
-        this.$targetElems = [rootElem];
-        this.$target = rootElem;
+    constructor(protected rootElem: HTMLElement, private config: ConfigIf) {
+        this.targetElems = [rootElem];
+        this.target = rootElem;
 
-        // direct children of the root will be line containers, let"s push the first one.
-        this.pushElem($("<span>").appendTo(rootElem));
+        const span = document.createElement("span");
+        rootElem.appendChild(span);
+        this.pushElem(span);
 
-        this.$rootElem.bind("scroll", (e: any) => { this.handleScroll(e); });
+        this.rootElem.addEventListener("scroll", (e: Event) => { this.handleScroll(e); });
 
         this.colorsEnabled = this.config.getDef("colorsEnabled", true);
         this.config.onSet("colorsEnabled", (val: any) => { this.setColorsEnabled(val); });
@@ -44,9 +44,9 @@ export class OutWinBase {
         for (let colorId in colorIdToHtml) {
             let colorHtml = colorIdToHtml[colorId];
 
-            this.$rootElem.find(".fg-" + colorId).css("color", this.colorsEnabled ? colorHtml : "");
-            this.$rootElem.find(".bg-" + colorId).css("background-color", this.colorsEnabled ? colorHtml : "");
-            this.$rootElem.find(".bb-" + colorId).css("border-bottom-color", this.colorsEnabled ? colorHtml : "");
+            this.rootElem.querySelectorAll<HTMLElement>(".fg-" + colorId).forEach(el => el.style.color = this.colorsEnabled ? colorHtml : "");
+            this.rootElem.querySelectorAll<HTMLElement>(".bg-" + colorId).forEach(el => el.style.backgroundColor = this.colorsEnabled ? colorHtml : "");
+            this.rootElem.querySelectorAll<HTMLElement>(".bb-" + colorId).forEach(el => el.style.borderBottomColor = this.colorsEnabled ? colorHtml : "");
         }
     }
 
@@ -62,30 +62,29 @@ export class OutWinBase {
     };
 
     // handling nested elements, always output to last one
-    private $targetElems: JQuery[];
+    private targetElems: HTMLElement[];
     private underlineNest = 0;
-    protected $target: JQuery;
-    private $rootElem: JQuery;
+    protected target: HTMLElement;
 
     private scrollLock = false; // true when we should not scroll to bottom
-    private handleScroll(e: any) {
-        let scrollHeight = this.$rootElem.prop("scrollHeight");
-        let scrollTop = this.$rootElem.scrollTop();
-        let outerHeight = this.$rootElem.outerHeight();
-        let is_at_bottom = outerHeight + scrollTop >= scrollHeight;
+    private handleScroll(_e: Event) {
+        const scrollHeight = this.rootElem.scrollHeight;
+        const scrollTop = this.rootElem.scrollTop;
+        const outerHeight = this.rootElem.offsetHeight;
+        const is_at_bottom = outerHeight + scrollTop >= scrollHeight;
 
         this.scrollLock = !is_at_bottom;
     }
 
-    // elem is the actual jquery element
-    public pushElem(elem: JQuery) {
+    // elem is an HTMLElement
+    public pushElem(elem: HTMLElement) {
         this.writeBuffer();
 
-        this.$target.append(elem);
-        this.$targetElems.push(elem);
-        this.$target = elem;
+        this.target.appendChild(elem);
+        this.targetElems.push(elem);
+        this.target = elem;
 
-        if (elem.hasClass("underline")) {
+        if (elem.classList.contains("underline")) {
             this.underlineNest += 1;
         }
     }
@@ -93,10 +92,10 @@ export class OutWinBase {
     public popElem() {
         this.writeBuffer();
 
-        let popped = this.$targetElems.pop();
-        this.$target = this.$targetElems[this.$targetElems.length - 1];
+        let popped = this.targetElems.pop();
+        this.target = this.targetElems[this.targetElems.length - 1];
 
-        if (popped && popped.hasClass("underline")) {
+        if (popped && popped.classList.contains("underline")) {
             this.underlineNest -= 1;
         }
 
@@ -136,7 +135,7 @@ export class OutWinBase {
         }
 
         if (this.colorsEnabled) {
-            
+
             if (this.fgColorId) {
                 styleText += "color:" + colorIdToHtml[this.fgColorId] + ";";
             }
@@ -155,7 +154,8 @@ export class OutWinBase {
         this.appendBuffer += spanText;
 
         if (txt.endsWith("\n")) {
-            this.$target.append(this.appendBuffer);
+            // ponytail: safe — server text goes through rawToHtml(); span attrs come from fixed color lookup
+            this.target.insertAdjacentHTML("beforeend", this.appendBuffer);
             this.appendBuffer = "";
             this.newLine();
         }
@@ -163,23 +163,24 @@ export class OutWinBase {
 
     private newLine() {
         this.popElem(); // pop the old line
-        this.pushElem($("<span>").appendTo(this.$target));
+        const span = document.createElement("span");
+        this.target.appendChild(span);
+        this.pushElem(span);
 
         this.EvtLine.fire(this.lineText);
         this.lineText = "";
 
         this.lineCount += 1;
         if (this.lineCount > this.maxLines) {
-            this.$rootElem.children(":lt(" +
-                (this.maxLines / 2) +
-                ")"
-            ).remove();
+            const toRemove = Array.from(this.rootElem.children).slice(0, this.maxLines / 2);
+            toRemove.forEach(c => c.remove());
             this.lineCount = (this.maxLines / 2);
         }
     }
 
     private writeBuffer() {
-        this.$target.append(this.appendBuffer);
+        // ponytail: safe — same as addText, all dynamic content is rawToHtml()-escaped
+        this.target.insertAdjacentHTML("beforeend", this.appendBuffer);
         this.appendBuffer = "";
     };
 
@@ -190,12 +191,9 @@ export class OutWinBase {
 
     private scrollRequested = false;
     private privScrolBottom() {
-        // console.time("_scroll_bottom");
-        let elem = this.$rootElem;
-        elem.scrollTop(elem.prop("scrollHeight"));
+        this.rootElem.scrollTop = this.rootElem.scrollHeight;
         this.scrollLock = false;
         this.scrollRequested = false;
-        // console.timeEnd("_scroll_bottom");
     };
 
     protected scrollBottom(force: boolean = false) {

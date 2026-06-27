@@ -28,13 +28,13 @@ export class Mxp {
         });
 
         this.tagHandlers.push((tag) => {
-            /* hande image tags */
+            /* handle image tags */
             let re = /^<image\s*(\S+)\s*url="(.*)">$/i;
             let match = re.exec(tag);
             if (match) {
-                /* push and pop is dirty way to do this, clean it up later */
-                let elem = $("<img src=\"" + match[2] + match[1] + "\">");
-                this.outputManager.pushMxpElem(elem);
+                const img = document.createElement("img");
+                img.src = match[2] + match[1];
+                this.outputManager.pushMxpElem(img);
                 this.outputManager.popMxpElem();
                 return true;
             }
@@ -75,9 +75,13 @@ export class Mxp {
             let match = re.exec(tag);
             if (match) {
                 this.openTags.push("a");
-                let elem = $(tag);
-                elem.attr("target", "_blank");
-                elem.addClass("underline");
+                // ponytail: tag is an MXP <a> element from the server; parse href via DOMParser to avoid innerHTML
+                const doc = new DOMParser().parseFromString(tag + "</a>", "text/html");
+                const parsed = doc.body.firstElementChild as HTMLAnchorElement | null;
+                const elem = document.createElement("a");
+                if (parsed?.href) elem.href = parsed.href;
+                elem.target = "_blank";
+                elem.classList.add("underline");
 
                 this.outputManager.pushMxpElem(elem);
                 return true;
@@ -103,7 +107,7 @@ export class Mxp {
             let match = re.exec(tag);
             if (match) {
                 this.openTags.push(match[1]);
-                let elem = $(tag);
+                const elem = document.createElement(match[1] as keyof HTMLElementTagNameMap) as HTMLElement;
                 this.outputManager.pushMxpElem(elem);
                 return true;
             }
@@ -131,12 +135,11 @@ export class Mxp {
                 let tag_m = tag_re.exec(tag);
                 if (tag_m) {
                     let cmd = tag_m[1];
-                    let html_tag = "<a href=\"#\" title=\"" + cmd + "\">";
-                    let elem = $(html_tag);
-
-                    elem.addClass("underline");
-
-                    elem.click(() => {
+                    const elem = document.createElement("a");
+                    elem.href = "#";
+                    elem.title = cmd;
+                    elem.classList.add("underline");
+                    elem.addEventListener("click", () => {
                         this.EvtEmitCmd.fire({value: cmd, noPrint: false});
                     });
                     this.openTags.push("send");
@@ -149,11 +152,9 @@ export class Mxp {
                 tag_m = tag_re.exec(tag);
                 if (tag_m) {
                     this.openTags.push("send");
-                    let html_tag = "<a href=\"#\">";
-                    let elem = $(html_tag);
-
-                    elem.addClass("underline");
-
+                    const elem = document.createElement("a");
+                    elem.href = "#";
+                    elem.classList.add("underline");
                     this.outputManager.pushMxpElem(elem);
                     return true;
                 }
@@ -166,12 +167,12 @@ export class Mxp {
                     console.log("Got closing send tag with no opening tag.");
                 } else {
                     this.openTags.pop();
-                    let elem = this.outputManager.popMxpElem();
-                    if (elem && !elem[0].hasAttribute("title")) {
-                        /* didn"t have explicit href so we need to do it here */
-                        let txt = elem.text();
-                        elem[0].setAttribute("title", txt);
-                        elem.click(() => {
+                    const elem = this.outputManager.popMxpElem();
+                    if (elem && !elem.hasAttribute("title")) {
+                        /* didn't have explicit href so we need to do it here */
+                        const txt = elem.textContent || "";
+                        elem.setAttribute("title", txt);
+                        elem.addEventListener("click", () => {
                             this.EvtEmitCmd.fire({value: txt, noPrint: false});
                         });
                     }
@@ -186,7 +187,7 @@ export class Mxp {
     handleMxpTag(data: string) {
         let handled = false;
         for (let i = 0; i < this.tagHandlers.length; i++) {
-            /* tag handlers will return true if it"s a match */
+            /* tag handlers will return true if it's a match */
             if (this.tagHandlers[i](data)) {
                 handled = true;
                 break;
@@ -198,7 +199,7 @@ export class Mxp {
         }
     };
 
-    // Need to close any remaining open tags whe we get newlines
+    // Need to close any remaining open tags when we get newlines
     public handleNewline() {
         if (this.openTags.length < 1) {
             return;

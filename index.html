@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" type="image/ico" href="favicon.ico">
+
+  <link rel="stylesheet" href="codemirror/lib/codemirror.css">
+  <link rel="stylesheet" href="codemirror/theme/neat.css">
+  <script src="codemirror/lib/codemirror.js"></script>
+  <script src="codemirror/addon/display/autorefresh.js"></script>
+  <script src="codemirror/mode/javascript/javascript.js"></script>
+
+  <link rel="stylesheet" href="css/client.css">
+
+  <script src="config.js"></script>
+</head>
+<body>
+<div id="mudslinger">
+  <nav id="menuBar">
+    <ul>
+      <li><button id="menuBar-conn-disconn">Connect</button></li>
+      <li><button>Aliases</button></li>
+      <li><button>Triggers</button></li>
+      <li><button>Script</button></li>
+      <li>
+        <button>Config</button>
+        <ul>
+          <li>
+            <button>Text Color</button>
+            <ul>
+              <li><button>White on Black</button></li>
+              <li><button>Green on Black</button></li>
+              <li><button>Black on Grey</button></li>
+              <li><button>Black on White</button></li>
+            </ul>
+          </li>
+          <li>
+            <button>Font Size</button>
+            <ul>
+              <li><button>xx-small</button></li>
+              <li><button>x-small</button></li>
+              <li><button>small</button></li>
+              <li><button>medium</button></li>
+              <li><button>large</button></li>
+              <li><button>x-large</button></li>
+              <li><button>xx-large</button></li>
+            </ul>
+          </li>
+          <li><label><input id="menuBar-chkEnableColor" type="checkbox"> Enable Color</label></li>
+          <li><label><input id="menuBar-chkEnableUtf8" type="checkbox"> Enable UTF-8</label></li>
+          <li><label><input id="menuBar-chkEnableMxp" type="checkbox"> Enable MXP</label></li>
+          <li class="menu-sep"></li>
+          <li><label><input id="menuBar-chkEnableTrig" type="checkbox"> Enable Triggers</label></li>
+          <li><label><input id="menuBar-chkEnableAlias" type="checkbox"> Enable Aliases</label></li>
+        </ul>
+      </li>
+      <li><button>About</button></li>
+    </ul>
+  </nav>
+  <div id="mainWin">
+    <pre id="winOutput" class="outputText"></pre>
+    <div id="cmdCont">
+      <textarea rows="1" id="cmdInput"></textarea>
+      <div class="chkCmdInputCmdStackCont" style="border:1px solid green">
+        <span class="toolTipText">Toggle command stacking</span>
+        <input id="chkCmdStack" type="checkbox" checked>
+        ;
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module" src="/src/ts/client.ts"></script>
+</body>
+</html>

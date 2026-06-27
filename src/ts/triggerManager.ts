@@ -19,10 +19,12 @@ export class TriggerManager {
 
     constructor(private jsScript: ScriptIf, private config: ConfigIf) {
         /* backward compatibility */
-        let savedTriggers = localStorage.getItem("triggers");
-        if (savedTriggers) {
-            this.config.set("triggers", JSON.parse(savedTriggers));
-            localStorage.removeItem("triggers");
+        if (typeof localStorage !== 'undefined') {
+            const savedTriggers = localStorage.getItem("triggers");
+            if (savedTriggers) {
+                this.config.set("triggers", JSON.parse(savedTriggers));
+                localStorage.removeItem("triggers");
+            }
         }
 
         this.loadTriggers();

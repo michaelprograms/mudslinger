@@ -28,15 +28,92 @@ a:link, a:visited { text-decoration: none; }
 
 #mudslinger {
     width: 100%;
-    height: 92vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 #mainWin {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     width: 100%;
 }
+
+/* ── menu bar ────────────────────────────────────────────────────────── */
+nav#menuBar {
+    flex-shrink: 0;
+    background: var(--ui-bg-raised);
+    border-bottom: 1px solid var(--ui-border);
+    font-family: "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+    font-size: small;
+    user-select: none;
+}
+
+nav#menuBar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+nav#menuBar > ul {
+    display: flex;
+}
+
+nav#menuBar li { position: relative; list-style: none; }
+
+nav#menuBar li > ul {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 150px;
+    background: var(--ui-bg-raised);
+    border: 1px solid var(--ui-border);
+    z-index: 1000;
+    white-space: nowrap;
+}
+
+nav#menuBar li:hover > ul { display: block; }
+
+nav#menuBar li > ul > li > ul {
+    top: 0;
+    left: 100%;
+}
+
+nav#menuBar button {
+    background: none;
+    border: none;
+    color: var(--ui-text);
+    cursor: pointer;
+    padding: 4px 10px;
+    font-family: inherit;
+    font-size: inherit;
+    white-space: nowrap;
+    display: block;
+    width: 100%;
+    text-align: left;
+}
+
+nav#menuBar button:hover { background: var(--ui-bg-hover); }
+
+nav#menuBar > ul > li:has(ul) > button::after { content: " ▾"; }
+nav#menuBar li > ul > li:has(ul) > button::after { content: " ▶"; }
+
+nav#menuBar .menu-sep {
+    border-top: 1px solid var(--ui-border);
+    margin: 2px 0;
+}
+
+nav#menuBar label {
+    display: block;
+    padding: 4px 10px;
+    cursor: pointer;
+    color: var(--ui-text);
+    white-space: nowrap;
+}
+nav#menuBar label:hover { background: var(--ui-bg-hover); }
 
 #cmdCont {
     display: flex;

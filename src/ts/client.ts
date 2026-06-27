@@ -218,18 +218,20 @@ function makeCbLocalConfigSave(): (val: string) => void {
     };
 }
 
-export namespace Mudslinger {
-    export let client: Client;
-    export async function init() {
-        let cfg = getConfig();
-        let u = new URL(cfg.mudWsUrl);
-        let connectionTarget: ConnectionTarget = { host: u.hostname, port: Number(u.port) };
+let _client: Client;
 
-        UserConfig.init(localStorage.getItem("userConfig"), makeCbLocalConfigSave());
+async function init() {
+    const cfg = getConfig();
+    const u = new URL(cfg.mudWsUrl);
+    const connectionTarget: ConnectionTarget = { host: u.hostname, port: Number(u.port) };
 
-        client = new Client(connectionTarget);
-        document.title = client.AppInfo.AppTitle + " - " + cfg.mudName;
-    }
+    UserConfig.init(localStorage.getItem("userConfig"), makeCbLocalConfigSave());
+
+    _client = new Client(connectionTarget);
+    document.title = AppInfo.AppTitle + " - " + cfg.mudName;
 }
 
-(<any>window).Mudslinger = Mudslinger;
+// Expose for browser console debugging
+(<any>window).Mudslinger = { get client() { return _client; } };
+
+init();

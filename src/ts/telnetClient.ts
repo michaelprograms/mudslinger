@@ -38,7 +38,7 @@ export class TelnetClient extends Telnet {
     private handleNewEnvSeq(seq: number[]): void {
         let actions = parseNewEnvSeq(seq);
 
-        const utf8 = UserConfig.getDef("utf8Enabled", false) === true;
+        const utf8 = UserConfig.getDef("utf8Enabled", true) === true;
         let varFuncs: {[k: string]: () => string} = {
             'CLIENT_NAME':    () => TTYPES[0],
             'CLIENT_VERSION': () => AppInfo.Version,
@@ -134,7 +134,7 @@ export class TelnetClient extends Telnet {
             if (opt === Opt.ECHO) {
                 this.EvtServerEcho.fire(true);
                 this.writeArr([Cmd.IAC, Cmd.DO, Opt.ECHO]);
-            } else if (opt === Opt.CHARSET && UserConfig.getDef("utf8Enabled", false) === true) {
+            } else if (opt === Opt.CHARSET && UserConfig.getDef("utf8Enabled", true) === true) {
                 this.writeArr([Cmd.IAC, Cmd.DO, Opt.CHARSET]);
                 this.doCharset = true;
             } else if (opt === Opt.SGA) {
@@ -153,7 +153,7 @@ export class TelnetClient extends Telnet {
             } else if (opt == Opt.NEW_ENVIRON) {
                 this.writeArr([Cmd.IAC, Cmd.WILL, Opt.NEW_ENVIRON]);
                 this.doNewEnviron = true;
-            } else if (opt === Opt.CHARSET && UserConfig.getDef("utf8Enabled", false) === true) {
+            } else if (opt === Opt.CHARSET && UserConfig.getDef("utf8Enabled", true) === true) {
                 this.writeArr([Cmd.IAC, Cmd.WILL, Opt.CHARSET]);
                 this.doCharset = true;
                 this.writeArr([Cmd.IAC, Cmd.SB, Opt.CHARSET, 1 /* REQUEST */]

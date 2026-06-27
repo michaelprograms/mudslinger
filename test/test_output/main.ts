@@ -22,7 +22,7 @@ let fakeWinConfig = {
 function run() {
     let outputWin = new OutputWin(fakeWinConfig);
     let outputManager = new OutputManager(outputWin, fakeMgrConfig);
-    let chatWin = new OutWinBase($("<div>"), fakeWinConfig);
+    let chatWin = new OutWinBase(document.createElement("div"), fakeWinConfig);
     let mxp = new Mxp(outputManager, chatWin, "MudslingerTest");
     outputManager.EvtMxpTag.handle((tag: string) => {
         mxp.handleMxpTag(tag);

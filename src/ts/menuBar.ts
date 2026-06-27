@@ -1,7 +1,5 @@
 import { EventHook } from "./event";
-
 import { UserConfig } from "./userConfig";
-
 import { AliasEditor } from "./aliasEditor";
 import { TriggerEditor } from "./triggerEditor";
 import { JsScriptWin } from "./jsScriptWin";
@@ -14,126 +12,68 @@ export class MenuBar {
     public EvtConnectClicked = new EventHook<void>();
     public EvtDisconnectClicked = new EventHook<void>();
 
-    private $menuBar: JQuery;
-    private $chkEnableColor: JQuery;
-    private $chkEnableMxp: JQuery;
-    private $chkEnableUtf8: JQuery;
-    private $chkEnableTrig: JQuery;
-    private $chkEnableAlias: JQuery;
-
     constructor(
         private aliasEditor: AliasEditor,
         private triggerEditor: TriggerEditor,
         private jsScriptWin: JsScriptWin,
         private aboutWin: AboutWin,
-        ) {
-
-        this.makeClickFuncs();
-
-        this.$menuBar = $("#menuBar");
-
-        this.$chkEnableColor = $("#menuBar-chkEnableColor");
-        this.$chkEnableUtf8 = $("#menuBar-chkEnableUtf8");
-        this.$chkEnableMxp = $("#menuBar-chkEnableMxp");
-
-        this.$chkEnableTrig = $("#menuBar-chkEnableTrig");
-        this.$chkEnableAlias = $("#menuBar-chkEnableAlias");
-
-        (<any>this.$menuBar).jqxMenu({ width: "100%", height: "4%"});
-        this.$menuBar.on("itemclick", (event: any) => { this.handleClick(event); });
-
-        this.$chkEnableColor.change(function() {
-            UserConfig.set("colorsEnabled", (this as HTMLInputElement).checked);
-        });
-        (this.$chkEnableColor[0] as HTMLInputElement).checked = UserConfig.getDef("colorsEnabled", true);
-
-        this.$chkEnableUtf8.change(function() {
-            UserConfig.set("utf8Enabled", (this as HTMLInputElement).checked);
-        });
-        (this.$chkEnableUtf8[0] as HTMLInputElement).checked = UserConfig.getDef("utf8Enabled", false);
-
-        this.$chkEnableMxp.change(function() {
-            UserConfig.set("mxpEnabled", (this as HTMLInputElement).checked);
-        });
-        (this.$chkEnableMxp[0] as HTMLInputElement).checked = UserConfig.getDef("mxpEnabled", true);
-
-        this.$chkEnableTrig.change(function() {
-            UserConfig.set("triggersEnabled", (this as HTMLInputElement).checked);
-        });
-        (this.$chkEnableTrig[0] as HTMLInputElement).checked = UserConfig.getDef("triggersEnabled", true);
-
-        this.$chkEnableAlias.change(function() {
-            UserConfig.set("aliasesEnabled", (this as HTMLInputElement).checked);
-        });
-        (this.$chkEnableAlias[0] as HTMLInputElement).checked = UserConfig.getDef("aliasesEnabled", true);
+    ) {
+        this.setupCheckboxes();
+        this.setupClicks();
     }
 
-    private clickFuncs: {[k: string]: () => void} = {};
-    private makeClickFuncs() {
-        this.clickFuncs["Connect"] = () => {
-            this.EvtConnectClicked.fire();
-        };
+    private setupCheckboxes() {
+        const chkColor = document.getElementById('menuBar-chkEnableColor') as HTMLInputElement;
+        const chkUtf8  = document.getElementById('menuBar-chkEnableUtf8')  as HTMLInputElement;
+        const chkMxp   = document.getElementById('menuBar-chkEnableMxp')   as HTMLInputElement;
+        const chkTrig  = document.getElementById('menuBar-chkEnableTrig')   as HTMLInputElement;
+        const chkAlias = document.getElementById('menuBar-chkEnableAlias')  as HTMLInputElement;
 
-        this.clickFuncs["Disconnect"] = () => {
-            this.EvtDisconnectClicked.fire();
-        };
+        chkColor.checked = UserConfig.getDef('colorsEnabled',   true);
+        chkUtf8.checked  = UserConfig.getDef('utf8Enabled',     true);
+        chkMxp.checked   = UserConfig.getDef('mxpEnabled',      true);
+        chkTrig.checked  = UserConfig.getDef('triggersEnabled', true);
+        chkAlias.checked = UserConfig.getDef('aliasesEnabled',  true);
 
-        this.clickFuncs["Aliases"] = () => {
-            this.aliasEditor.show();
-        };
-
-        this.clickFuncs["Triggers"] = () => {
-            this.triggerEditor.show();
-        };
-
-        this.clickFuncs["Green on Black"] = () => {
-            this.EvtChangeDefaultColor.fire(["green", "low"]);
-            this.EvtChangeDefaultBgColor.fire(["black", "low"]);
-        };
-
-        this.clickFuncs["White on Black"] = () => {
-            this.EvtChangeDefaultColor.fire(["white", "low"]);
-            this.EvtChangeDefaultBgColor.fire(["black", "low"]);
-        };
-
-        this.clickFuncs["Black on Grey"] = () => {
-            this.EvtChangeDefaultColor.fire(["black", "low"]);
-            this.EvtChangeDefaultBgColor.fire(["white", "low"]);
-        };
-
-        this.clickFuncs["Black on White"] = () => {
-            this.EvtChangeDefaultColor.fire(["black", "low"]);
-            this.EvtChangeDefaultBgColor.fire(["white", "high"]);
-        };
-
-        for (let sz of ['xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large']) {
-            this.clickFuncs[sz] = () => {
-                this.EvtChangeFontSize.fire(sz);
-            }
-        }
-
-        this.clickFuncs["Script"] = () => {
-            this.jsScriptWin.show();
-        };
-
-        this.clickFuncs["About"] = () => {
-            this.aboutWin.show();
-        };
+        chkColor.addEventListener('change', () => UserConfig.set('colorsEnabled',   chkColor.checked));
+        chkUtf8.addEventListener( 'change', () => UserConfig.set('utf8Enabled',     chkUtf8.checked));
+        chkMxp.addEventListener(  'change', () => UserConfig.set('mxpEnabled',      chkMxp.checked));
+        chkTrig.addEventListener( 'change', () => UserConfig.set('triggersEnabled', chkTrig.checked));
+        chkAlias.addEventListener('change', () => UserConfig.set('aliasesEnabled',  chkAlias.checked));
     }
 
-    private handleClick(event: any) {
-        let item = event.args;
-        let text = $(item).text();
-        if (text in this.clickFuncs) {
-            this.clickFuncs[text]();
+    private setupClicks() {
+        const actions: {[k: string]: () => void} = {
+            'Connect':        () => this.EvtConnectClicked.fire(),
+            'Disconnect':     () => this.EvtDisconnectClicked.fire(),
+            'Aliases':        () => this.aliasEditor.show(),
+            'Triggers':       () => this.triggerEditor.show(),
+            'Script':         () => this.jsScriptWin.show(),
+            'About':          () => this.aboutWin.show(),
+            'White on Black': () => { this.EvtChangeDefaultColor.fire(['white', 'low']);  this.EvtChangeDefaultBgColor.fire(['black', 'low']); },
+            'Green on Black': () => { this.EvtChangeDefaultColor.fire(['green', 'low']);  this.EvtChangeDefaultBgColor.fire(['black', 'low']); },
+            'Black on Grey':  () => { this.EvtChangeDefaultColor.fire(['black', 'low']);  this.EvtChangeDefaultBgColor.fire(['white', 'low']); },
+            'Black on White': () => { this.EvtChangeDefaultColor.fire(['black', 'low']);  this.EvtChangeDefaultBgColor.fire(['white', 'high']); },
+        };
+        for (const sz of ['xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large']) {
+            actions[sz] = () => this.EvtChangeFontSize.fire(sz);
         }
+
+        document.getElementById('menuBar')!.addEventListener('click', (e) => {
+            const btn = (e.target as HTMLElement).closest('button');
+            if (!btn) return;
+            const text = btn.textContent?.trim() ?? '';
+            actions[text]?.();
+        });
     }
 
     handleTelnetConnect() {
-        $("#menuBar-conn-disconn").text("Disconnect");
+        const btn = document.getElementById('menuBar-conn-disconn');
+        if (btn) btn.textContent = 'Disconnect';
     }
 
     handleTelnetDisconnect() {
-        $("#menuBar-conn-disconn").text("Connect");
+        const btn = document.getElementById('menuBar-conn-disconn');
+        if (btn) btn.textContent = 'Connect';
     }
 }

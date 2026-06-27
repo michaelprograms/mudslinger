@@ -10,26 +10,24 @@ export class CommandInput {
     private cmd_index: number = -1;
     private cmd_entered: string = "";
 
-    private $cmdInput: JQuery;
-
+    private cmdInput: HTMLTextAreaElement;
     private chkCmdStack: HTMLInputElement;
 
     constructor(private aliasManager: AliasManager) {
-        this.$cmdInput = $("#cmdInput");
+        this.cmdInput = document.getElementById("cmdInput") as HTMLTextAreaElement;
+        this.chkCmdStack = document.getElementById("chkCmdStack") as HTMLInputElement;
 
-        this.chkCmdStack = $("#chkCmdStack")[0] as HTMLInputElement;
-
-        this.$cmdInput.keydown((event: KeyboardEvent) => { return this.keydown(event); });
-        this.$cmdInput.bind("input propertychange", () => { return this.inputChange(); });
-
-        $(document).ready(() => {
-            this.loadHistory();
-            this.inputChange(); // Force a resize
+        this.cmdInput.addEventListener("keydown", (event: KeyboardEvent) => {
+            if (this.keydown(event) === false) event.preventDefault();
         });
+        this.cmdInput.addEventListener("input", () => { this.inputChange(); });
+
+        this.loadHistory();
+        this.inputChange(); // Force a resize
     }
 
     private sendCmd(): void {
-        let cmd: string = this.$cmdInput.val();
+        let cmd: string = this.cmdInput.value;
         let result = this.aliasManager.checkAlias(cmd);
         if (!result) {
             if (this.chkCmdStack.checked) {
@@ -49,7 +47,7 @@ export class CommandInput {
             this.EvtEmitAliasCmds.fire({orig: cmd, commands: cmds});
         } /* else the script ran already */
 
-        this.$cmdInput.select();
+        this.cmdInput.select();
 
         if (cmd.trim() === "") {
             return;
@@ -76,15 +74,15 @@ export class CommandInput {
                 }
             case 38: // up
                 if (this.cmd_index === -1) {
-                    this.cmd_entered = this.$cmdInput.val();
+                    this.cmd_entered = this.cmdInput.value;
                     this.cmd_index = this.cmd_history.length - 1;
                 } else {
                     this.cmd_index -= 1;
                     this.cmd_index = Math.max(this.cmd_index, 0);
                 }
-                this.$cmdInput.val(this.cmd_history[this.cmd_index]);
+                this.cmdInput.value = this.cmd_history[this.cmd_index];
                 this.inputChange();
-                this.$cmdInput.select();
+                this.cmdInput.select();
                 return false;
             case 40: // down
                 if (this.cmd_index === -1) {
@@ -94,57 +92,57 @@ export class CommandInput {
                 if (this.cmd_index === (this.cmd_history.length - 1)) {
                     // Already at latest, grab entered but unsent value
                     this.cmd_index = -1;
-                    this.$cmdInput.val(this.cmd_entered);
+                    this.cmdInput.value = this.cmd_entered;
                 } else {
                     this.cmd_index += 1;
-                    this.$cmdInput.val(this.cmd_history[this.cmd_index]);
+                    this.cmdInput.value = this.cmd_history[this.cmd_index];
                 }
-                this.$cmdInput.val(this.cmd_history[this.cmd_index]);
+                this.cmdInput.value = this.cmd_history[this.cmd_index];
                 this.inputChange();
-                this.$cmdInput.select();
+                this.cmdInput.select();
                 return false;
             case 97:
-                this.$cmdInput.val("southwest");
+                this.cmdInput.value = "southwest";
                 this.sendCmd();
                 return false;
             case 98:
-                this.$cmdInput.val("south");
+                this.cmdInput.value = "south";
                 this.sendCmd()
                 return false;
             case 99:
-                this.$cmdInput.val("southeast");
+                this.cmdInput.value = "southeast";
                 this.sendCmd();
                 return false;
             case 100:
-                this.$cmdInput.val("west");
+                this.cmdInput.value = "west";
                 this.sendCmd();
                 return false;
             case 101:
-                this.$cmdInput.val("look");
+                this.cmdInput.value = "look";
                 this.sendCmd();
                 return false;
             case 102:
-                this.$cmdInput.val("east");
+                this.cmdInput.value = "east";
                 this.sendCmd();
                 return false;
             case 103:
-                this.$cmdInput.val("northwest");
+                this.cmdInput.value = "northwest";
                 this.sendCmd();
                 return false;
             case 104:
-                this.$cmdInput.val("north");
+                this.cmdInput.value = "north";
                 this.sendCmd();
                 return false;
             case 105:
-                this.$cmdInput.val("northeast");
+                this.cmdInput.value = "northeast";
                 this.sendCmd();
                 return false;
             case 107:
-                this.$cmdInput.val("down");
+                this.cmdInput.value = "down";
                 this.sendCmd();
                 return false;
             case 109:
-                this.$cmdInput.val("up");
+                this.cmdInput.value = "up";
                 this.sendCmd();
                 return false;
             default:
@@ -155,11 +153,9 @@ export class CommandInput {
     }
 
     private inputChange(): void {
-        let input = this.$cmdInput;
-        input.height("1px");
-        let scrollHeight = Math.max(input[0].scrollHeight, 20);
-        let new_height = scrollHeight;
-        input.height(new_height + "px");
+        this.cmdInput.style.height = "1px";
+        const scrollHeight = Math.max(this.cmdInput.scrollHeight, 20);
+        this.cmdInput.style.height = scrollHeight + "px";
     }
 
     private saveHistory(): void {
@@ -174,6 +170,6 @@ export class CommandInput {
     }
 
     setFontSize(sz: string): void {
-        this.$cmdInput.css("font-size", sz);
+        this.cmdInput.style.fontSize = sz;
     }
 }
