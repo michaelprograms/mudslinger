@@ -1,3 +1,4 @@
+import "./commandInput.css";
 import { EventHook } from "../core/event";
 
 import {AliasManager} from "../manager/alias";

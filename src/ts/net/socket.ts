@@ -93,6 +93,6 @@ export class Socket {
             }
         }
 
-        this.transport.write(arr.buffer);
+        this.transport.write(arr.buffer as ArrayBuffer);
     }
 }

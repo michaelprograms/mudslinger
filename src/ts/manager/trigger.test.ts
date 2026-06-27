@@ -4,11 +4,11 @@ import { EditorItem } from "../panel/base";
 
 function testConfig(triggers: EditorItem[]): triggerManager.ConfigIf {
     let triggers_ = triggers;
-    let enabled_: boolean;
+    let enabled_: boolean | undefined;
     return {
         get: (key: "triggers") => triggers_,
         set: (key: "triggers", val: EditorItem[]) => { triggers_ = val; },
-        getDef: (key: "triggersEnabled", def: boolean) => enabled_ !== undefined ? enabled_ : def,
+        getDef: (key: "triggersEnabled", def: boolean) => enabled_ ?? def,
     };
 }
 
@@ -40,7 +40,7 @@ class CmdCatcher {
 describe("triggerManager", () => {
     it("basic noscript", () => {
         const trigs: EditorItem[] = [{ pattern: "test1", value: "do\na\nthing", regex: false, is_script: false }];
-        const mgr = new triggerManager.TriggerManager(null, testConfig(trigs));
+        const mgr = new triggerManager.TriggerManager(null as any, testConfig(trigs));
         const catcher = new CmdCatcher(mgr);
         mgr.handleLine("123 test1 456 more");
         expect(catcher.cmds).toEqual(['do', 'a', 'thing']);
@@ -57,7 +57,7 @@ describe("triggerManager", () => {
 
     it("regex noscript", () => {
         const trigs: EditorItem[] = [{ pattern: "test1 (\\d{3})\\s", value: "do\na$1\nthing", regex: true, is_script: false }];
-        const mgr = new triggerManager.TriggerManager(null, testConfig(trigs));
+        const mgr = new triggerManager.TriggerManager(null as any, testConfig(trigs));
         const catcher = new CmdCatcher(mgr);
         mgr.handleLine("123 test1 456 more");
         expect(catcher.cmds).toEqual(['do', 'a456', 'thing']);
@@ -69,7 +69,7 @@ describe("triggerManager", () => {
         const mgr = new triggerManager.TriggerManager(scr, testConfig(trigs));
         mgr.handleLine("123 test1 456 more");
         expect(scr.calls.pop()).toEqual(["n/a 1", "match, line"]);
-        const scrCall = scr.scriptCalls.pop();
+        const scrCall = scr.scriptCalls.pop()!;
         expect(scrCall[0][0]).toBe("test1 456 ");
         expect(scrCall[0][1]).toBe("456");
         expect(scrCall[1]).toBe("123 test1 456 more");

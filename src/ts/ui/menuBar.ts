@@ -1,3 +1,4 @@
+import "./menuBar.css";
 import { EventHook } from "../core/event";
 import { UserConfig } from "../core/userConfig";
 import { AliasEditor } from "../panel/alias";

@@ -1,3 +1,4 @@
+import "../base.css";
 import { UserConfig } from "./userConfig";
 import { AppInfo } from "./appInfo";
 

@@ -1,77 +1,57 @@
 # Mudslinger
 
 A self-hosted, web-based MUD client. Players open a page in their browser and
-are connected to a single MUD automatically; there is nothing to install on the
-client side. It renders MUD output (ANSI, XTERM 256 color, UTF-8, MXP) and sends
+are connected to a MUD automatically; there is nothing to install on the client
+side. It renders MUD output (ANSI, XTERM 256 color, UTF-8, MXP) and sends
 player input.
 
 The client connects directly to a MUD's native WebSocket port (e.g. a FluffOS
 `external_port ... websocket`), which carries the telnet byte stream as binary
-WebSocket frames. The telnet protocol stack (IAC negotiation, MXP, MSDP) runs in
-the browser. Use a `wss://` URL when serving the page over HTTPS, or the browser
-will block the connection as mixed content. The player's client IP is not
-available to the MUD, since there is no proxy to report it.
-
-End-user documentation lives in [`userdocs/`](userdocs/). This file is for
-developers and operators.
+WebSocket frames. The telnet protocol stack (IAC negotiation, MXP, MSDP) runs
+entirely in the browser. Use a `wss://` URL when serving the page over HTTPS,
+or the browser will block the connection as mixed content. The player's real IP
+is not available to the MUD, since there is no proxy to report it.
 
 ## Prerequisites
 
-- Node.js >= 20
+- Node.js >= 22
 
 ## Configuration
 
-Copy the defaults and edit them:
+Build-time settings are controlled via Vite `define` constants and `VITE_*`
+environment variables (see `vite.config.ts`):
+
+| Variable          | Default                                              | Meaning                                    |
+| ----------------- | ---------------------------------------------------- | ------------------------------------------ |
+| `VITE_MUD_URL`    | `ws://localhost:5000`                                 | MUD WebSocket URL (`ws://` or `wss://`)    |
+| `VITE_MUD_NAME`   | `My MUD`                                              | Display name shown in the UI               |
+| `VITE_REPO_URL`   | `https://github.com/michaelprograms/mudslinger`       | Repo link in the About panel               |
+
+Set them in a `.env` file (gitignored) or pass inline:
 
 ```bash
-cp static/public/config.default.js static/public/config.js
+VITE_MUD_URL=wss://mud.example.com:4200 npm run build
 ```
-
-`config.js` is gitignored (it is per-deployment) and is loaded at runtime by the
-page. Fields:
-
-| Field      | Meaning                                                       |
-| ---------- | ------------------------------------------------------------- |
-| `mudWsUrl` | MUD WebSocket URL, e.g. `ws://host:port` or `wss://host:port` |
-| `mudName`  | Display name of the MUD this instance serves                  |
-| `mudHost`  | Display-only address of the MUD                               |
-| `mudPort`  | Display-only port of the MUD                                  |
-| `msdp`     | Enable the MSDP gauge/map side panel (MUD must support it)    |
 
 ## Build and run
 
 ```bash
 npm install
-npm run build          # production bundle
-npm run build-dev      # unminified bundle for debugging
+npm run build          # production bundle -> static/public/assets/
+npm run build-dev      # unminified bundle (mode=development)
+npm run dev            # Vite dev server with HMR
 ```
 
-The build runs in three stages: `tsc` compiles TypeScript to `build/`, `webpack`
-bundles it into `static/public/`, and `buildDocs.js` renders the product docs.
-Then serve the built `static/public/` directory on port 5000:
-
-```bash
-npm start
-```
-
-Then open <http://localhost:5000>.
-
-## Docs
-
-The user-facing docs live in [`userdocs/`](userdocs/) as Markdown.
-`npm run build-docs` renders them to `static/public/docs/*.html` so the in-app
-Docs link resolves. The full build runs this step automatically.
+Then serve `static/public/` (the build output) behind a web server. See
+`DEPLOY.md` for nginx configuration.
 
 ## Tests
 
 ```bash
-npm run build-test     # build the QUnit test bundle
+npm test               # vitest run (headless)
+npm run typecheck      # tsc --noEmit
 ```
-
-## Deployment
-
-VPS deployment is a planned phase and not yet documented here.
 
 ## License
 
-[MIT](userdocs/LICENSE.md)
+[MIT](LICENSE.md)

@@ -1,3 +1,4 @@
+import "./about.css";
 import { AppInfo } from "../core/appInfo";
 
 type PanelMode = 'float' | 'top' | 'bottom' | 'left' | 'right' | 'maximize';

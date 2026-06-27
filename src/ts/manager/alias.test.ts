@@ -4,11 +4,11 @@ import { EditorItem } from "../panel/base";
 
 function testConfig(aliases: EditorItem[]): aliasManager.ConfigIf {
     let aliases_ = aliases;
-    let enabled_: boolean;
+    let enabled_: boolean | undefined;
     return {
         get: (key: "aliases") => aliases_,
         set: (key: "aliases", val: EditorItem[]) => { aliases_ = val; },
-        getDef: (key: "aliasesEnabled", def: boolean) => enabled_ !== undefined ? enabled_ : def,
+        getDef: (key: "aliasesEnabled", def: boolean) => enabled_ ?? def,
     };
 }
 
@@ -36,7 +36,7 @@ describe("aliasManager", () => {
             { pattern: "test1", value: "do a thing",    regex: false, is_script: false },
             { pattern: "test2", value: "do a thing $1", regex: false, is_script: false },
         ];
-        const mgr = new aliasManager.AliasManager(null, testConfig(aliases));
+        const mgr = new aliasManager.AliasManager(null as any, testConfig(aliases));
         expect(mgr.checkAlias("test1 123 456 more")).toBe("do a thing");
         expect(mgr.checkAlias("test2 123 456 more")).toBe("do a thing 123 456 more");
     });
@@ -66,7 +66,7 @@ describe("aliasManager", () => {
             { pattern: "abc ([a-z])([a-z])([a-z])([a-z])([a-z])([a-z])([a-z])([a-z])([a-z])",
               value: "do a thing $1 $2 $3 $4 $5 $6 $7 $8 $9", regex: true, is_script: false },
         ];
-        const mgr = new aliasManager.AliasManager(null, testConfig(aliases));
+        const mgr = new aliasManager.AliasManager(null as any, testConfig(aliases));
         expect(mgr.checkAlias("test1 123 456 more")).toBe("do a thing");
         expect(mgr.checkAlias("abcdef")).toBe("do a thing def");
         expect(mgr.checkAlias("abc defghijkl")).toBe("do a thing d e f g h i j k l");
@@ -82,13 +82,13 @@ describe("aliasManager", () => {
 
         expect(mgr.checkAlias("test1 123 456 more")).toBe(true);
         expect(scr.calls.pop()).toEqual(["n/a 1", "match, input"]);
-        const call1 = scr.scriptCalls.pop();
+        const call1 = scr.scriptCalls.pop()!;
         expect(call1[0][0]).toBe("test1");
         expect(call1[1]).toBe("test1 123 456 more");
 
         expect(mgr.checkAlias("abcdef")).toBe(true);
         expect(scr.calls.pop()).toEqual(["n/a 2", "match, input"]);
-        const call2 = scr.scriptCalls.pop();
+        const call2 = scr.scriptCalls.pop()!;
         expect(call2[0][0]).toBe("abcdef");
         expect(call2[0][1]).toBe("def");
         expect(call2[1]).toBe("abcdef");

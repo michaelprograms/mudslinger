@@ -1,0 +1,21 @@
+#cmdCont {
+    display: flex;
+    flex-direction: row;
+}
+
+#cmdInput {
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    resize: none;
+    font-family: "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+    font-size: small;
+    display: inline;
+}
+
+.chkCmdInputCmdStackCont .toolTipText {
+    display: none;
+    font-family: "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+    font-size: small;
+}
+.chkCmdInputCmdStackCont:hover .toolTipText { display: inline; }

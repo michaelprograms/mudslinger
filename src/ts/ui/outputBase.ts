@@ -1,3 +1,4 @@
+import "./outputWin.css";
 import * as Util from "../core/util";
 import { colorIdToHtml } from "../protocol/color";
 import { EventHook } from "../core/event";

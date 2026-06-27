@@ -1,3 +1,4 @@
+import "./base.css";
 import * as Util from "../core/util";
 import { basicSetup } from "codemirror";
 import { EditorView } from "@codemirror/view";

@@ -14,6 +14,7 @@ Ongoing work to remove legacy dependencies and simplify the stack.
 - **jqxMenu → native CSS nav** — `menuBar.ts` rewritten to native DOM; `jqwidgets-framework` removed from `package.json`; `<nav>` with CSS `:hover` dropdowns replaces the old `<ul>` + jqxMenu init
 - **jQuery → removed** — `outWinBase.ts`, `outputManager.ts`, `mxp.ts`, `commandInput.ts`, `outputWin.ts` converted to vanilla DOM; `jquery` and `@types/jquery` removed from `package.json`; `<script src="jquery.min.js">` removed from `index.html`; jQuery copy removed from `postinstall.js`
 - **CodeMirror 5 → 6** — `panelEditorBase.ts` and `jsScriptWin.ts` migrated to CM6 ESM (`basicSetup` + `@codemirror/lang-javascript` + `@codemirror/theme-one-dark`); gains history, bracketMatching, closeBrackets, one-dark theme; CM5 `<script>`/`<link>` tags removed from `index.html`; `static/public/codemirror/` vendored tree deleted; `tools/postinstall.js` deleted; `fs-extra` removed; postinstall replaced with shell one-liner
+- **client.css → component CSS** — monolithic `static/public/client.css` split into 6 co-located CSS files imported by their components (`base.css`, `menuBar.css`, `outputWin.css`, `commandInput.css`, `panel/base.css`, `panel/about.css`); `<link>` tag removed from `index.html`; Vite bundles them automatically; dead `#leftPanel`/`#rightPanel` rules dropped
 
 ## In Progress
 
@@ -26,8 +27,6 @@ Ongoing work to remove legacy dependencies and simplify the stack.
   `outputManager.ts`, `mxp.ts`, `color.ts`). High effort; MXP support is non-trivial since
   xterm.js has no MUD protocol awareness. Keep `static/test/test_output.html` as the visual
   regression harness while evaluating.
-- **TypeScript bumps** — routine, no design work needed
-- break client.css into component.module.css Vite style files
 
 ## Dependency status
 

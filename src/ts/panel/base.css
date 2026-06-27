@@ -1,0 +1,148 @@
+.mudpanel {
+    position: fixed;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    background: var(--ui-bg-base);
+    border: 1px solid var(--ui-border);
+    color: var(--ui-text);
+    font-family: "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+    font-size: small;
+    min-width: 280px;
+    min-height: 180px;
+    overflow: hidden;
+}
+
+.mudpanel[hidden] { display: none; }
+
+.mudpanel-float    { resize: both; }
+.mudpanel-top      { top: 0;    left: 0; right: 0;  height: 40%; }
+.mudpanel-bottom   { bottom: 0; left: 0; right: 0;  height: 40%; }
+.mudpanel-left     { top: 0;    left: 0; bottom: 0; width: 40%;  }
+.mudpanel-right    { top: 0;    right: 0; bottom: 0; width: 40%; }
+.mudpanel-maximize { inset: 0; }
+
+.mudpanel-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px;
+    background: var(--ui-bg-raised);
+    border-bottom: 1px solid var(--ui-border);
+    cursor: move;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.mudpanel-title { flex: 1; font-weight: bold; }
+
+.mudpanel-modes { display: flex; gap: 2px; }
+
+.mudpanel-modes button,
+.mudpanel-close {
+    background: none;
+    border: 1px solid var(--ui-border);
+    color: var(--ui-text);
+    cursor: pointer;
+    padding: 1px 5px;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.mudpanel-modes button:hover,
+.mudpanel-close:hover { background: var(--ui-bg-hover); }
+
+.mudpanel-modes button.active { border-color: var(--ui-border-active); background: var(--ui-bg-hover); }
+
+.mudpanel-close { border-color: transparent; margin-left: 2px; }
+.mudpanel-close:hover { background: var(--ui-danger); border-color: var(--ui-danger); }
+
+.mudpanel-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+.winEdit-list-pane {
+    display: flex;
+    flex-direction: column;
+    width: 25%;
+    min-width: 80px;
+    resize: horizontal;
+    overflow: auto;
+    border-right: 1px solid var(--ui-border);
+    flex-shrink: 0;
+}
+
+.winEdit-list-buttons { padding: 4px; flex-shrink: 0; }
+
+.winEdit-listBox {
+    flex: 1;
+    width: 100%;
+    background: var(--ui-bg-deep);
+    color: var(--ui-text);
+    border: none;
+    overflow-y: auto;
+}
+
+.winEdit-edit-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 4px;
+    gap: 4px;
+}
+
+.winEdit-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.winEdit-value-label { flex-shrink: 0; }
+
+.winEdit-value-area {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.winEdit-pattern { width: 100%; }
+
+.winEdit-textArea {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    background: var(--ui-bg-deep);
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
+    font-family: inherit;
+    font-size: inherit;
+    resize: none;
+}
+
+.winEdit-scriptArea,
+.winScript-code {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.winEdit-scriptArea > .cm-editor,
+.winScript-code > .cm-editor {
+    flex: 1;
+    min-height: 0;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.winEdit-scriptArea .cm-scroller,
+.winScript-code .cm-scroller {
+    overflow: auto;
+}
