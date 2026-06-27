@@ -16,15 +16,6 @@
         <button>Config</button>
         <ul>
           <li>
-            <button>Text Color</button>
-            <ul>
-              <li><button>White on Black</button></li>
-              <li><button>Green on Black</button></li>
-              <li><button>Black on Grey</button></li>
-              <li><button>Black on White</button></li>
-            </ul>
-          </li>
-          <li>
             <button>Font Size</button>
             <ul>
               <li><button>xx-small</button></li>
@@ -36,9 +27,7 @@
               <li><button>xx-large</button></li>
             </ul>
           </li>
-          <li><label><input id="menuBar-chkEnableColor" type="checkbox"> Enable Color</label></li>
           <li><label><input id="menuBar-chkEnableUtf8" type="checkbox"> Enable UTF-8</label></li>
-          <li><label><input id="menuBar-chkEnableMxp" type="checkbox"> Enable MXP</label></li>
           <li class="menu-sep"></li>
           <li><label><input id="menuBar-chkEnableTrig" type="checkbox"> Enable Triggers</label></li>
           <li><label><input id="menuBar-chkEnableAlias" type="checkbox"> Enable Aliases</label></li>
@@ -48,7 +37,7 @@
     </ul>
   </nav>
   <div id="mainWin">
-    <pre id="winOutput" class="outputText"></pre>
+    <div id="winOutput"></div>
     <div id="cmdCont">
       <textarea rows="1" id="cmdInput"></textarea>
       <div class="chkCmdInputCmdStackCont" style="border:1px solid green">
