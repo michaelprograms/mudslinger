@@ -53,11 +53,11 @@ Each entry: **current → target**, why it's worth doing, and rough effort/risk.
 - **Effort/risk**: High. Need replacements for windowing/splitter/menu widgets.
 
 ### jQuery Deprecation
-1. jqxProgressBar → native <progress> or a <div> with a width% inner bar — you're already manually targeting .jqx-progressbar-value with .css() anyway
+1. ~~jqxProgressBar~~ — removed with MSDP sidebar
 2. jqxWindow → native <dialog> (draggable via mouse events or a 10-line helper)
-3. jqxSplitter → CSS resize + flex, or Split.js (2kb, no jQuery)
+3. jqxSplitter → used in `trigAlEditBase.ts` only (trigger/alias editor); CSS resize + flex, or Split.js (2kb, no jQuery).
 4. jqxMenu → a <nav> with CSS dropdowns, or keep it
-5. Query is used 53 more times outside of jqwidgets calls, so dropping it would be a bigger lift. But replacing the 4 widgets with native equivalents is achievable and would let you ditch the jqwidgets-framework package entirely. 
+5. jQuery is used throughout outside of jqwidgets calls, so dropping it would be a bigger lift. But replacing the widgets with native equivalents is achievable and would let you ditch the jqwidgets-framework package entirely.
 
 ### custom output renderer → xterm.js
 - **Current**: bespoke renderer in `outputWin.ts` / `outWinBase.ts` /

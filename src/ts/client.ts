@@ -16,11 +16,6 @@ import { TriggerEditor } from "./triggerEditor";
 import { TriggerManager } from "./triggerManager";
 import { AboutWin } from "./aboutWin";
 import { getConfig } from "./clientConfig";
-import { OutWinBase } from "./outWinBase";
-import { MapWin } from "./mapWin";
-import { GaugeWin } from "./gaugeWin";
-
-
 interface ConnectionTarget {
     host: string,
     port: number
@@ -44,64 +39,7 @@ export class Client {
     private serverEcho = false;
 
     constructor(private connectionTarget: ConnectionTarget) {
-        let enableMsdp: boolean = getConfig().msdp;
         let clientName: string = "Mudslinger";
-
-        let chatWin: OutWinBase | undefined;
-        let mapWin: MapWin | undefined;
-        let gaugeWin: GaugeWin | undefined;
-
-        if (enableMsdp) {
-            let mainWin = document.getElementById("mainWin")!;
-            mainWin.id = "mainVertSplit";
-            mainWin.innerHTML = `
-            <div>
-                <div id="leftPanel">
-                    <pre id="winOutput" class="outputText"></pre>
-                    <!--<br>-->
-                    <div id="cmdCont">
-                    <textarea rows="1" id="cmdInput"></textarea>
-                    <div class="chkCmdInputCmdStackCont" style="border:1px solid green">
-                        <span class="toolTipText">Toggle command stacking</span>
-                        <input id="chkCmdStack" type="checkbox" checked>
-                        ;
-                    </div>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <div id = "rightPanel">
-                    <div id="winMap" >
-                        <center><div id=winMap-roomName></div>
-                            <div id="winMap-svgCont" style="width:125px;height:100px"></div>
-                        </center>
-                        <center>
-                            <div id="winMap-olcStatus"></div>
-                        </center>
-                    </div>
-                    <div id="winGauge" >
-                        <div id='winGauge-hpBar' class='gaugeBar'></div>
-                        <div id='winGauge-manaBar' class='gaugeBar'></div>
-                        <div id='winGauge-moveBar' class='gaugeBar'></div>
-                        <div id='winGauge-tnlBar' class='gaugeBar'></div>
-                        <div id='winGauge-enemyBar' class='gaugeBar'></div>
-                    </div>
-                    <center><span>CHAT</span></center>
-                    <pre id="winChat" class="outputText"></pre>
-                </div>
-            </div>
-            `;
-            (<any>$("#mainVertSplit")).jqxSplitter({
-                width: "100%",
-                height: "100%",
-                orientation: "vertical",
-                panels: [{size: "75%"}, {size: "25%"}]
-            });
-
-            chatWin = new OutWinBase($("#winChat"), UserConfig);
-            mapWin = new MapWin();
-            gaugeWin = new GaugeWin();
-        }
 
         this.aboutWin = new AboutWin();
         this.jsScript = new JsScript();
@@ -121,7 +59,7 @@ export class Client {
 
         this.outputManager = new OutputManager(this.outputWin, UserConfig);
 
-        this.mxp = new Mxp(this.outputManager, chatWin, clientName);
+        this.mxp = new Mxp(this.outputManager, undefined, clientName);
         this.socket = new Socket(this.outputManager, this.mxp);
         this.menuBar = new MenuBar(this.aliasEditor, this.triggerEditor, this.jsScriptWin, this.aboutWin);
 
@@ -186,18 +124,6 @@ export class Client {
             this.menuBar.handleTelnetDisconnect();
             this.outputWin.handleWsDisconnect();
         });
-
-        if (mapWin) {
-            this.socket.EvtMsdpVar.handle((data) => {
-                mapWin.handleMsdpVar(data[0], data[1]);
-            });
-        }
-
-        if (gaugeWin) {
-            this.socket.EvtMsdpVar.handle((data) => {
-                gaugeWin.handleMsdpVar(data[0], data[1]);
-            });
-        }
 
         // CommandInput events
         this.commandInput.EvtEmitCmd.handle((data: string) => {

@@ -13,44 +13,15 @@ const TTYPES: string[] = [
 
 export class TelnetClient extends Telnet {
     public EvtServerEcho = new EventHook<boolean>();
-    public EvtMsdpVar = new EventHook<[MsdpVarName, MsdpVal]>();
 
     private ttypeIndex: number = 0;
 
     private doNewEnviron: boolean = false;
     private doCharset: boolean = false;
 
-    private msdpEnabled: boolean = false;
-    private supportedMsdpVars: string[] = [];
-
-    constructor(writeFunc: (data: ArrayBuffer) => void, private enableMsdp: boolean) {
+    constructor(writeFunc: (data: ArrayBuffer) => void) {
         super(writeFunc);
-
-        if (enableMsdp) {
-            this.msdpEnabled = true;
-            TTYPES[0] = "Mudslinger";
-            this.supportedMsdpVars = [
-                "HEALTH", "HEALTH_MAX",
-                "MANA", "MANA_MAX",
-                "MOVEMENT", "MOVEMENT_MAX",
-                "EXPERIENCE_TNL", "EXPERIENCE_MAX",
-                "OPPONENT_HEALTH", "OPPONENT_HEALTH_MAX",
-                "OPPONENT_NAME",
-                "ROOM_NAME", "ROOM_EXITS", "ROOM_VNUM", "ROOM_SECTOR",
-                "EDIT_MODE", "EDIT_VNUM",
-            ]
-        }
-
         this.EvtNegotiation.handle((data) => { this.onNegotiation(data); });
-    }
-
-    private writeMsdpVar(varName: string, value: string) {
-        this.writeArr([Cmd.IAC, Cmd.SB, ExtOpt.MSDP, MsdpDef.VAR].concat(
-            arrayFromString(varName),
-            [MsdpDef.VAL],
-            arrayFromString(value),
-            [Cmd.IAC, Cmd.SE]
-        ));
     }
 
     private writeNewEnvVar(varName: string, varVal: string) {
@@ -151,9 +122,6 @@ export class TelnetClient extends Telnet {
             } else if (this.doNewEnviron && sb.length > 0 && sb[0] == Opt.NEW_ENVIRON) {
                 let seq = sb.slice(1);
                 this.handleNewEnvSeq(seq);
-            } else if (this.msdpEnabled && sb[0] === ExtOpt.MSDP) {
-                let result = ParseMsdp(sb.slice(1));
-                this.EvtMsdpVar.fire(result);
             }
             return;
         }
@@ -169,13 +137,6 @@ export class TelnetClient extends Telnet {
             } else if (opt === Opt.CHARSET && UserConfig.getDef("utf8Enabled", false) === true) {
                 this.writeArr([Cmd.IAC, Cmd.DO, Opt.CHARSET]);
                 this.doCharset = true;
-            } else if (this.msdpEnabled && opt === ExtOpt.MSDP) {
-                this.writeArr([Cmd.IAC, Cmd.DO, ExtOpt.MSDP]);
-                this.writeMsdpVar("CLIENT_ID", TTYPES[0]);
-
-                for (let varName of this.supportedMsdpVars) {
-                    this.writeMsdpVar("REPORT", varName);
-                }
             } else if (opt === Opt.SGA) {
                 this.writeArr([Cmd.IAC, Cmd.DO, Opt.SGA]);
             } else {
@@ -213,7 +174,6 @@ export class TelnetClient extends Telnet {
 }
 
 export namespace ExtOpt {
-    export const MSDP = 69;
     export const MCCP = 70;
     export const MSP = 90;
     export const MXP = 91;
@@ -314,107 +274,3 @@ export function parseNewEnvSeq(seq: number[]): [number, number | null, string][]
     return rtn;
 }
 
-export type MsdpVarName = string;
-type MsdpObj = {[k: string]: MsdpVal};
-type MsdpArr = Array<any>;
-
-export type MsdpVal = string | MsdpArr | MsdpObj;
-
-function GetMsdpTable(data: Array<number>): [MsdpObj, number] {
-    // skip first char which should be MSDP.TABLE_OPEN
-    let i = 1;
-
-    let rtn: MsdpVal = {};
-
-    while (data[i] !== MsdpDef.TABLE_CLOSE) {
-        let [k, v, j] = GetMsdpVar(data.slice(i));
-        i += j;
-        rtn[k] = v;
-    }
-
-    i += 1;
-    return [rtn, i];
-}
-
-
-function GetMsdpArray(data: Array<number>): [MsdpArr, number] {
-    // skip first char which should be MSDP.ARRAY_OPEN
-    let i = 1;
-
-    let rtn = [];
-    while (data[i] !== MsdpDef.ARRAY_CLOSE) {
-        let [val, j] = GetMsdpVal(data.slice(i));
-        i += j;
-        rtn.push(val);
-    }
-
-    i += 1;
-    return [rtn, i];
-}
-
-
-function GetMsdpVal(data: Array<number>): [MsdpVal, number] {
-    // skip first char which should be MSDP.VAL
-    let i = 1;
-
-    if (i >= data.length) {
-        return ["", i];
-    }
-
-    if (data[i] === MsdpDef.ARRAY_OPEN) {
-        let [rtn, j] = GetMsdpArray(data.slice(i));
-        i += j;
-        return [rtn, i];
-    } else if (data[i] === MsdpDef.TABLE_OPEN) {
-        let [rtn, j] = GetMsdpTable(data.slice(i));
-        i += j;
-        return [rtn, i];
-    }
-
-    // normal var
-    let startInd = i;
-    while (true) {
-        if (i >= data.length) {
-            break;
-        }
-        if ([MsdpDef.VAR, MsdpDef.VAL, MsdpDef.ARRAY_CLOSE, MsdpDef.TABLE_CLOSE].indexOf(data[i]) !== -1) {
-            break;
-        }
-        i += 1;
-    }
-    let val = String.fromCharCode.apply(String, data.slice(startInd, i));
-
-    return [val, i];
-}
-
-function GetMsdpVar(data: Array<number>): [MsdpVarName, MsdpVal, number] {
-    // skip first char which should be MSDP.VAR
-    let i = 1;
-
-    while (data[i] !== MsdpDef.VAL) {
-        i++;
-    }
-
-    let varName = String.fromCharCode.apply(String, data.slice(1, i));
-
-    let [val, j] = GetMsdpVal(data.slice(i));
-
-    i += j;
-
-    return [varName, val, i];
-}
-
-export function ParseMsdp(data: Array<number>): [MsdpVarName, MsdpVal] {
-    let [varName, val, i] = GetMsdpVar(data);
-
-    return [varName, val];
-}
-
-export namespace MsdpDef {
-    export const VAR = 1;
-    export const VAL = 2;
-    export const TABLE_OPEN = 3;
-    export const TABLE_CLOSE = 4;
-    export const ARRAY_OPEN = 5;
-    export const ARRAY_CLOSE = 6;
-}

@@ -2,7 +2,7 @@ import { EventHook } from "./event";
 
 import { Mxp } from "./mxp";
 import { OutputManager } from "./outputManager";
-import { TelnetClient, MsdpVarName, MsdpVal } from "./telnetClient";
+import { TelnetClient } from "./telnetClient";
 import { UserConfig } from "./userConfig";
 import { getConfig } from "./clientConfig";
 import { Transport, makeTransport } from "./transport";
@@ -17,8 +17,6 @@ export class Socket {
     public EvtWsError = new EventHook<any>();
     public EvtWsConnect = new EventHook<{sid: string}>();
     public EvtWsDisconnect = new EventHook<void>();
-    public EvtMsdpVar = new EventHook<[MsdpVarName, MsdpVal]>();
-
     private transport!: Transport;
     private telnetClient: TelnetClient | null = null;
 
@@ -41,10 +39,9 @@ export class Socket {
         });
 
         this.transport.EvtMudConnect.handle((val: [string, number]) => {
-            let enableMsdp = getConfig().msdp;
             this.telnetClient = new TelnetClient((data) => {
                 this.transport.write(data);
-            }, enableMsdp);
+            });
 
             this.telnetClient.EvtData.handle((data) => {
                 this.outputManager.handleTelnetData(data);
@@ -52,10 +49,6 @@ export class Socket {
 
             this.telnetClient.EvtServerEcho.handle((data) => {
                 this.EvtServerEcho.fire(data);
-            });
-
-            this.telnetClient.EvtMsdpVar.handle((data) => {
-                this.EvtMsdpVar.fire(data);
             });
 
             this.EvtTelnetConnect.fire(val);

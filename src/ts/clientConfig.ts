@@ -2,9 +2,6 @@ export interface MudslingerConfig {
     // Full ws:// or wss:// URL of the MUD's WebSocket port.
     mudWsUrl: string;
     mudName: string;
-    mudHost: string;
-    mudPort: number;
-    msdp: boolean;
 }
 
 export function getConfig(): MudslingerConfig {

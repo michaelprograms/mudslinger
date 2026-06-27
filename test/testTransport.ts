@@ -5,10 +5,7 @@ import { WebSocketTransport } from "../src/ts/webSocketTransport";
 function cfg(over: Partial<MudslingerConfig>): MudslingerConfig {
     return Object.assign({
         mudWsUrl: "wss://example.com:16666",
-        mudName: "Test",
-        mudHost: "127.0.0.1",
-        mudPort: 4000,
-        msdp: false
+        mudName: "Test"
     }, over);
 }
 
