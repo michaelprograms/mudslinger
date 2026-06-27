@@ -1,4 +1,4 @@
-import { AppInfo } from "./appInfo";
+import { AppInfo } from "../core/appInfo";
 
 type PanelMode = 'float' | 'top' | 'bottom' | 'left' | 'right' | 'maximize';
 

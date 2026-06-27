@@ -1,9 +1,9 @@
-import { EventHook } from "./event";
-import { UserConfig } from "./userConfig";
-import { AliasEditor } from "./aliasEditor";
-import { TriggerEditor } from "./triggerEditor";
-import { JsScriptWin } from "./jsScriptWin";
-import { AboutWin } from "./aboutWin";
+import { EventHook } from "../core/event";
+import { UserConfig } from "../core/userConfig";
+import { AliasEditor } from "../panel/alias";
+import { TriggerEditor } from "../panel/trigger";
+import { JsScriptWin } from "../panel/script";
+import { AboutWin } from "../panel/about";
 
 export class MenuBar {
     public EvtChangeDefaultColor = new EventHook<[string, string]>();

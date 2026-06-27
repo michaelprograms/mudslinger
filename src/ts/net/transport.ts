@@ -1,6 +1,6 @@
-import { EventHook } from "./event";
-import { MudslingerConfig } from "./clientConfig";
-import { WebSocketTransport } from "./webSocketTransport";
+import { EventHook } from "../core/event";
+import { MudslingerConfig } from "../core/config";
+import { WebSocketTransport } from "./websocket";
 
 // Abstraction over "move bytes to/from the MUD".
 // Implementation: WebSocketTransport (native WebSocket -> MUD websocket port).

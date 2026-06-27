@@ -1,7 +1,7 @@
 import { Telnet, NegotiationData, Cmd, CmdName, Opt, OptName } from "./telnetlib";
-import { EventHook } from "./event";
-import { UserConfig } from "./userConfig";
-import { AppInfo } from "./appInfo";
+import { EventHook } from "../core/event";
+import { UserConfig } from "../core/userConfig";
+import { AppInfo } from "../core/appInfo";
 
 
 const TTYPES: string[] = [

@@ -1,4 +1,4 @@
-import { EditorItem } from "./panelEditorBase";
+import { EditorItem } from "../panel/base";
 
 
 export interface ConfigIf {

@@ -1,10 +1,10 @@
-import { EventHook } from "./event";
+import { EventHook } from "../core/event";
 
-import { Mxp } from "./mxp";
-import { OutputManager } from "./outputManager";
-import { TelnetClient } from "./telnetClient";
-import { UserConfig } from "./userConfig";
-import { getConfig } from "./clientConfig";
+import { Mxp } from "../protocol/mxp";
+import { OutputManager } from "../manager/output";
+import { TelnetClient } from "../protocol/telnet";
+import { UserConfig } from "../core/userConfig";
+import { getConfig } from "../core/config";
 import { Transport, makeTransport } from "./transport";
 
 

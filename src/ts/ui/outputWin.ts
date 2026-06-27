@@ -1,5 +1,5 @@
-import { OutWinBase, ConfigIf } from "./outWinBase";
-import * as Util from "./util";
+import { OutWinBase, ConfigIf } from "./outputBase";
+import * as Util from "../core/util";
 
 export class OutputWin extends OutWinBase {
     constructor(config: ConfigIf) {
@@ -69,7 +69,7 @@ export class OutputWin extends OutWinBase {
         outer.appendChild(dots);
         outer.appendChild(document.createTextNode("]]\n"));
 
-        this.connIntervalId = setInterval(() => dots.textContent += '.', 1000);
+        this.connIntervalId = window.setInterval(() => dots.textContent += '.', 1000);
         this.target.appendChild(outer);
         this.scrollBottom(true);
     }

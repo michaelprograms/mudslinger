@@ -1,9 +1,9 @@
-import {OutputWin} from "./outputWin";
-import {OutWinBase} from "./outWinBase";
-import {EventHook} from "./event";
+import {OutputWin} from "../ui/outputWin";
+import {OutWinBase} from "../ui/outputBase";
+import {EventHook} from "../core/event";
 
 import { ansiColorTuple, copyAnsiColorTuple, colorIdToHtml,
-         ansiFgLookup, ansiBgLookup, ansiName, ansiLevel } from "./color";
+         ansiFgLookup, ansiBgLookup, ansiName, ansiLevel } from "../protocol/color";
 
 
 export interface ConfigIf {

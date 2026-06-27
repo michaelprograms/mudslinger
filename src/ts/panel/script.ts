@@ -1,5 +1,5 @@
-import { JsScript } from "./jsScript";
-import { UserConfig } from "./userConfig";
+import { JsScript } from "../core/script";
+import { UserConfig } from "../core/userConfig";
 import { basicSetup } from "codemirror";
 import { EditorView } from "@codemirror/view";
 import { EditorState, Compartment } from "@codemirror/state";

@@ -1,5 +1,5 @@
-import { EventHook } from "./event";
-import { EditorItem } from "./panelEditorBase";
+import { EventHook } from "../core/event";
+import { EditorItem } from "../panel/base";
 
 
 export interface ConfigIf {

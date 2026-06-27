@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import * as triggerManager from "../src/ts/triggerManager";
-import { EditorItem } from "../src/ts/panelEditorBase";
+import * as triggerManager from "./trigger";
+import { EditorItem } from "../panel/base";
 
 function testConfig(triggers: EditorItem[]): triggerManager.ConfigIf {
     let triggers_ = triggers;

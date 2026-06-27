@@ -1,5 +1,5 @@
-import { AliasManager } from "./aliasManager";
-import { PanelEditorBase } from "./panelEditorBase";
+import { AliasManager } from "../manager/alias";
+import { PanelEditorBase } from "./base";
 
 export class AliasEditor extends PanelEditorBase {
     constructor(private aliasManager: AliasManager) {

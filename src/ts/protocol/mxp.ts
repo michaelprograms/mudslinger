@@ -1,7 +1,7 @@
-import { EventHook } from "./event";
+import { EventHook } from "../core/event";
 
-import { OutputManager } from "./outputManager";
-import { OutWinBase } from "./outWinBase";
+import { OutputManager } from "../manager/output";
+import { OutWinBase } from "../ui/outputBase";
 
 
 export class Mxp {

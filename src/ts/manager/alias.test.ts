@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import * as aliasManager from "../src/ts/aliasManager";
-import { EditorItem } from "../src/ts/panelEditorBase";
+import * as aliasManager from "./alias";
+import { EditorItem } from "../panel/base";
 
 function testConfig(aliases: EditorItem[]): aliasManager.ConfigIf {
     let aliases_ = aliases;

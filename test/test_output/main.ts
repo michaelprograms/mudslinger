@@ -1,8 +1,8 @@
-import { OutputWin } from "../../src/ts/outputWin";
-import { OutWinBase } from "../../src/ts/outWinBase";
-import { OutputManager, ConfigIf } from "../../src/ts/outputManager";
-import { Mxp } from "../../src/ts/mxp";
-import { ansiColorTuple} from "../../src/ts/color";
+import { OutputWin } from "../../src/ts/ui/outputWin";
+import { OutWinBase } from "../../src/ts/ui/outputBase";
+import { OutputManager, ConfigIf } from "../../src/ts/manager/output";
+import { Mxp } from "../../src/ts/protocol/mxp";
+import { ansiColorTuple} from "../../src/ts/protocol/color";
 
 let fakeMgrConfig = {
     set: (key: "defaultAnsiFg" | "defaultAnsiBg" | "fontSize", val: ansiColorTuple | string): void => {

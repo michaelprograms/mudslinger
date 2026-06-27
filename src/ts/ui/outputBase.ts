@@ -1,6 +1,6 @@
-import * as Util from "./util";
-import { colorIdToHtml } from "./color";
-import { EventHook } from "./event";
+import * as Util from "../core/util";
+import { colorIdToHtml } from "../protocol/color";
+import { EventHook } from "../core/event";
 
 export interface ConfigIf {
     onSet(key: "colorsEnabled", cb: (val: any) => void): void;

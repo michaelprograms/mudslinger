@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseNewEnvSeq, NewEnv } from "../src/ts/telnetClient";
+import { parseNewEnvSeq, NewEnv } from "./telnet";
 
 function arrayFromString(str: string): number[] {
     return Array.from(str).map(c => c.charCodeAt(0));

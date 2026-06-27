@@ -1,4 +1,4 @@
-import * as Util from "./util";
+import * as Util from "../core/util";
 import { basicSetup } from "codemirror";
 import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";

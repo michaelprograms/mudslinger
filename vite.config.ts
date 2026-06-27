@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
             __MUD_NAME__:    JSON.stringify(env.VITE_MUD_NAME ?? 'My MUD'),
         },
         test: {
-            include: ['test/**/*.test.ts'],
+            include: ['src/**/*.test.ts'],
             environment: 'node',
         },
     };

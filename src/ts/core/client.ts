@@ -1,21 +1,21 @@
 import { UserConfig } from "./userConfig";
 import { AppInfo } from "./appInfo";
 
-import { AliasEditor } from "./aliasEditor";
-import { AliasManager } from "./aliasManager";
-import { CommandInput } from "./commandInput";
-import { JsScript, EvtScriptEmitCmd, EvtScriptEmitPrint, EvtScriptEmitEvalError, EvtScriptEmitError } from "./jsScript";
-import { JsScriptWin } from "./jsScriptWin";
-import { MenuBar } from "./menuBar";
+import { AliasEditor } from "../panel/alias";
+import { AliasManager } from "../manager/alias";
+import { CommandInput } from "../ui/commandInput";
+import { JsScript, EvtScriptEmitCmd, EvtScriptEmitPrint, EvtScriptEmitEvalError, EvtScriptEmitError } from "./script";
+import { JsScriptWin } from "../panel/script";
+import { MenuBar } from "../ui/menuBar";
 
-import { Mxp } from "./mxp";
-import { OutputManager } from "./outputManager";
-import { OutputWin } from "./outputWin";
-import { Socket } from "./socket";
-import { TriggerEditor } from "./triggerEditor";
-import { TriggerManager } from "./triggerManager";
-import { AboutWin } from "./aboutWin";
-import { getConfig } from "./clientConfig";
+import { Mxp } from "../protocol/mxp";
+import { OutputManager } from "../manager/output";
+import { OutputWin } from "../ui/outputWin";
+import { Socket } from "../net/socket";
+import { TriggerEditor } from "../panel/trigger";
+import { TriggerManager } from "../manager/trigger";
+import { AboutWin } from "../panel/about";
+import { getConfig } from "./config";
 interface ConnectionTarget {
     host: string,
     port: number

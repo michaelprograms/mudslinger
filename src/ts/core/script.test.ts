@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import * as jsScript from "../src/ts/jsScript";
+import * as jsScript from "./script";
 
 let sends: string[];
 let prints: string[];

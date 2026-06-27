@@ -1,6 +1,6 @@
-import { EventHook } from "./event";
+import { EventHook } from "../core/event";
 
-import {AliasManager} from "./aliasManager";
+import {AliasManager} from "../manager/alias";
 
 export class CommandInput {
     public EvtEmitCmd = new EventHook<string>();

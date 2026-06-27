@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "rootDir": ".",
+        "target": "ES2022",
         "strict": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,

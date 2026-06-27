@@ -1,4 +1,4 @@
-import { EventHook } from "./event";
+import { EventHook } from "../core/event";
 import { Transport } from "./transport";
 
 export class WebSocketTransport implements Transport {

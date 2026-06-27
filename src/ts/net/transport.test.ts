@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { MudslingerConfig } from "../src/ts/clientConfig";
-import { makeTransport } from "../src/ts/transport";
-import { WebSocketTransport } from "../src/ts/webSocketTransport";
+import { MudslingerConfig } from "../core/config";
+import { makeTransport } from "./transport";
+import { WebSocketTransport } from "./websocket";
 
 function cfg(over: Partial<MudslingerConfig>): MudslingerConfig {
     return Object.assign({ mudUrl: "wss://example.com:16666", mudName: "Test" }, over);
