@@ -48,12 +48,9 @@ export abstract class PanelEditorBase {
             <div class="mudpanel-titlebar">
                 <span class="mudpanel-title">${title}</span>
                 <span class="mudpanel-modes">
-                    <button data-mode="float"    title="Float">&#x22A1;</button>
-                    <button data-mode="top"      title="Dock top">&#x25B2;</button>
-                    <button data-mode="bottom"   title="Dock bottom">&#x25BC;</button>
-                    <button data-mode="left"     title="Dock left">&#x25C0;</button>
-                    <button data-mode="right"    title="Dock right">&#x25B6;</button>
-                    <button data-mode="maximize" title="Maximize">&#x26F6;</button>
+                    <button data-toggle="h"   title="Dock left / right">&#x25C0;&#x25B6;</button>
+                    <button data-toggle="v"   title="Dock top / bottom">&#x25B2;&#x25BC;</button>
+                    <button data-toggle="max" title="Float / Maximize">&#x26F6;</button>
                 </span>
                 <button class="mudpanel-close" title="Close">&#x2715;</button>
             </div>
@@ -149,19 +146,35 @@ export abstract class PanelEditorBase {
             this.clearPositionStyle();
         }
 
-        this.panel.querySelectorAll<HTMLElement>('.mudpanel-modes button').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === mode);
-        });
+        this.updateModeButtons();
+    }
+
+    private updateModeButtons(): void {
+        const hBtn   = this.panel.querySelector<HTMLElement>('[data-toggle="h"]')!;
+        const vBtn   = this.panel.querySelector<HTMLElement>('[data-toggle="v"]')!;
+        const maxBtn = this.panel.querySelector<HTMLElement>('[data-toggle="max"]')!;
+        hBtn.classList.toggle('active',   this.mode === 'left'     || this.mode === 'right');
+        vBtn.classList.toggle('active',   this.mode === 'top'      || this.mode === 'bottom');
+        maxBtn.classList.toggle('active', this.mode === 'maximize');
     }
 
     private initModeButtons(): void {
-        this.panel.querySelectorAll<HTMLElement>('.mudpanel-modes button').forEach(btn => {
-            btn.addEventListener('click', e => {
-                e.stopPropagation();
-                this.setMode(btn.dataset.mode as PanelMode);
-            });
+        const hBtn   = this.panel.querySelector<HTMLElement>('[data-toggle="h"]')!;
+        const vBtn   = this.panel.querySelector<HTMLElement>('[data-toggle="v"]')!;
+        const maxBtn = this.panel.querySelector<HTMLElement>('[data-toggle="max"]')!;
+
+        hBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            this.setMode(this.mode === 'left' ? 'right' : 'left');
         });
-        (this.panel.querySelector('[data-mode="float"]') as HTMLElement).classList.add('active');
+        vBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            this.setMode(this.mode === 'top' ? 'bottom' : 'top');
+        });
+        maxBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            this.setMode(this.mode === 'maximize' ? 'float' : 'maximize');
+        });
     }
 
     private initDrag(): void {

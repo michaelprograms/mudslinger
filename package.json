@@ -6,9 +6,8 @@
   },
   "scripts": {
     "postinstall": "node tools/postinstall.js",
-    "build": "node tools/genAppInfo.js `git rev-parse HEAD` && tsc -p tsconfig.json && webpack && node tools/buildDocs.js",
-    "build-dev": "node tools/genAppInfo.js `git rev-parse HEAD` && tsc -p tsconfig.json && webpack --mode=development && node tools/buildDocs.js",
-    "build-docs": "node tools/buildDocs.js",
+    "build": "node tools/genAppInfo.js `git rev-parse HEAD` && tsc -p tsconfig.json && webpack",
+    "build-dev": "node tools/genAppInfo.js `git rev-parse HEAD` && tsc -p tsconfig.json && webpack --mode=development",
     "start": "npx http-server static/public -p 5000",
     "build-test": "tsc -p tsconfig.test.json && webpack --config webpack.config.test.js",
     "build-test-output": "tsc -p tsconfig.test.json && webpack --config webpack.config.test_output.js"
@@ -23,7 +22,6 @@
     "@types/jquery": "^2.0.68",
     "@types/qunit": "^2.19.14",
     "html-webpack-plugin": "^5",
-    "markdown-it": "^14",
     "qunit": "^2.26.0",
     "typescript": "^5",
     "webpack": "^5",

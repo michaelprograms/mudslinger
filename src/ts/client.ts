@@ -213,33 +213,8 @@ export class Client {
 }
 
 function makeCbLocalConfigSave(): (val: string) => void {
-    let localConfigAck = localStorage.getItem("localConfigAck");
-
     return (val: string) => {
         localStorage.setItem('userConfig', val);
-        if (!localConfigAck) {
-            let win = document.createElement('div');
-            win.innerHTML = `
-                <!--header-->
-                <div>INFO</div>
-                <!--content-->
-                <div>
-                <p>
-                    Your settings are saved to this browser's <b>localStorage</b>,
-                    so they are specific to this device and browser.
-                </p>
-                <p>
-                    Use the export/import options to move settings between browsers.
-                </p>
-                </div>
-            `;
-            (<any>$(win)).jqxWindow({
-                closeButtonAction: 'close'
-            });
-
-            localConfigAck = "true";
-            localStorage.setItem('localConfigAck', localConfigAck);
-        }
     };
 }
 

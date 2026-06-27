@@ -55,13 +55,11 @@ Each entry: **current → target**, why it's worth doing, and rough effort/risk.
 1. ~~jqxProgressBar~~ — removed with MSDP sidebar
 2. ~~jqxSplitter~~ — removed; trigger/alias editor now uses a vanilla dock
    panel with float/top/bottom/left/right/maximize modes
-3. jqxWindow → still in `jsScriptWin.ts`, `aboutWin.ts`, `statusWin.ts`, and
-   one inline in `client.ts`. Replace with the same dock-panel pattern or
-   native `<dialog>`.
+3. ~~jqxWindow~~ — fully removed; all panels now use `.mudpanel` dock system
 4. jqxMenu → `menuBar.ts` only; a `<nav>` with CSS dropdowns, or keep it.
 5. jQuery is used throughout outside of jqwidgets calls, so dropping it would
-   be a bigger lift. But replacing the remaining 2 widget types would let you
-   ditch `jqwidgets-framework` entirely.
+   be a bigger lift. But replacing jqxMenu would let you ditch
+   `jqwidgets-framework` entirely.
 
 ### custom output renderer → xterm.js
 - **Current**: bespoke renderer in `outputWin.ts` / `outWinBase.ts` /
@@ -94,3 +92,4 @@ Each entry: **current → target**, why it's worth doing, and rough effort/risk.
 - **TypeScript / webpack patch bumps**: routine, no design work needed.
 - need to send appropriate Terminal environs (CHARSET?)
 - GMCP support
+- ~~Replace 'Docs' with inline dialog~~ — done; About panel now has three tabs (About / Scripting API / License), external docs site and buildDocs build step removed
