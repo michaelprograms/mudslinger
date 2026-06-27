@@ -27,7 +27,7 @@ Ongoing work to remove legacy dependencies and simplify the stack.
   xterm.js has no MUD protocol awareness. Keep `static/test/test_output.html` as the visual
   regression harness while evaluating.
 - **TypeScript bumps** — routine, no design work needed
-- move config out of static directory to root of project or src?
+- break client.css into component.module.css Vite style files
 
 ## Dependency status
 
