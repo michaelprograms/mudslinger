@@ -13,8 +13,8 @@ export class ProxyTransport implements Transport {
     public EvtData = new EventHook<ArrayBuffer>();
     public EvtSetClientIp = new EventHook<string>();
 
-    private ioConn: IoSocket;
-    private ioEvt: IoEvent;
+    private ioConn!: IoSocket;
+    private ioEvt!: IoEvent;
 
     constructor(private socketIoUrl: string) {
     }
@@ -24,10 +24,10 @@ export class ProxyTransport implements Transport {
         this.ioConn = io(this.socketIoUrl);
 
         this.ioConn.on("connect", () => {
-            this.EvtLinkConnect.fire({ sid: this.ioConn.id });
+            this.EvtLinkConnect.fire({ sid: this.ioConn.id || "" });
         });
         this.ioConn.on("disconnect", () => {
-            this.EvtLinkDisconnect.fire(null);
+            this.EvtLinkDisconnect.fire();
         });
         this.ioConn.on("error", (msg: any) => {
             this.EvtLinkError.fire(msg);
@@ -42,7 +42,7 @@ export class ProxyTransport implements Transport {
             this.EvtMudConnect.fire(val);
         });
         this.ioEvt.srvTelnetClosed.handle(() => {
-            this.EvtMudDisconnect.fire(null);
+            this.EvtMudDisconnect.fire();
         });
         this.ioEvt.srvTelnetError.handle((data) => {
             this.EvtMudError.fire(data);
@@ -66,6 +66,6 @@ export class ProxyTransport implements Transport {
     }
 
     public closeMud(): void {
-        this.ioEvt.clReqTelnetClose.fire(null);
+        this.ioEvt.clReqTelnetClose.fire(undefined);
     }
 }

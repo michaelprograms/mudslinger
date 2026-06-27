@@ -15,7 +15,7 @@ export class TelnetClient extends Telnet {
     public EvtServerEcho = new EventHook<boolean>();
     public EvtMsdpVar = new EventHook<[MsdpVarName, MsdpVal]>();
 
-    public clientIp: string;
+    public clientIp: string = "";
 
     private ttypeIndex: number = 0;
 
@@ -111,6 +111,9 @@ export class TelnetClient extends Telnet {
     private onNegotiation(data: NegotiationData) {
         let {cmd, opt} = data;
         // console.log(CmdName(cmd), OptName(opt));
+
+        // opt is null only for SB/SE, which carry no option and aren't handled here.
+        if (opt === null) return;
 
         if (cmd === Cmd.WILL) {
             if (opt === Opt.ECHO) {
@@ -213,15 +216,15 @@ function arrayFromString(str: string): number[] {
     return arr;
 }
 
-export function parseNewEnvSeq(seq: number[]): [number, number, string][] {
-    let rtn: [number, number, string][] = [];
+export function parseNewEnvSeq(seq: number[]): [number, number | null, string][] {
+    let rtn: [number, number | null, string][] = [];
 
     let i: number = 0;
 
-    let firstAct: number = null;
-    let act: number = null;
-    let varType: number = null;
-    let varName: string = null;
+    let firstAct: number | null = null;
+    let act: number | null = null;
+    let varType: number | null = null;
+    let varName: string | null = null;
     
     while (true) {
         if (act !== null && varType !== null && varName !== null) {

@@ -20,9 +20,9 @@ export class Socket {
     public EvtSetClientIp = new EventHook<string>();
     public EvtMsdpVar = new EventHook<[MsdpVarName, MsdpVal]>();
 
-    private transport: Transport;
-    private telnetClient: TelnetClient;
-    private clientIp: string;
+    private transport!: Transport;
+    private telnetClient: TelnetClient | null = null;
+    private clientIp: string = "";
 
     constructor(private outputManager: OutputManager, private mxp: Mxp) {
     }
@@ -35,7 +35,7 @@ export class Socket {
         });
 
         this.transport.EvtLinkDisconnect.handle(() => {
-            this.EvtWsDisconnect.fire(null);
+            this.EvtWsDisconnect.fire();
         });
 
         this.transport.EvtLinkError.handle((msg: any) => {
@@ -69,7 +69,7 @@ export class Socket {
 
         this.transport.EvtMudDisconnect.handle(() => {
             this.telnetClient = null;
-            this.EvtTelnetDisconnect.fire(null);
+            this.EvtTelnetDisconnect.fire();
         });
 
         this.transport.EvtMudError.handle((data) => {

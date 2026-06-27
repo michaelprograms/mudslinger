@@ -1,7 +1,6 @@
 import {OutputWin} from "./outputWin";
 import {OutWinBase} from "./outWinBase";
 import {EventHook} from "./event";
-import { utf8decode } from "./util";
 
 import { ansiColorTuple, copyAnsiColorTuple, colorIdToHtml,
          ansiFgLookup, ansiBgLookup, ansiName, ansiLevel } from "./color";
@@ -26,16 +25,16 @@ export class OutputManager {
     private ansiReverse = false;
     private ansiBold = false;
 
-    private ansiFg: ansiColorTuple;
-    private ansiBg: ansiColorTuple;
+    private ansiFg: ansiColorTuple | null = null;
+    private ansiBg: ansiColorTuple | null = null;
 
-    private fgColorId: string;
-    private bgColorId: string;
+    private fgColorId: string | null = null;
+    private bgColorId: string | null = null;
 
-    private defaultAnsiFg: ansiColorTuple;
-    private defaultFgId: string;
-    private defaultAnsiBg: ansiColorTuple;
-    private defaultBgId: string;
+    private defaultAnsiFg!: ansiColorTuple;
+    private defaultFgId!: string;
+    private defaultAnsiBg!: ansiColorTuple;
+    private defaultBgId!: string;
 
     constructor(private outputWin: OutputWin, private config: ConfigIf) {
         this.targetWindows = [this.outputWin];
@@ -102,7 +101,7 @@ export class OutputManager {
         this.target.addText(data);
     }
 
-    private setFgColorId(colorId: string) {
+    private setFgColorId(colorId: string | null) {
         this.fgColorId = colorId;
         this.pushFgColorIdToTarget();
     }
@@ -115,7 +114,7 @@ export class OutputManager {
         }
     }
 
-    private setAnsiFg(color: ansiColorTuple) {
+    private setAnsiFg(color: ansiColorTuple | null) {
         this.ansiFg = color;
         if (color) {
             this.setFgColorId(color[0] + "-" + color[1]);
@@ -124,7 +123,7 @@ export class OutputManager {
         }
     }
 
-    private setBgColorId(color: string) {
+    private setBgColorId(color: string | null) {
         this.bgColorId = color;
         this.pushBgColorIdToTarget();
     }
@@ -137,7 +136,7 @@ export class OutputManager {
         }
     }
 
-    private setAnsiBg(color: ansiColorTuple) {
+    private setAnsiBg(color: ansiColorTuple | null) {
         this.ansiBg = color;
         if (color) {
             this.setBgColorId(color[0] + "-" + color[1]);
@@ -170,9 +169,10 @@ export class OutputManager {
             }
         }
 
-        /* Standard ANSI color sequence */
-        let new_fg: ansiColorTuple;
-        let new_bg: ansiColorTuple;
+        /* Standard ANSI color sequence.
+           undefined = untouched this sequence, null = explicit reset. */
+        let new_fg: ansiColorTuple | null | undefined = undefined;
+        let new_bg: ansiColorTuple | null | undefined = undefined;
 
         for (let i = 0; i < codes.length; i++) {
 
@@ -310,31 +310,17 @@ export class OutputManager {
         this.config.set("defaultAnsiBg", this.defaultAnsiBg);
     }
 
-    private partialUtf8: Uint8Array;
-    private partialSeq: string;
+    // Streaming decoder: buffers incomplete multibyte chars split across packets.
+    private utf8Decoder = new TextDecoder();
+    private partialSeq: string | null = null;
     public handleTelnetData(data: ArrayBuffer) {
-        // console.timeEnd("command_resp");
-        // console.time("_handle_telnet_data");
-
         let rx = this.partialSeq || "";
         this.partialSeq = null;
 
         if (this.config.get("utf8Enabled") === true) {
-            let utf8Data: Uint8Array;
-            if (this.partialUtf8) {
-                utf8Data = new Uint8Array(data.byteLength + this.partialUtf8.length);
-                utf8Data.set(this.partialUtf8, 0);
-                utf8Data.set(new Uint8Array(data), this.partialUtf8.length);
-                this.partialUtf8 = null;
-            } else {
-                utf8Data = new Uint8Array(data);
-            }
-
-            let result = utf8decode(utf8Data);
-            this.partialUtf8 = result.partial;
-            rx += result.result;
+            rx += this.utf8Decoder.decode(data, { stream: true });
         } else {
-            rx += String.fromCharCode.apply(String, new Uint8Array(data));
+            rx += String.fromCharCode.apply(String, Array.from(new Uint8Array(data)));
         }
 
         let output = "";
@@ -457,8 +443,7 @@ export class OutputManager {
                 this.handleText(output);
             }
             this.partialSeq = rx.slice(i);
-            console.log("Got partial:");
-            console.log(this.partialSeq);
+            console.log("Got partial codes:", Array.from(this.partialSeq).map(c => c.charCodeAt(0)));
             break;
         }
         if (!this.partialSeq) {
@@ -466,6 +451,5 @@ export class OutputManager {
             this.handleText(output);
         }
         this.outputDone();
-        // console.timeEnd("_handle_telnet_data");
     }
 }

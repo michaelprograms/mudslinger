@@ -15,7 +15,7 @@ export interface ScriptIf {
 export class TriggerManager {
     public EvtEmitTriggerCmds = new EventHook<string[]>();
 
-    public triggers: Array<TrigAlItem> = null;
+    public triggers: Array<TrigAlItem> = [];
 
     constructor(private jsScript: ScriptIf, private config: ConfigIf) {
         /* backward compatibility */

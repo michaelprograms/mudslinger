@@ -47,12 +47,12 @@ export class Client {
         let enableMsdp: boolean = getConfig().msdp;
         let clientName: string = "Mudslinger";
 
-        let chatWin: OutWinBase;
-        let mapWin: MapWin;
-        let gaugeWin: GaugeWin;
+        let chatWin: OutWinBase | undefined;
+        let mapWin: MapWin | undefined;
+        let gaugeWin: GaugeWin | undefined;
 
         if (enableMsdp) {
-            let mainWin = document.getElementById("mainWin");
+            let mainWin = document.getElementById("mainWin")!;
             mainWin.id = "mainVertSplit";
             mainWin.innerHTML = `
             <div>
@@ -156,7 +156,7 @@ export class Client {
         });
 
         this.socket.EvtTelnetTryConnect.handle((val: [string, number]) => {
-           this.outputWin.handleTelnetTryConnect(val[0], val[1]); 
+            this.outputWin.handleTelnetTryConnect(val[0], val[1]); 
         });
 
         this.socket.EvtTelnetConnect.handle((_val: [string, number]) => {
@@ -321,10 +321,13 @@ export namespace Mudslinger {
     export let client: Client;
     export async function init() {
         let cfg = getConfig();
-        let connectionTarget: ConnectionTarget = {
-            host: cfg.mudHost,
-            port: cfg.mudPort
-        };
+        let connectionTarget: ConnectionTarget;
+        if (cfg.transport === "websocket" && cfg.mudWsUrl) {
+            let u = new URL(cfg.mudWsUrl);
+            connectionTarget = { host: u.hostname, port: Number(u.port) };
+        } else {
+            connectionTarget = { host: cfg.mudHost, port: cfg.mudPort };
+        }
 
         UserConfig.init(localStorage.getItem("userConfig"), makeCbLocalConfigSave());
 

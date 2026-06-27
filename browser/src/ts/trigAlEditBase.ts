@@ -28,11 +28,11 @@ export abstract class TrigAlEditBase {
 
     /* these need to be overridden */
     protected abstract getList(): Array<string>;
-    protected abstract getItem(ind: number): TrigAlItem;
+    protected abstract getItem(ind: number): TrigAlItem | null;
     protected abstract saveItem(ind: number, pattern: string, value: string, checked: boolean, is_script: boolean): void;
     protected abstract deleteItem(ind: number): void;
 
-    protected abstract defaultPattern: string;
+    protected abstract defaultPattern: string | null;
     protected abstract defaultValue: string;
     protected abstract defaultScript: string;
 

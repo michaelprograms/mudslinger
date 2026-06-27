@@ -10,7 +10,7 @@ export class WebSocketTransport implements Transport {
     public EvtMudError = new EventHook<string>();
     public EvtData = new EventHook<ArrayBuffer>();
 
-    private ws: WebSocket;
+    private ws!: WebSocket;
 
     constructor(private mudWsUrl: string) {
     }
@@ -48,7 +48,7 @@ export class WebSocketTransport implements Transport {
         };
 
         this.ws.onclose = () => {
-            this.EvtMudDisconnect.fire(null);
+            this.EvtMudDisconnect.fire();
         };
 
         this.ws.onerror = () => {

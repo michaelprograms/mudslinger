@@ -27,7 +27,7 @@ export class TriggerEditor extends TrigAlEditBase {
         + "indices according to match groups.\n"
         + "*/\n";
 
-    protected defaultPattern: string = null;
+    protected defaultPattern: string | null = null;
 
     protected getList() {
         let triggers = this.triggerManager.triggers;

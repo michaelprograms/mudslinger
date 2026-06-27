@@ -44,11 +44,11 @@ export class MapWin {
 
     private dirs: {[k: string]: string} = {};
     private roomName = "";
-    private roomVnum: string = null;
-    private roomSector: string = null;
+    private roomVnum: string | null = null;
+    private roomSector: string | null = null;
 
-    private editMode: string = null;
-    private editVnum: string = null;
+    private editMode: string | null = null;
+    private editVnum: string | null = null;
 
     private updateGrid() {
         let output = "";

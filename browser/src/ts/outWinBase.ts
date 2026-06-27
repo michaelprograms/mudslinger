@@ -50,14 +50,14 @@ export class OutWinBase {
         }
     }
 
-    private fgColorId: string;
-    private bgColorId: string;
+    private fgColorId: string | null = null;
+    private bgColorId: string | null = null;
 
-    public setFgColorId(colorId: string) {
+    public setFgColorId(colorId: string | null) {
         this.fgColorId = colorId;
     }
 
-    public setBgColorId(colorId: string) {
+    public setBgColorId(colorId: string | null) {
         this.bgColorId = colorId;
     };
 
@@ -96,7 +96,7 @@ export class OutWinBase {
         let popped = this.$targetElems.pop();
         this.$target = this.$targetElems[this.$targetElems.length - 1];
 
-        if (popped.hasClass("underline")) {
+        if (popped && popped.hasClass("underline")) {
             this.underlineNest -= 1;
         }
 
@@ -118,7 +118,7 @@ export class OutWinBase {
             classText += "bg-" + this.bgColorId + " ";
         }
         if (this.underlineNest > 0) {
-            classText += "bb-" + this.fgColorId + " ";
+            classText += "bb-" + (this.fgColorId || "") + " ";
         }
 
         if (classText !== "") {
@@ -130,7 +130,7 @@ export class OutWinBase {
         if (this.underlineNest > 0) {
             styleText += "border-bottom-style:solid;";
             styleText += "border-bottom-width:1px;";
-            if (this.colorsEnabled) {
+            if (this.colorsEnabled && this.fgColorId) {
                 styleText += "border-bottom-color:" + colorIdToHtml[this.fgColorId] + ";";
             }
         }

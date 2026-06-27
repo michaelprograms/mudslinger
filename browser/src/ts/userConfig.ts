@@ -7,7 +7,7 @@ export namespace UserConfig {
 
     let saveFunc: (v: string) => void;
 
-    export function init(userConfigStr: string, saveFunc_: (v: string) => void) {
+    export function init(userConfigStr: string | null, saveFunc_: (v: string) => void) {
         saveFunc = saveFunc_;
 
         if (userConfigStr) {

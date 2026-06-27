@@ -5,13 +5,13 @@ export class EventHook<TData> {
         this.handlers.push([callback, context]);
     }
 
-    public fire(data: TData): boolean {
+    public fire(data?: TData): boolean {
         if (this.handlers.length < 1) {
             return false;
         }
 
         for (let [cb, context] of this.handlers) {
-            cb.call(context, data);
+            cb.call(context, data as TData);
         }
 
         return true;

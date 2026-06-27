@@ -7,17 +7,17 @@ const GAUGE_WIDTH = "100%";
 
 
 class MsdpVals {
-    HEALTH: number;
-    HEALTH_MAX: number;
-    MANA: number;
-    MANA_MAX: number;
-    MOVEMENT: number;
-    MOVEMENT_MAX: number;
-    EXPERIENCE_TNL: number;
-    EXPERIENCE_MAX: number;
-    OPPONENT_HEALTH: number;
-    OPPONENT_HEALTH_MAX: number;
-    OPPONENT_NAME: string;
+    HEALTH: number = 0;
+    HEALTH_MAX: number = 0;
+    MANA: number = 0;
+    MANA_MAX: number = 0;
+    MOVEMENT: number = 0;
+    MOVEMENT_MAX: number = 0;
+    EXPERIENCE_TNL: number = 0;
+    EXPERIENCE_MAX: number = 0;
+    OPPONENT_HEALTH: number = 0;
+    OPPONENT_HEALTH_MAX: number = 0;
+    OPPONENT_NAME: string = "";
 }
 
 

@@ -5,7 +5,7 @@ export let EvtScriptEmitPrint = new EventHook<string>();
 export let EvtScriptEmitError = new EventHook<any>();
 export let EvtScriptEmitEvalError = new EventHook<any>();
 
-function makeScript(text: string, argsSig: string) {
+function makeScript(this: any, text: string, argsSig: string) {
     let _scriptFunc_: any;
     /* Scripting API section */
     let send = function(cmd: string) {

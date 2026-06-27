@@ -83,3 +83,4 @@ Each entry: **current → target**, why it's worth doing, and rough effort/risk.
 - **socket.io-client** `^4`: already current major (v4). Just keep it patched;
   bump in lockstep with the proxy's `socket.io` server version.
 - **TypeScript / webpack patch bumps**: routine, no design work needed.
+- need to send appropriate Terminal environs (CHARSET?)

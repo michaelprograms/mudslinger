@@ -6,7 +6,7 @@ export class AliasEditor extends TrigAlEditBase {
         super("ALIASES");
     }
 
-    protected defaultPattern: string = null;
+    protected defaultPattern: string | null = null;
 
     protected defaultValue: string = 
               "Put the alias value here.\n"

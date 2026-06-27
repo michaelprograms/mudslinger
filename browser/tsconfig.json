@@ -1,6 +1,8 @@
 {
     "compilerOptions": {
         "outDir": "./build",
+        "rootDir": "..",
+        "strict": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,
         "lib": [

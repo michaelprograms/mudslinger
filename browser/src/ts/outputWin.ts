@@ -72,7 +72,7 @@ export class OutputWin extends OutWinBase {
         this.scrollBottom(true);
     }
 
-    private connIntervalId: number = null;
+    private connIntervalId: number | null = null;
 
     handleTelnetTryConnect(host: string, port: number): void {
         if (this.connIntervalId) {
@@ -82,7 +82,7 @@ export class OutputWin extends OutWinBase {
 
         let elem = document.createElement("span");
         elem.innerHTML = "<span style='color:cyan'>"
-            + "[[Telnet connecting to " + host + ":" + port.toString()
+            + "[[Connecting to " + host + ":" + port.toString()
             + "<span class='conn-dots'></span>"
             + "]]<br>";
 
@@ -101,7 +101,7 @@ export class OutputWin extends OutWinBase {
         }
         this.$target.append(
             "<span style=\"color:cyan\">"
-            + "[[Telnet connected]]"
+            + "[[Connected]]"
             + "<br>"
             + "</span>");
         this.scrollBottom(true);
@@ -114,7 +114,7 @@ export class OutputWin extends OutWinBase {
         }
         this.$target.append(
             "<span style=\"color:cyan\">"
-            + "[[Telnet disconnected]]"
+            + "[[Disconnected]]"
             + "<br>"
         + "</span>");
         this.scrollBottom(true);

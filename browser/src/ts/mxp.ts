@@ -10,7 +10,7 @@ export class Mxp {
     private openTags: Array<string> = [];
     private tagHandlers: Array<(tag: string) => boolean> = [];
 
-    constructor(private outputManager: OutputManager, private chatWin: OutWinBase, private clientName: string) {
+    constructor(private outputManager: OutputManager, private chatWin: OutWinBase | undefined, private clientName: string) {
         this.makeTagHandlers();
     }
 
@@ -49,7 +49,7 @@ export class Mxp {
                 let match = re.exec(tag);
                 if (match) {
                     this.openTags.push("dest");
-                    this.outputManager.pushTarget(this.chatWin);
+                    this.outputManager.pushTarget(this.chatWin!);
                     return true;
                 }
 
@@ -137,7 +137,7 @@ export class Mxp {
                     elem.addClass("underline");
 
                     elem.click(() => {
-                        this.EvtEmitCmd.fire({value: tag_m[1], noPrint: false});
+                        this.EvtEmitCmd.fire({value: cmd, noPrint: false});
                     });
                     this.openTags.push("send");
                     this.outputManager.pushMxpElem(elem);
@@ -167,7 +167,7 @@ export class Mxp {
                 } else {
                     this.openTags.pop();
                     let elem = this.outputManager.popMxpElem();
-                    if (!elem[0].hasAttribute("title")) {
+                    if (elem && !elem[0].hasAttribute("title")) {
                         /* didn"t have explicit href so we need to do it here */
                         let txt = elem.text();
                         elem[0].setAttribute("title", txt);

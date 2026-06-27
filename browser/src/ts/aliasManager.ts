@@ -12,7 +12,7 @@ export interface ScriptIf {
 }
 
 export class AliasManager {
-    public aliases: Array<TrigAlItem> = null;
+    public aliases: Array<TrigAlItem> = [];
 
     constructor(private jsScript: ScriptIf, private config: ConfigIf) {
         this.loadAliases();
@@ -29,7 +29,7 @@ export class AliasManager {
     // return the result of the alias if any (string with embedded lines)
     // return true if matched and script ran
     // return null if no match
-    public checkAlias(cmd: string): boolean | string {
+    public checkAlias(cmd: string): boolean | string | null {
         if (this.config.getDef("aliasesEnabled", true) !== true) return null;
 
         for (let i = 0; i < this.aliases.length; i++) {
