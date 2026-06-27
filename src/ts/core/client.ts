@@ -65,14 +65,6 @@ export class Client {
         this.menuBar = new MenuBar(this.aliasEditor, this.triggerEditor, this.jsScriptWin, this.aboutWin);
 
         // MenuBar events
-        this.menuBar.EvtChangeDefaultColor.handle((data: [string, string]) => {
-            this.outputManager.handleChangeDefaultColor(data[0], data[1]);
-        });
-
-        this.menuBar.EvtChangeDefaultBgColor.handle((data: [string, string]) => {
-            this.outputManager.handleChangeDefaultBgColor(data[0], data[1]);
-        });
-
         this.menuBar.EvtChangeFontSize.handle((sz: string) => {
             this.outputManager.handleChangeFontSize(sz);
         });
