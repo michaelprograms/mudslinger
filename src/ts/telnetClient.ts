@@ -18,6 +18,7 @@ export class TelnetClient extends Telnet {
     private ttypeIndex: number = 0;
 
     private doNewEnviron: boolean = false;
+    private doCharset: boolean = false;
 
     private msdpEnabled: boolean = false;
     private supportedMsdpVars: string[] = [];
@@ -66,13 +67,18 @@ export class TelnetClient extends Telnet {
     private handleNewEnvSeq(seq: number[]): void {
         let actions = parseNewEnvSeq(seq);
 
+        const utf8 = UserConfig.getDef("utf8Enabled", false) === true;
         let varFuncs: {[k: string]: () => string} = {
-            // Browser has no way to know its own IP over a direct WebSocket.
-            'IPADDRESS': () => { return ""; },
-            'CLIENT_NAME': () => { return TTYPES[0]; },
-            'CLIENT_VERSION': () => {
-                return `${AppInfo.Version}`;
-            }
+            'CLIENT_NAME':    () => TTYPES[0],
+            'CLIENT_VERSION': () => AppInfo.Version,
+            'ANSI':           () => "1",
+            'VT100':          () => "0",
+            '256_COLORS':     () => "1",
+            'UTF-8':          () => utf8 ? "1" : "0",
+            'CHARSET':        () => utf8 ? "UTF-8" : "ASCII",
+            'SCREEN_READER':  () => "0",
+            'TERMINAL_TYPE':  () => "ANSI-256COLOR",
+            'MTTS':           () => utf8 ? "13" : "9",
         };
 
         for (let i = 0; i < actions.length; i++) {
@@ -121,7 +127,16 @@ export class TelnetClient extends Telnet {
                 return;
             }
 
-            if (sb.length === 2 && sb[0] === Opt.TTYPE && sb[1] === SubNeg.SEND) {
+            if (this.doCharset && sb[0] === Opt.CHARSET && sb.length > 2 && sb[1] === 1 /* REQUEST */) {
+                const sep = String.fromCharCode(sb[2]);
+                const list = String.fromCharCode(...sb.slice(2)).split(sep).map(s => s.toUpperCase());
+                if (list.indexOf("UTF-8") !== -1) {
+                    this.writeArr([Cmd.IAC, Cmd.SB, Opt.CHARSET, SubNeg.ACCEPTED]
+                        .concat(arrayFromString("UTF-8"), [Cmd.IAC, Cmd.SE]));
+                } else {
+                    this.writeArr([Cmd.IAC, Cmd.SB, Opt.CHARSET, SubNeg.REJECTED, Cmd.IAC, Cmd.SE]);
+                }
+            } else if (sb.length === 2 && sb[0] === Opt.TTYPE && sb[1] === SubNeg.SEND) {
                 let ttype: string;
                 if (this.ttypeIndex >= TTYPES.length) {
                     ttype = "UNKNOWNIP";
@@ -151,6 +166,9 @@ export class TelnetClient extends Telnet {
             if (opt === Opt.ECHO) {
                 this.EvtServerEcho.fire(true);
                 this.writeArr([Cmd.IAC, Cmd.DO, Opt.ECHO]);
+            } else if (opt === Opt.CHARSET && UserConfig.getDef("utf8Enabled", false) === true) {
+                this.writeArr([Cmd.IAC, Cmd.DO, Opt.CHARSET]);
+                this.doCharset = true;
             } else if (this.msdpEnabled && opt === ExtOpt.MSDP) {
                 this.writeArr([Cmd.IAC, Cmd.DO, ExtOpt.MSDP]);
                 this.writeMsdpVar("CLIENT_ID", TTYPES[0]);
@@ -174,6 +192,11 @@ export class TelnetClient extends Telnet {
             } else if (opt == Opt.NEW_ENVIRON) {
                 this.writeArr([Cmd.IAC, Cmd.WILL, Opt.NEW_ENVIRON]);
                 this.doNewEnviron = true;
+            } else if (opt === Opt.CHARSET && UserConfig.getDef("utf8Enabled", false) === true) {
+                this.writeArr([Cmd.IAC, Cmd.WILL, Opt.CHARSET]);
+                this.doCharset = true;
+                this.writeArr([Cmd.IAC, Cmd.SB, Opt.CHARSET, 1 /* REQUEST */]
+                    .concat(arrayFromString(";UTF-8"), [Cmd.IAC, Cmd.SE]));
             } else if (opt === ExtOpt.MXP && UserConfig.getDef("mxpEnabled", true) === true) {
                 this.writeArr([Cmd.IAC, Cmd.WILL, ExtOpt.MXP]);
             } else {
@@ -182,6 +205,8 @@ export class TelnetClient extends Telnet {
         } else if (cmd === Cmd.DONT) {
             if (opt === Opt.NEW_ENVIRON) {
                 this.doNewEnviron = false;
+            } else if (opt === Opt.CHARSET) {
+                this.doCharset = false;
             }
         }
     }
