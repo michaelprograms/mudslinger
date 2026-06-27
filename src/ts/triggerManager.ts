@@ -1,11 +1,11 @@
 import { EventHook } from "./event";
-import { TrigAlItem } from "./trigAlEditBase";
+import { EditorItem } from "./panelEditorBase";
 
 
 export interface ConfigIf {
-    set(key: "triggers", val: TrigAlItem[]): void;
+    set(key: "triggers", val: EditorItem[]): void;
     getDef(key: "triggersEnabled", def: boolean): boolean;
-    get(key: "triggers"): TrigAlItem[];
+    get(key: "triggers"): EditorItem[];
 }
 
 export interface ScriptIf {
@@ -15,7 +15,7 @@ export interface ScriptIf {
 export class TriggerManager {
     public EvtEmitTriggerCmds = new EventHook<string[]>();
 
-    public triggers: Array<TrigAlItem> = [];
+    public triggers: Array<EditorItem> = [];
 
     constructor(private jsScript: ScriptIf, private config: ConfigIf) {
         /* backward compatibility */

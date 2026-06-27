@@ -1,13 +1,27 @@
-a {
-    color: inherit;
+/* ── color palette ───────────────────────────────────────────────────── */
+:root {
+    /* Terminal output — intentionally separate from UI chrome */
+    --terminal-bg: #000;
+    --terminal-fg: rgb(0, 187, 0);   /* classic MUD green */
+
+    /* UI chrome — dark theme */
+    --ui-bg-deep:        #111;       /* inputs, listboxes */
+    --ui-bg-base:        #1e1e1e;    /* panel/window bodies */
+    --ui-bg-raised:      #2d2d2d;    /* titlebars, toolbars */
+    --ui-bg-hover:       #444;       /* interactive hover */
+    --ui-border:         #555;       /* standard border */
+    --ui-border-active:  #aaa;       /* focused / selected state */
+    --ui-text:           #ccc;       /* primary text */
+    --ui-danger:         #900;       /* destructive actions */
 }
 
-a:link, a:visited {
-    text-decoration: none;
-}
+/* ── base ────────────────────────────────────────────────────────────── */
+
+a { color: inherit; }
+a:link, a:visited { text-decoration: none; }
 
 .CodeMirror {
-    border: 1px solid black;
+    border: 1px solid var(--ui-border);
 }
 
 #mudslinger {
@@ -17,77 +31,59 @@ a:link, a:visited {
 }
 
 #mainWin {
-    display: -webkit-flex;
     display: flex;
-    -webkit-flex-direction: column;
     flex-direction: column;
-    height:100%;
-    width:100%;
+    height: 100%;
+    width: 100%;
 }
 
 #cmdCont {
-    display: -webkit-flex;
     display: flex;
-    -webkit-flex-direction: row;
     flex-direction: row;
 }
 
 #winOutput, .mxp-dest-output {
-    height:calc(100% - 21px);
-    margin:0;
-    padding:0;
+    height: calc(100% - 21px);
+    margin: 0;
+    padding: 0;
 }
 
 .outputText {
     font-size: small;
-    background-color:black;
-    font-family:"Consolas", "DejaVu Sans Mono", "Courier New", monospace;
-    color:rgb(0,187,0); /* low green */
+    background-color: var(--terminal-bg);
+    color: var(--terminal-fg);
+    font-family: "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
     white-space: pre-wrap;
-    overflow-y:scroll;
-    overflow-x:scroll;
-    width:100%;
+    overflow-y: scroll;
+    overflow-x: scroll;
+    width: 100%;
 }
 
 #cmdInput {
     margin: 0;
     padding: 0;
     flex: 1;
-}
-
-#cmdInput {
     resize: none;
-    font-family:"Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+    font-family: "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
     font-size: small;
     display: inline;
 }
 
 .chkCmdInputCmdStackCont .toolTipText {
     display: none;
-    font-family:"Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+    font-family: "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
     font-size: small;
 }
+.chkCmdInputCmdStackCont:hover .toolTipText { display: inline; }
 
-.chkCmdInputCmdStackCont:hover .toolTipText {
-    display: inline;
-}
-
-.winEdit-pattern {
-    width: 100%;
-}
-
-.winEdit-listBox {
-    width: 100%;
-    height: 100%;
-}
+.winEdit-pattern { width: 100%; }
+.winEdit-listBox { width: 100%; height: 100%; }
 
 #leftPanel {
-    height:100%;
-    width:100%;
-    display: -webkit-flex;
+    height: 100%;
+    width: 100%;
     display: flex;
-    -webkit-flex-direction: column;
-    flex-direction: column;   
+    flex-direction: column;
 }
 
 #rightPanel {
@@ -96,44 +92,132 @@ a:link, a:visited {
     height: 100%;
 }
 
-#winMap {
-    background-color:grey;
+/* ── dock panel (trigger/alias editors) ─────────────────────────────── */
+
+.mudpanel {
+    position: fixed;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    background: var(--ui-bg-base);
+    border: 1px solid var(--ui-border);
+    color: var(--ui-text);
+    font-family: "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+    font-size: small;
+    min-width: 280px;
+    min-height: 180px;
+    overflow: hidden;
 }
 
-#winGauge {
-    background-color:black;
-    height: 10%;
+.mudpanel[hidden] { display: none; }
+
+/* float: size/position from inline style; browser resize handle */
+.mudpanel-float    { resize: both; }
+.mudpanel-top      { top: 0;    left: 0; right: 0;  height: 40%; }
+.mudpanel-bottom   { bottom: 0; left: 0; right: 0;  height: 40%; }
+.mudpanel-left     { top: 0;    left: 0; bottom: 0; width: 40%;  }
+.mudpanel-right    { top: 0;    right: 0; bottom: 0; width: 40%; }
+.mudpanel-maximize { inset: 0; }
+
+.mudpanel-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px;
+    background: var(--ui-bg-raised);
+    border-bottom: 1px solid var(--ui-border);
+    cursor: move;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.mudpanel-title { flex: 1; font-weight: bold; }
+
+.mudpanel-modes { display: flex; gap: 2px; }
+
+.mudpanel-modes button,
+.mudpanel-close {
+    background: none;
+    border: 1px solid var(--ui-border);
+    color: var(--ui-text);
+    cursor: pointer;
+    padding: 1px 5px;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.mudpanel-modes button:hover,
+.mudpanel-close:hover { background: var(--ui-bg-hover); }
+
+.mudpanel-modes button.active { border-color: var(--ui-border-active); background: var(--ui-bg-hover); }
+
+.mudpanel-close { border-color: transparent; margin-left: 2px; }
+.mudpanel-close:hover { background: var(--ui-danger); border-color: var(--ui-danger); }
+
+.mudpanel-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+.winEdit-list-pane {
+    display: flex;
+    flex-direction: column;
+    width: 25%;
+    min-width: 80px;
+    resize: horizontal;
+    overflow: auto;
+    border-right: 1px solid var(--ui-border);
+    flex-shrink: 0;
+}
+
+.winEdit-list-buttons { padding: 4px; flex-shrink: 0; }
+
+.winEdit-listBox {
+    flex: 1;
     width: 100%;
+    background: var(--ui-bg-deep);
+    color: var(--ui-text);
+    border: none;
+    overflow-y: auto;
 }
 
-#winGauge .gaugeBar {
-    background-color:grey;
+.winEdit-edit-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 4px;
+    gap: 4px;
 }
 
-.gaugeBar .jqx-progressbar-text, .gaugeText {
-    color: yellow;
-    text-shadow: 0px 0px 2px black;
-    font-size: 10px;
-    font-family: Courier;
+.winEdit-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
-#winMap-roomName {
-    min-height: 25px;
-    border-style: solid;
-    border-color: black;
-    background-color: green;
-    font-weight: bold;
+.winEdit-value-label { flex-shrink: 0; }
+
+.winEdit-value-area {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-#winMap-olcStatus {
-    border-style: solid;
-    border-color: black;
-    font-weight: bold;
-}
-
-#winChat {
+.winEdit-textArea,
+.CodeMirror {
+    flex: 1;
+    width: 100%;
     height: 100%;
-    margin:0;
-    padding:0;
-    flex-grow: 1;
+    box-sizing: border-box;
+    background: var(--ui-bg-deep);
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
+    font-family: inherit;
+    font-size: inherit;
+    resize: none;
 }

@@ -1,7 +1,7 @@
 import { AliasManager } from "./aliasManager";
-import { TrigAlEditBase } from "./trigAlEditBase";
+import { PanelEditorBase } from "./panelEditorBase";
 
-export class AliasEditor extends TrigAlEditBase {
+export class AliasEditor extends PanelEditorBase {
     constructor(private aliasManager: AliasManager) {
         super("ALIASES");
     }

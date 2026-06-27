@@ -1,10 +1,10 @@
-import { TrigAlItem } from "./trigAlEditBase";
+import { EditorItem } from "./panelEditorBase";
 
 
 export interface ConfigIf {
-    set(key: "aliases", val: TrigAlItem[]): void;
+    set(key: "aliases", val: EditorItem[]): void;
     getDef(key: "aliasesEnabled", def: boolean): boolean;
-    get(key: "aliases"): TrigAlItem[];
+    get(key: "aliases"): EditorItem[];
 }
 
 export interface ScriptIf {
@@ -12,7 +12,7 @@ export interface ScriptIf {
 }
 
 export class AliasManager {
-    public aliases: Array<TrigAlItem> = [];
+    public aliases: Array<EditorItem> = [];
 
     constructor(private jsScript: ScriptIf, private config: ConfigIf) {
         this.loadAliases();

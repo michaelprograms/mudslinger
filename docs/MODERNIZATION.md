@@ -47,17 +47,21 @@ Each entry: **current → target**, why it's worth doing, and rough effort/risk.
   until jqwidgets is also replaced.
 
 ### jqwidgets-framework → modern UI primitives
-- **Current**: `jqwidgets-framework` `^9.1.6`; used for windows, splitter,
-  menu (see `trigAlEditBase.ts`: `jqxWindow`, `jqxSplitter`).
+- **Current**: `jqwidgets-framework` `^9.1.6`; used for windows and menu.
 - **Why**: heavy, jQuery-bound, licensing baggage; blocks the jQuery removal.
-- **Effort/risk**: High. Need replacements for windowing/splitter/menu widgets.
+- **Effort/risk**: High. Need replacements for windowing/menu widgets.
 
 ### jQuery Deprecation
 1. ~~jqxProgressBar~~ — removed with MSDP sidebar
-2. jqxWindow → native <dialog> (draggable via mouse events or a 10-line helper)
-3. jqxSplitter → used in `trigAlEditBase.ts` only (trigger/alias editor); CSS resize + flex, or Split.js (2kb, no jQuery).
-4. jqxMenu → a <nav> with CSS dropdowns, or keep it
-5. jQuery is used throughout outside of jqwidgets calls, so dropping it would be a bigger lift. But replacing the widgets with native equivalents is achievable and would let you ditch the jqwidgets-framework package entirely.
+2. ~~jqxSplitter~~ — removed; trigger/alias editor now uses a vanilla dock
+   panel with float/top/bottom/left/right/maximize modes
+3. jqxWindow → still in `jsScriptWin.ts`, `aboutWin.ts`, `statusWin.ts`, and
+   one inline in `client.ts`. Replace with the same dock-panel pattern or
+   native `<dialog>`.
+4. jqxMenu → `menuBar.ts` only; a `<nav>` with CSS dropdowns, or keep it.
+5. jQuery is used throughout outside of jqwidgets calls, so dropping it would
+   be a bigger lift. But replacing the remaining 2 widget types would let you
+   ditch `jqwidgets-framework` entirely.
 
 ### custom output renderer → xterm.js
 - **Current**: bespoke renderer in `outputWin.ts` / `outWinBase.ts` /

@@ -1,7 +1,7 @@
-import { TrigAlEditBase } from "./trigAlEditBase";
+import { PanelEditorBase } from "./panelEditorBase";
 import { TriggerManager } from "./triggerManager";
 
-export class TriggerEditor extends TrigAlEditBase {
+export class TriggerEditor extends PanelEditorBase {
     constructor(private triggerManager: TriggerManager) {
         super("TRIGGERS");
     }
