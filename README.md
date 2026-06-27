@@ -2,60 +2,71 @@
 
 A self-hosted, web-based MUD client. Players open a page in their browser and
 are connected to a single MUD automatically; there is nothing to install on the
-client side.
+client side. It renders MUD output (ANSI, XTERM 256 color, UTF-8, MXP) and sends
+player input.
+
+The client connects directly to a MUD's native WebSocket port (e.g. a FluffOS
+`external_port ... websocket`), which carries the telnet byte stream as binary
+WebSocket frames. The telnet protocol stack (IAC negotiation, MXP, MSDP) runs in
+the browser. Use a `wss://` URL when serving the page over HTTPS, or the browser
+will block the connection as mixed content. The player's client IP is not
+available to the MUD, since there is no proxy to report it.
 
 End-user documentation lives in [`userdocs/`](userdocs/). This file is for
 developers and operators.
-
-## Architecture
-
-The project is a small monorepo of three Node.js / TypeScript components:
-
-- **`browser/`** the single-page web client. Renders MUD output (ANSI, XTERM
-  256 color, UTF-8, MXP) and sends player input. See
-  [`browser/README.md`](browser/README.md).
-- **`telnet_proxy/`** a Node.js / Socket.IO service that holds the telnet
-  connection to the MUD and relays bytes to and from the browser, since browsers
-  cannot open raw TCP sockets. See
-  [`telnet_proxy/README.md`](telnet_proxy/README.md).
-- **`common/`** the shared Socket.IO event protocol (`ioevent.ts`) used by both
-  sides.
-
-Data flow: `browser` <-> Socket.IO <-> `telnet_proxy` <-> telnet <-> MUD.
 
 ## Prerequisites
 
 - Node.js >= 20
 
-## Local build and run
+## Configuration
 
-Run the proxy and the client in two terminals.
-
-Proxy:
+Copy the defaults and edit them:
 
 ```bash
-cd telnet_proxy
-cp configServer.default.js configServer.js   # first time; edit mudHost/mudPort
+cp static/public/config.default.js static/public/config.js
+```
+
+`config.js` is gitignored (it is per-deployment) and is loaded at runtime by the
+page. Fields:
+
+| Field      | Meaning                                                       |
+| ---------- | ------------------------------------------------------------- |
+| `mudWsUrl` | MUD WebSocket URL, e.g. `ws://host:port` or `wss://host:port` |
+| `mudName`  | Display name of the MUD this instance serves                  |
+| `mudHost`  | Display-only address of the MUD                               |
+| `mudPort`  | Display-only port of the MUD                                  |
+| `msdp`     | Enable the MSDP gauge/map side panel (MUD must support it)    |
+
+## Build and run
+
+```bash
 npm install
-npm run build
+npm run build          # production bundle
+npm run build-dev      # unminified bundle for debugging
+```
+
+The build runs in three stages: `tsc` compiles TypeScript to `build/`, `webpack`
+bundles it into `static/public/`, and `buildDocs.js` renders the product docs.
+Then serve the built `static/public/` directory on port 5000:
+
+```bash
 npm start
 ```
 
-Browser:
+Then open <http://localhost:5000>.
+
+## Docs
+
+The user-facing docs live in [`userdocs/`](userdocs/) as Markdown.
+`npm run build-docs` renders them to `static/public/docs/*.html` so the in-app
+Docs link resolves. The full build runs this step automatically.
+
+## Tests
 
 ```bash
-cd browser
-cp static/public/config.default.js static/public/config.js   # first time
-npm install
-npm run build
-npx http-server static/public -p 5000
+npm run build-test     # build the QUnit test bundle
 ```
-
-Then open <http://localhost:5000>. Each component's README documents its own
-config fields.
-
-After a build, run through [`docs/SMOKE_TEST.md`](docs/SMOKE_TEST.md) to confirm
-the client, proxy, and MUD all talk to each other.
 
 ## Deployment
 

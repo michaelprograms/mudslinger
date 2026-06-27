@@ -66,21 +66,19 @@ Each entry: **current → target**, why it's worth doing, and rough effort/risk.
   skips italic (3), underline (4), blink (6), alt-font (11) — they log
   "Unsupported ANSI code" and `continue`, so surrounding colors still render.
   Cosmetic only. Add cases if a MUD relies on them.
-- **Noisy `IAC 249 not recognized`**: `telnetlib.ts` logs this for GA (Go
-  Ahead), which is consumed correctly — the message is just console noise.
-  Silence GA specifically if the log gets annoying.
-- Both surfaced during the websocket-transport work but affect the proxy
-  renderer identically; they are not transport bugs.
 
 ### CodeMirror 5 → 6
 - **Current**: `codemirror` `^5.24.2`.
 - **Why**: CM5 is in maintenance only; CM6 is the actively developed line.
 - **Effort/risk**: Medium. CM6 is a near-total API rewrite (state/view
   architecture), not a version bump.
+- **Duplicate vendored copy**: `static/public/codemirror/` is a hand-copied,
+  byte-identical subset of the installed package (`^5.24.2` resolves to 5.53.2)
+  — runtime files only (`lib`/`mode`/`addon`/`theme`/`keymap`), no `src/`. It
+  will silently drift from `node_modules` on any update. Copy it from
+  `node_modules` in a build step instead of committing it.
 
 ## Lower priority / watch
 
-- **socket.io-client** `^4`: already current major (v4). Just keep it patched;
-  bump in lockstep with the proxy's `socket.io` server version.
 - **TypeScript / webpack patch bumps**: routine, no design work needed.
 - need to send appropriate Terminal environs (CHARSET?)
