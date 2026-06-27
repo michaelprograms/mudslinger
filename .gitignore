@@ -1,6 +1,2 @@
 /node_modules/
-/build/
-
-/static/public/assets
-
-docs/superpowers
+.env
