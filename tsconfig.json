@@ -13,9 +13,7 @@
             "DOM.Iterable",
             "ScriptHost"
         ],
-        "types": [
-            "jquery"
-        ]
+        "types": []
     },
     "exclude": [
         "node_modules"

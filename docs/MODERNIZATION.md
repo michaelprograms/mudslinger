@@ -13,19 +13,9 @@ Ongoing work to remove legacy dependencies and simplify the stack.
 - **External docs site** — folded into About panel (three tabs: About / Scripting API / License); `buildDocs` step and `userdocs/` source deleted
 - **jqxMenu → native CSS nav** — `menuBar.ts` rewritten to native DOM; `jqwidgets-framework` removed from `package.json`; `<nav>` with CSS `:hover` dropdowns replaces the old `<ul>` + jqxMenu init
 - **jQuery → removed** — `outWinBase.ts`, `outputManager.ts`, `mxp.ts`, `commandInput.ts`, `outputWin.ts` converted to vanilla DOM; `jquery` and `@types/jquery` removed from `package.json`; `<script src="jquery.min.js">` removed from `index.html`; jQuery copy removed from `postinstall.js`
+- **CodeMirror 5 → 6** — `panelEditorBase.ts` and `jsScriptWin.ts` migrated to CM6 ESM (`basicSetup` + `@codemirror/lang-javascript` + `@codemirror/theme-one-dark`); gains history, bracketMatching, closeBrackets, one-dark theme; CM5 `<script>`/`<link>` tags removed from `index.html`; `static/public/codemirror/` vendored tree deleted; `tools/postinstall.js` deleted; `fs-extra` removed; postinstall replaced with shell one-liner
 
 ## In Progress
-
-### postinstall.js → delete
-Currently copies CodeMirror 5 out of `node_modules` into `static/public/` so
-it can be loaded as a global `<script>` tag. Once CodeMirror is gone, this
-script has nothing left to do except copy `config.default.js` — which can be a one-liner
-or just a note in the README.
-
-### CodeMirror 5 → 6
-CM5 is maintenance-only. CM6 is an ESM package — Vite bundles it directly, no vendoring or
-global script needed. Three call sites to update: `panelEditorBase.ts`, `jsScriptWin.ts`,
-`aboutWin.ts`. CM6 is a near-total API rewrite (state/view architecture), not a version bump.
 
 ## Backlog
 
@@ -37,6 +27,7 @@ global script needed. Three call sites to update: `panelEditorBase.ts`, `jsScrip
   xterm.js has no MUD protocol awareness. Keep `static/test/test_output.html` as the visual
   regression harness while evaluating.
 - **TypeScript bumps** — routine, no design work needed
+- move config out of static directory to root of project or src?
 
 ## Dependency status
 
@@ -47,4 +38,4 @@ global script needed. Three call sites to update: `panelEditorBase.ts`, `jsScrip
 | `genAppInfo.js` + `buildDocs.js` + `markdown-it` | removed (vite define + About panel) | ✅ done |
 | `jqwidgets-framework` v9.1.6 | removed (native CSS nav) | ✅ done |
 | `jquery` v2.2.4 + `@types/jquery` v2.0.68 | removed (vanilla DOM throughout) | ✅ done |
-| `codemirror` v5 + `fs-extra` + `postinstall.js` | `codemirror` v6 bundled by vite | 🔧 in progress |
+| `codemirror` v5 + `fs-extra` + `postinstall.js` | `codemirror` v6 + `@codemirror/lang-javascript` + `@codemirror/theme-one-dark` | ✅ done |

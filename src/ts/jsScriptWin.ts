@@ -1,7 +1,10 @@
 import { JsScript } from "./jsScript";
 import { UserConfig } from "./userConfig";
-
-declare let CodeMirror: any;
+import { basicSetup } from "codemirror";
+import { EditorView } from "@codemirror/view";
+import { EditorState, Compartment } from "@codemirror/state";
+import { javascript } from "@codemirror/lang-javascript";
+import { oneDark } from "@codemirror/theme-one-dark";
 
 type PanelMode = 'float' | 'top' | 'bottom' | 'left' | 'right' | 'maximize';
 
@@ -15,7 +18,8 @@ export class JsScriptWin {
     private runButton: HTMLButtonElement;
     private saveButton: HTMLButtonElement;
     private cancelButton: HTMLButtonElement;
-    private codeMirror: any;
+    private codeMirror!: EditorView;
+    private readOnlyComp = new Compartment();
 
     private mode: PanelMode = 'float';
     private floatStyle = { top: '10%', left: '15%', width: '700px', height: '500px' };
@@ -53,7 +57,7 @@ export class JsScriptWin {
                         <button class="winScript-btnCancel" disabled>CANCEL</button>
                     </div>
                     <div class="winEdit-value-area">
-                        <textarea class="winScript-code"></textarea>
+                        <div class="winScript-code"></div>
                     </div>
                 </div>
             </div>
@@ -67,15 +71,18 @@ export class JsScriptWin {
         this.saveButton   = this.panel.querySelector('.winScript-btnSave') as HTMLButtonElement;
         this.cancelButton = this.panel.querySelector('.winScript-btnCancel') as HTMLButtonElement;
 
-        this.codeMirror = CodeMirror.fromTextArea(
-            this.panel.querySelector('.winScript-code') as HTMLTextAreaElement, {
-                mode: 'javascript',
-                theme: 'neat',
-                autoRefresh: true,
-                matchBrackets: true,
-                lineNumbers: true
-            }
-        );
+        this.codeMirror = new EditorView({
+            state: EditorState.create({
+                doc: '',
+                extensions: [
+                    basicSetup,
+                    javascript(),
+                    oneDark,
+                    this.readOnlyComp.of(EditorState.readOnly.of(false))
+                ]
+            }),
+            parent: this.panel.querySelector('.winScript-code') as HTMLElement
+        });
 
         this.applyFloatStyle();
         this.initModeButtons();
@@ -92,6 +99,12 @@ export class JsScriptWin {
         this.saveButton.addEventListener('click',     () => { this.handleSave(); });
         this.cancelButton.addEventListener('click',   () => { this.handleCancel(); });
         this.runButton.addEventListener('click',      () => { this.handleRun(); });
+    }
+
+    private cmSet(text: string): void {
+        this.codeMirror.dispatch({
+            changes: { from: 0, to: this.codeMirror.state.doc.length, insert: text }
+        });
     }
 
     private bringToFront(): void {
@@ -171,7 +184,9 @@ export class JsScriptWin {
         this.runButton.disabled    = state;
         this.saveButton.disabled   = state;
         this.cancelButton.disabled = state;
-        this.codeMirror.setOption('readOnly', state ? 'nocursor' : false);
+        this.codeMirror.dispatch({
+            effects: this.readOnlyComp.reconfigure(EditorState.readOnly.of(state))
+        });
     }
 
     private updateListBox(): void {
@@ -186,14 +201,14 @@ export class JsScriptWin {
         const item = this.scripts[this.listBox.selectedIndex];
         if (!item) return;
         this.nameInput.value = item.name;
-        this.codeMirror.setValue(item.code);
+        this.cmSet(item.code);
         this.setEditorDisabled(false);
     }
 
     private handleNew(): void {
         this.listBox.selectedIndex = -1;
         this.nameInput.value = 'New Script';
-        this.codeMirror.setValue('// write script here');
+        this.cmSet('// write script here');
         this.setEditorDisabled(false);
     }
 
@@ -205,13 +220,13 @@ export class JsScriptWin {
         this.updateListBox();
         this.listBox.selectedIndex = -1;
         this.nameInput.value = '';
-        this.codeMirror.setValue('');
+        this.cmSet('');
         this.setEditorDisabled(true);
     }
 
     private handleSave(): void {
         const ind  = this.listBox.selectedIndex;
-        const item = { name: this.nameInput.value, code: this.codeMirror.getValue() };
+        const item = { name: this.nameInput.value, code: this.codeMirror.state.doc.toString() };
         if (ind < 0) {
             this.scripts.push(item);
             this.updateListBox();
@@ -230,13 +245,13 @@ export class JsScriptWin {
             this.handleSelect();
         } else {
             this.nameInput.value = '';
-            this.codeMirror.setValue('');
+            this.cmSet('');
             this.setEditorDisabled(true);
         }
     }
 
     private handleRun(): void {
-        const script = this.jsScript.makeScript(this.codeMirror.getValue(), '');
+        const script = this.jsScript.makeScript(this.codeMirror.state.doc.toString(), '');
         if (script) { script(); }
     }
 

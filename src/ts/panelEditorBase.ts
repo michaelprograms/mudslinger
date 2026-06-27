@@ -1,6 +1,9 @@
 import * as Util from "./util";
-
-declare let CodeMirror: any;
+import { basicSetup } from "codemirror";
+import { EditorView } from "@codemirror/view";
+import { EditorState } from "@codemirror/state";
+import { javascript } from "@codemirror/lang-javascript";
+import { oneDark } from "@codemirror/theme-one-dark";
 
 export interface EditorItem {
     pattern: string;
@@ -21,8 +24,8 @@ export abstract class PanelEditorBase {
     private regexCheckbox: HTMLInputElement;
     private scriptCheckbox: HTMLInputElement;
     private textArea: HTMLTextAreaElement;
-    private codeMirror: any;
-    private codeMirrorWrapper: HTMLElement;
+    private scriptArea!: HTMLElement;
+    private codeMirror!: EditorView;
     private newButton: HTMLButtonElement;
     private deleteButton: HTMLButtonElement;
     private saveButton: HTMLButtonElement;
@@ -73,7 +76,7 @@ export abstract class PanelEditorBase {
                     <div class="winEdit-value-label">Value:</div>
                     <div class="winEdit-value-area">
                         <textarea class="winEdit-textArea" disabled></textarea>
-                        <textarea class="winEdit-scriptArea"></textarea>
+                        <div class="winEdit-scriptArea"></div>
                     </div>
                 </div>
             </div>
@@ -90,17 +93,16 @@ export abstract class PanelEditorBase {
         this.saveButton     = this.panel.querySelector('.winEdit-btnSave') as HTMLButtonElement;
         this.cancelButton   = this.panel.querySelector('.winEdit-btnCancel') as HTMLButtonElement;
         this.textArea = this.panel.querySelector('.winEdit-textArea') as HTMLTextAreaElement;
-        const scriptArea = this.panel.querySelector('.winEdit-scriptArea') as HTMLTextAreaElement;
 
-        this.codeMirror = CodeMirror.fromTextArea(scriptArea, {
-            mode: "javascript",
-            theme: "neat",
-            autoRefresh: true,
-            matchBrackets: true,
-            lineNumbers: true
+        this.scriptArea = this.panel.querySelector('.winEdit-scriptArea') as HTMLElement;
+        this.codeMirror = new EditorView({
+            state: EditorState.create({
+                doc: '',
+                extensions: [basicSetup, javascript(), oneDark]
+            }),
+            parent: this.scriptArea
         });
-        this.codeMirrorWrapper = this.codeMirror.getWrapperElement();
-        this.codeMirrorWrapper.style.display = 'none';
+        this.scriptArea.style.display = 'none';
 
         this.applyFloatStyle();
         this.initModeButtons();
@@ -206,10 +208,16 @@ export abstract class PanelEditorBase {
 
     private selectNone(): void { this.listBox.selectedIndex = -1; }
 
+    private cmSet(text: string): void {
+        this.codeMirror.dispatch({
+            changes: { from: 0, to: this.codeMirror.state.doc.length, insert: text }
+        });
+    }
+
     private clearEditor(): void {
         this.pattern.value         = '';
         this.textArea.value        = '';
-        this.codeMirror.setValue('');
+        this.cmSet('');
         this.regexCheckbox.checked  = false;
         this.scriptCheckbox.checked = false;
     }
@@ -226,7 +234,7 @@ export abstract class PanelEditorBase {
         this.saveItem(
             ind,
             this.pattern.value,
-            is_script ? this.codeMirror.getValue() : this.textArea.value,
+            is_script ? this.codeMirror.state.doc.toString() : this.textArea.value,
             this.regexCheckbox.checked,
             is_script
         );
@@ -247,7 +255,7 @@ export abstract class PanelEditorBase {
         this.selectNone();
         this.pattern.value  = this.defaultPattern || 'INPUT PATTERN HERE';
         this.textArea.value = this.defaultValue   || 'INPUT VALUE HERE';
-        this.codeMirror.setValue(this.defaultScript || '// INPUT SCRIPT HERE');
+        this.cmSet(this.defaultScript || '// INPUT SCRIPT HERE');
     }
 
     private handleDeleteButtonClick(): void {
@@ -260,14 +268,14 @@ export abstract class PanelEditorBase {
     }
 
     private showScriptInput(): void {
-        this.textArea.style.display        = 'none';
-        this.codeMirrorWrapper.style.display = '';
-        this.codeMirror.refresh();
+        this.textArea.style.display     = 'none';
+        this.scriptArea.style.display   = '';
+        this.codeMirror.requestMeasure();
     }
 
     private showTextInput(): void {
-        this.codeMirrorWrapper.style.display = 'none';
-        this.textArea.style.display          = '';
+        this.scriptArea.style.display  = 'none';
+        this.textArea.style.display    = '';
     }
 
     private handleListBoxChange(): void {
@@ -278,12 +286,12 @@ export abstract class PanelEditorBase {
         this.pattern.value = item.pattern;
         if (item.is_script) {
             this.showScriptInput();
-            this.codeMirror.setValue(item.value);
+            this.cmSet(item.value);
             this.textArea.value = '';
         } else {
             this.showTextInput();
             this.textArea.value = item.value;
-            this.codeMirror.setValue('');
+            this.cmSet('');
         }
         this.regexCheckbox.checked  = !!item.regex;
         this.scriptCheckbox.checked = !!item.is_script;

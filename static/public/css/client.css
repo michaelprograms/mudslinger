@@ -22,7 +22,7 @@ html, body { margin: 0; padding: 0; }
 a { color: inherit; }
 a:link, a:visited { text-decoration: none; }
 
-.CodeMirror {
+.cm-editor {
     border: 1px solid var(--ui-border);
 }
 
@@ -323,8 +323,7 @@ nav#menuBar label:hover { background: var(--ui-bg-hover); }
 .about-pane pre code { background: none; padding: 0; }
 .about-pane a { color: var(--ui-border-active); }
 
-.winEdit-textArea,
-.CodeMirror {
+.winEdit-textArea {
     flex: 1;
     width: 100%;
     height: 100%;
@@ -335,4 +334,25 @@ nav#menuBar label:hover { background: var(--ui-bg-hover); }
     font-family: inherit;
     font-size: inherit;
     resize: none;
+}
+
+.winEdit-scriptArea,
+.winScript-code {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.winEdit-scriptArea > .cm-editor,
+.winScript-code > .cm-editor {
+    flex: 1;
+    min-height: 0;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.winEdit-scriptArea .cm-scroller,
+.winScript-code .cm-scroller {
+    overflow: auto;
 }

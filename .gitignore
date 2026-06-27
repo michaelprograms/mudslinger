@@ -1,16 +1,6 @@
 /node_modules/
 /build/
 
-/static/public/config.js
-/static/public/codemirror/
-/static/public/index.html
-/static/public/assets/
-/static/public/jquery.min.js
-/static/public/jqwidgets/
-/static/public/mudslinger-*.js
-/static/test/mudslingerTest.js
-/static/test/mudslingerTestOutput.js
-/static/test/qunit/
-/static/public/docs/
+/static/public/assets
 
 docs/superpowers

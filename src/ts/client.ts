@@ -222,7 +222,7 @@ let _client: Client;
 
 async function init() {
     const cfg = getConfig();
-    const u = new URL(cfg.mudWsUrl);
+    const u = new URL(cfg.mudUrl);
     const connectionTarget: ConnectionTarget = { host: u.hostname, port: Number(u.port) };
 
     UserConfig.init(localStorage.getItem("userConfig"), makeCbLocalConfigSave());
