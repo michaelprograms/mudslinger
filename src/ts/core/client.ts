@@ -9,17 +9,17 @@ import { JsScript, EvtScriptEmitCmd, EvtScriptEmitPrint, EvtScriptEmitEvalError,
 import { JsScriptWin } from "../panel/script";
 import { MenuBar } from "../ui/menuBar";
 
-import { Mxp } from "../protocol/mxp";
-import { OutputManager } from "../manager/output";
-import { OutputWin } from "../ui/outputWin";
+import { StreamManager } from "../manager/stream";
+import { MudTerminal } from "../ui/terminal";
 import { Socket } from "../net/socket";
 import { TriggerEditor } from "../panel/trigger";
 import { TriggerManager } from "../manager/trigger";
 import { AboutWin } from "../panel/about";
 import { getConfig } from "./config";
+
 interface ConnectionTarget {
-    host: string,
-    port: number
+    host: string;
+    port: number;
 }
 
 export class Client {
@@ -29,9 +29,8 @@ export class Client {
     private jsScript: JsScript;
     private jsScriptWin: JsScriptWin;
     private menuBar: MenuBar;
-    private mxp: Mxp;
-    private outputManager: OutputManager;
-    private outputWin: OutputWin;
+    private stream: StreamManager;
+    private terminal: MudTerminal;
     private socket: Socket;
     private triggerEditor: TriggerEditor;
     private triggerManager: TriggerManager;
@@ -40,40 +39,38 @@ export class Client {
     private serverEcho = false;
 
     constructor(private connectionTarget: ConnectionTarget) {
-        let clientName: string = "Mudslinger";
-
         this.aboutWin = new AboutWin();
         this.jsScript = new JsScript();
-
         this.jsScriptWin = new JsScriptWin(this.jsScript);
-        this.triggerManager = new TriggerManager(
-            this.jsScript, UserConfig);
-        this.aliasManager = new AliasManager(
-            this.jsScript, UserConfig);
-
+        this.triggerManager = new TriggerManager(this.jsScript, UserConfig);
+        this.aliasManager = new AliasManager(this.jsScript, UserConfig);
         this.commandInput = new CommandInput(this.aliasManager);
 
-        this.outputWin = new OutputWin(UserConfig);
+        this.terminal = new MudTerminal();
+        this.stream = new StreamManager(this.terminal, UserConfig);
 
         this.aliasEditor = new AliasEditor(this.aliasManager);
         this.triggerEditor = new TriggerEditor(this.triggerManager);
 
-        this.outputManager = new OutputManager(this.outputWin, UserConfig);
-
-        this.mxp = new Mxp(this.outputManager, undefined, clientName);
-        this.socket = new Socket(this.outputManager, this.mxp);
+        this.socket = new Socket(this.stream);
         this.menuBar = new MenuBar(this.aliasEditor, this.triggerEditor, this.jsScriptWin, this.aboutWin);
+
+        // Initialize font size from saved config
+        const savedFontSize = UserConfig.get("fontSize");
+        if (savedFontSize) {
+            this.terminal.setFontSize(savedFontSize);
+            this.commandInput.setFontSize(savedFontSize);
+        }
 
         // MenuBar events
         this.menuBar.EvtChangeFontSize.handle((sz: string) => {
-            this.outputManager.handleChangeFontSize(sz);
+            this.terminal.setFontSize(sz);
+            UserConfig.set("fontSize", sz);
+            this.commandInput.setFontSize(sz);
         });
 
         this.menuBar.EvtConnectClicked.handle(() => {
-            this.socket.openTelnet(
-                this.connectionTarget.host,
-                this.connectionTarget.port
-            );
+            this.socket.openTelnet(this.connectionTarget.host, this.connectionTarget.port);
         });
 
         this.menuBar.EvtDisconnectClicked.handle(() => {
@@ -82,122 +79,92 @@ export class Client {
 
         // Socket events
         this.socket.EvtServerEcho.handle((val: boolean) => {
-            // Server echo ON means we should have local echo OFF
             this.serverEcho = val;
         });
 
         this.socket.EvtTelnetTryConnect.handle((val: [string, number]) => {
-            this.outputWin.handleTelnetTryConnect(val[0], val[1]); 
+            this.terminal.handleTelnetTryConnect(val[0], val[1]);
         });
 
         this.socket.EvtTelnetConnect.handle((_val: [string, number]) => {
             this.serverEcho = false;
             this.menuBar.handleTelnetConnect();
-            this.outputWin.handleTelnetConnect();
+            this.terminal.handleTelnetConnect();
         });
 
         this.socket.EvtTelnetDisconnect.handle(() => {
             this.menuBar.handleTelnetDisconnect();
-            this.outputWin.handleTelnetDisconnect();
+            this.terminal.handleTelnetDisconnect();
         });
 
         this.socket.EvtTelnetError.handle((data: string) => {
-            this.outputWin.handleTelnetError(data);
+            this.terminal.handleTelnetError(data);
         });
 
-        this.socket.EvtWsError.handle((data) => {
-            this.outputWin.handleWsError();
+        this.socket.EvtWsError.handle(() => {
+            this.terminal.handleWsError();
         });
 
-        this.socket.EvtWsConnect.handle((_val: {sid: string}) => {
-            this.outputWin.handleWsConnect();
+        this.socket.EvtWsConnect.handle((_val: { sid: string }) => {
+            this.terminal.handleWsConnect();
         });
 
         this.socket.EvtWsDisconnect.handle(() => {
             this.menuBar.handleTelnetDisconnect();
-            this.outputWin.handleWsDisconnect();
+            this.terminal.handleWsDisconnect();
         });
 
         // CommandInput events
         this.commandInput.EvtEmitCmd.handle((data: string) => {
-            if (true !== this.serverEcho) {
-                this.outputWin.handleSendCommand(data);
+            if (this.serverEcho !== true) {
+                this.terminal.handleSendCommand(data);
             }
             this.socket.sendCmd(data);
         });
 
         this.commandInput.EvtEmitAliasCmds.handle((data) => {
-            this.outputWin.handleAliasSendCommands(data.orig, data.commands)
-            for (let cmd of data.commands) {
+            this.terminal.handleAliasSendCommands(data.orig, data.commands);
+            for (const cmd of data.commands) {
                 this.socket.sendCmd(cmd);
             }
-        });
-
-        // Mxp events
-        this.mxp.EvtEmitCmd.handle((data) => {
-            if (data.noPrint !== true) {
-                this.outputWin.handleSendCommand(data.value);
-            }
-            this.socket.sendCmd(data.value);
         });
 
         // JsScript events
         EvtScriptEmitCmd.handle((data: string) => {
-            this.outputWin.handleScriptSendCommand(data);
+            this.terminal.handleScriptSendCommand(data);
             this.socket.sendCmd(data);
         });
 
         EvtScriptEmitPrint.handle((data: string) => {
-            this.outputWin.handleScriptPrint(data);
+            this.terminal.handleScriptPrint(data);
         });
 
-        EvtScriptEmitError.handle((data: {stack: any}) => {
-            this.outputWin.handleScriptError(data)
+        EvtScriptEmitError.handle((data: { stack: any }) => {
+            this.terminal.handleScriptError(data);
         });
 
-        EvtScriptEmitEvalError.handle((data: {stack: any}) => {
-            this.outputWin.handleScriptEvalError(data)
+        EvtScriptEmitEvalError.handle((data: { stack: any }) => {
+            this.terminal.handleScriptEvalError(data);
         });
 
         // TriggerManager events
         this.triggerManager.EvtEmitTriggerCmds.handle((data: string[]) => {
-            this.outputWin.handleTriggerSendCommands(data);
-            for (let cmd of data) {
+            this.terminal.handleTriggerSendCommands(data);
+            for (const cmd of data) {
                 this.socket.sendCmd(cmd);
             }
         });
 
-        // OutputWin events
-        this.outputWin.EvtLine.handle((line: string) => {
+        // Terminal line events → triggers
+        this.terminal.EvtLine.handle((line: string) => {
             this.triggerManager.handleLine(line);
         });
 
-        // OutputManager events
-        this.outputManager.EvtNewLine.handle(() => {
-            this.mxp.handleNewline();
-        });
-
-        this.outputManager.EvtMxpTag.handle((data: string) => {
-            this.mxp.handleMxpTag(data);
-        });
-
-        this.outputManager.EvtFontSizeChanged.handle((sz: string) => {
-            this.commandInput.setFontSize(sz);
-        });
-
-        this.commandInput.setFontSize(this.outputManager.getFontSize());
-
-        // Prevent navigating away accidentally
-        window.onbeforeunload = () => {
-            return "";
-        };
+        window.onbeforeunload = () => "";
 
         this.socket.open().then((success) => {
-            if (!success) { return; }
-
-            this.socket.openTelnet(
-                this.connectionTarget.host,
-                this.connectionTarget.port);
+            if (!success) return;
+            this.socket.openTelnet(this.connectionTarget.host, this.connectionTarget.port);
         });
     }
 
@@ -207,7 +174,7 @@ export class Client {
 
 function makeCbLocalConfigSave(): (val: string) => void {
     return (val: string) => {
-        localStorage.setItem('userConfig', val);
+        localStorage.setItem("userConfig", val);
     };
 }
 
@@ -217,14 +184,11 @@ async function init() {
     const cfg = getConfig();
     const u = new URL(cfg.mudUrl);
     const connectionTarget: ConnectionTarget = { host: u.hostname, port: Number(u.port) };
-
     UserConfig.init(localStorage.getItem("userConfig"), makeCbLocalConfigSave());
-
     _client = new Client(connectionTarget);
     document.title = AppInfo.AppTitle + " - " + cfg.mudName;
 }
 
-// Expose for browser console debugging
 (<any>window).Mudslinger = { get client() { return _client; } };
 
 init();

@@ -1,12 +1,12 @@
 import { EventHook } from "../core/event";
-
-import { Mxp } from "../protocol/mxp";
-import { OutputManager } from "../manager/output";
 import { TelnetClient } from "../protocol/telnet";
 import { UserConfig } from "../core/userConfig";
 import { getConfig } from "../core/config";
 import { Transport, makeTransport } from "./transport";
 
+export interface TelnetDataHandlerIf {
+    handleTelnetData(data: ArrayBuffer): void;
+}
 
 export class Socket {
     public EvtServerEcho = new EventHook<boolean>();
@@ -20,8 +20,7 @@ export class Socket {
     private transport!: Transport;
     private telnetClient: TelnetClient | null = null;
 
-    constructor(private outputManager: OutputManager, private mxp: Mxp) {
-    }
+    constructor(private dataHandler: TelnetDataHandlerIf) {}
 
     public async open() {
         this.transport = makeTransport(getConfig());
@@ -44,7 +43,7 @@ export class Socket {
             });
 
             this.telnetClient.EvtData.handle((data) => {
-                this.outputManager.handleTelnetData(data);
+                this.dataHandler.handleTelnetData(data);
             });
 
             this.telnetClient.EvtServerEcho.handle((data) => {
@@ -92,7 +91,6 @@ export class Socket {
                 arr[i] = cmd.charCodeAt(i);
             }
         }
-
         this.transport.write(arr.buffer as ArrayBuffer);
     }
 }
