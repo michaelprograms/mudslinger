@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
         define: {
             __APP_VERSION__: JSON.stringify(version),
             __APP_BUILD__:   JSON.stringify(gitHash),
-            __REPO_URL__:    JSON.stringify(env.VITE_REPO_URL),
+            __REPO_URL__:    JSON.stringify(env.VITE_REPO_URL ?? 'https://github.com/michaelprograms/mudslinger'),
             __MUD_URL__:     JSON.stringify(env.VITE_MUD_URL  ?? 'ws://localhost:5000'),
             __MUD_NAME__:    JSON.stringify(env.VITE_MUD_NAME ?? 'My MUD'),
         },
