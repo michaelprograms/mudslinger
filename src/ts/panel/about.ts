@@ -39,7 +39,6 @@ export class AboutWin {
                     <ul>
                         <li>ANSI color &amp; XTERM 256 colors</li>
                         <li>UTF-8</li>
-                        <li>MXP support (<code>&lt;image&gt;</code>, <code>&lt;send&gt;</code>, <code>&lt;a&gt;</code>, <code>&lt;i&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;u&gt;</code>, <code>&lt;s&gt;</code>)</li>
                         <li>Triggers (basic and regex)</li>
                         <li>Aliases (basic and regex)</li>
                         <li>JavaScript scripting</li>

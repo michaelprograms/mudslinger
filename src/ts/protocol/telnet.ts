@@ -158,8 +158,6 @@ export class TelnetClient extends Telnet {
                 this.doCharset = true;
                 this.writeArr([Cmd.IAC, Cmd.SB, Opt.CHARSET, 1 /* REQUEST */]
                     .concat(arrayFromString(";UTF-8"), [Cmd.IAC, Cmd.SE]));
-            } else if (opt === ExtOpt.MXP && UserConfig.getDef("mxpEnabled", true) === true) {
-                this.writeArr([Cmd.IAC, Cmd.WILL, ExtOpt.MXP]);
             } else {
                 this.writeArr([Cmd.IAC, Cmd.WONT, opt]);
             }
