@@ -68,7 +68,7 @@ export abstract class PanelEditorBase {
                 </div>
                 <div class="winEdit-edit-pane">
                     <div class="winEdit-meta">
-                        <label>Pattern <input type="text" class="winEdit-pattern" disabled></label>
+                        <label>Pattern <input type="text" class="winEdit-pattern" placeholder="^pattern$" disabled></label>
                         <label><input type="checkbox" class="winEdit-chkRegex" disabled> Regex</label>
                         <label><input type="checkbox" class="winEdit-chkScript" disabled> Script</label>
                         <button class="winEdit-btnSave" disabled>SAVE</button>
@@ -254,7 +254,7 @@ export abstract class PanelEditorBase {
     private handleNewButtonClick(): void {
         this.setEditorDisabled(false);
         this.selectNone();
-        this.pattern.value  = this.defaultPattern || 'INPUT PATTERN HERE';
+        this.pattern.value  = this.defaultPattern || '';
         this.textArea.value = this.defaultValue   || 'INPUT VALUE HERE';
         this.cmSet(this.defaultScript || '// INPUT SCRIPT HERE');
     }

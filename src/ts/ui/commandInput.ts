@@ -12,16 +12,26 @@ export class CommandInput {
     private cmd_entered: string = "";
 
     private cmdInput: HTMLTextAreaElement;
+    private cmdInputPassword: HTMLInputElement;
     private chkCmdStack: HTMLInputElement;
 
     constructor(private aliasManager: AliasManager) {
         this.cmdInput = document.getElementById("cmdInput") as HTMLTextAreaElement;
+        this.cmdInputPassword = document.getElementById("cmdInputPassword") as HTMLInputElement;
         this.chkCmdStack = document.getElementById("chkCmdStack") as HTMLInputElement;
 
         this.cmdInput.addEventListener("keydown", (event: KeyboardEvent) => {
             if (this.keydown(event) === false) event.preventDefault();
         });
         this.cmdInput.addEventListener("input", () => { this.inputChange(); });
+
+        this.cmdInputPassword.addEventListener("keydown", (event: KeyboardEvent) => {
+            if (event.key === "Enter") {
+                this.EvtEmitCmd.fire(this.cmdInputPassword.value);
+                this.cmdInputPassword.value = "";
+                event.preventDefault();
+            }
+        });
 
         this.loadHistory();
         this.inputChange(); // Force a resize
@@ -170,11 +180,17 @@ export class CommandInput {
         }
     }
 
+    setPasswordMode(on: boolean): void {
+        this.cmdInput.style.display = on ? "none" : "";
+        this.cmdInputPassword.style.display = on ? "" : "none";
+        (on ? this.cmdInputPassword : this.cmdInput).focus();
+    }
+
     focus(): void {
         this.cmdInput.focus();
     }
 
-    setFontSize(sz: string): void {
-        this.cmdInput.style.fontSize = sz;
+    setFontSize(sz: number): void {
+        this.cmdInput.style.fontSize = sz + 'px';
     }
 }

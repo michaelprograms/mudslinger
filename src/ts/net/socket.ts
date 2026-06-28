@@ -2,7 +2,7 @@ import { EventHook } from "../core/event";
 import { TelnetClient } from "../protocol/telnet";
 import { UserConfig } from "../core/userConfig";
 import { getConfig } from "../core/config";
-import { Transport, makeTransport } from "./transport";
+import { WebSocketTransport } from "./websocket";
 
 export interface TelnetDataHandlerIf {
     handleTelnetData(data: ArrayBuffer): void;
@@ -14,28 +14,13 @@ export class Socket {
     public EvtTelnetConnect = new EventHook<[string, number]>();
     public EvtTelnetDisconnect = new EventHook<void>();
     public EvtTelnetError = new EventHook<string>();
-    public EvtWsError = new EventHook<any>();
-    public EvtWsConnect = new EventHook<{sid: string}>();
-    public EvtWsDisconnect = new EventHook<void>();
-    private transport!: Transport;
+    private transport!: WebSocketTransport;
     private telnetClient: TelnetClient | null = null;
 
     constructor(private dataHandler: TelnetDataHandlerIf) {}
 
     public async open() {
-        this.transport = makeTransport(getConfig());
-
-        this.transport.EvtLinkConnect.handle((data) => {
-            this.EvtWsConnect.fire(data);
-        });
-
-        this.transport.EvtLinkDisconnect.handle(() => {
-            this.EvtWsDisconnect.fire();
-        });
-
-        this.transport.EvtLinkError.handle((msg: any) => {
-            this.EvtWsError.fire(msg);
-        });
+        this.transport = new WebSocketTransport(getConfig().mudUrl);
 
         this.transport.EvtMudConnect.handle((val: [string, number]) => {
             this.telnetClient = new TelnetClient((data) => {

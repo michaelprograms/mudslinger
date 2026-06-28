@@ -31,11 +31,13 @@ export class TriggerManager {
     }
 
     public saveTriggers() {
+        this.triggers.sort((a, b) => a.pattern.localeCompare(b.pattern));
         this.config.set("triggers", this.triggers);
     }
 
     private loadTriggers() {
         this.triggers = this.config.get("triggers") || [];
+        this.triggers.sort((a, b) => a.pattern.localeCompare(b.pattern));
     }
 
     public handleLine(line: string): void {

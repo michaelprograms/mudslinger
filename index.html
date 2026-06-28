@@ -12,27 +12,7 @@
       <li><button>Aliases</button></li>
       <li><button>Triggers</button></li>
       <li><button>Script</button></li>
-      <li>
-        <button>Config</button>
-        <ul>
-          <li>
-            <button>Font Size</button>
-            <ul>
-              <li><button>xx-small</button></li>
-              <li><button>x-small</button></li>
-              <li><button>small</button></li>
-              <li><button>medium</button></li>
-              <li><button>large</button></li>
-              <li><button>x-large</button></li>
-              <li><button>xx-large</button></li>
-            </ul>
-          </li>
-          <li><label><input id="menuBar-chkEnableUtf8" type="checkbox"> Enable UTF-8</label></li>
-          <li class="menu-sep"></li>
-          <li><label><input id="menuBar-chkEnableTrig" type="checkbox"> Enable Triggers</label></li>
-          <li><label><input id="menuBar-chkEnableAlias" type="checkbox"> Enable Aliases</label></li>
-        </ul>
-      </li>
+      <li><button>Config</button></li>
       <li><button>About</button></li>
     </ul>
   </nav>
@@ -40,6 +20,7 @@
     <div id="winOutput"></div>
     <div id="cmdCont">
       <textarea rows="1" id="cmdInput" autofocus></textarea>
+      <input type="password" id="cmdInputPassword" style="display:none">
       <div class="chkCmdInputCmdStackCont" style="border:1px solid green">
         <span class="toolTipText">Toggle command stacking</span>
         <input id="chkCmdStack" type="checkbox" checked>

@@ -1,10 +1,6 @@
 import { EventHook } from "../core/event";
-import { Transport } from "./transport";
 
-export class WebSocketTransport implements Transport {
-    public EvtLinkConnect = new EventHook<{ sid: string }>();
-    public EvtLinkDisconnect = new EventHook<void>();
-    public EvtLinkError = new EventHook<any>();
+export class WebSocketTransport {
     public EvtMudConnect = new EventHook<[string, number]>();
     public EvtMudDisconnect = new EventHook<void>();
     public EvtMudError = new EventHook<string>();

@@ -3,20 +3,23 @@
     flex-direction: row;
 }
 
-#cmdInput {
+#cmdInput,
+#cmdInputPassword {
     margin: 0;
     padding: 0;
     flex: 1;
     resize: none;
     font-family: "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
     font-size: small;
-    display: inline;
     caret-color: #ffffff;
     outline: 2px solid transparent;
     transition: outline-color 0.1s;
 }
 
-#cmdInput:focus {
+#cmdInput { display: inline; }
+
+#cmdInput:focus,
+#cmdInputPassword:focus {
     outline-color: #4a9eff;
 }
 

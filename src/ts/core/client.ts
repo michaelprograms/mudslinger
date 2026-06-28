@@ -15,6 +15,7 @@ import { Socket } from "../net/socket";
 import { TriggerEditor } from "../panel/trigger";
 import { TriggerManager } from "../manager/trigger";
 import { AboutWin } from "../panel/about";
+import { ConfigWin } from "../panel/config";
 import { getConfig } from "./config";
 
 interface ConnectionTarget {
@@ -35,11 +36,13 @@ export class Client {
     private triggerEditor: TriggerEditor;
     private triggerManager: TriggerManager;
     private aboutWin: AboutWin;
+    private configWin: ConfigWin;
 
     private serverEcho = false;
 
     constructor(private connectionTarget: ConnectionTarget) {
         this.aboutWin = new AboutWin();
+        this.configWin = new ConfigWin();
         this.jsScript = new JsScript();
         this.jsScriptWin = new JsScriptWin(this.jsScript);
         this.triggerManager = new TriggerManager(this.jsScript, UserConfig);
@@ -53,19 +56,18 @@ export class Client {
         this.triggerEditor = new TriggerEditor(this.triggerManager);
 
         this.socket = new Socket(this.stream);
-        this.menuBar = new MenuBar(this.aliasEditor, this.triggerEditor, this.jsScriptWin, this.aboutWin);
+        this.menuBar = new MenuBar(this.aliasEditor, this.triggerEditor, this.jsScriptWin, this.aboutWin, this.configWin);
 
         // Initialize font size from saved config
-        const savedFontSize = UserConfig.get("fontSize");
+        const savedFontSize: number | undefined = UserConfig.get("fontSize");
         if (savedFontSize) {
             this.terminal.setFontSize(savedFontSize);
             this.commandInput.setFontSize(savedFontSize);
         }
 
-        // MenuBar events
-        this.menuBar.EvtChangeFontSize.handle((sz: string) => {
+        // ConfigWin events
+        this.configWin.EvtChangeFontSize.handle((sz: number) => {
             this.terminal.setFontSize(sz);
-            UserConfig.set("fontSize", sz);
             this.commandInput.setFontSize(sz);
         });
 
@@ -80,6 +82,7 @@ export class Client {
         // Socket events
         this.socket.EvtServerEcho.handle((val: boolean) => {
             this.serverEcho = val;
+            this.commandInput.setPasswordMode(val);
         });
 
         this.socket.EvtTelnetTryConnect.handle((val: [string, number]) => {
@@ -101,22 +104,9 @@ export class Client {
             this.terminal.handleTelnetError(data);
         });
 
-        this.socket.EvtWsError.handle(() => {
-            this.terminal.handleWsError();
-        });
-
-        this.socket.EvtWsConnect.handle((_val: { sid: string }) => {
-            this.terminal.handleWsConnect();
-        });
-
-        this.socket.EvtWsDisconnect.handle(() => {
-            this.menuBar.handleTelnetDisconnect();
-            this.terminal.handleWsDisconnect();
-        });
-
         // CommandInput events
         this.commandInput.EvtEmitCmd.handle((data: string) => {
-            if (this.serverEcho !== true) {
+            if (!this.serverEcho && UserConfig.getDef('localEcho', true)) {
                 this.terminal.handleSendCommand(data);
             }
             this.socket.sendCmd(data);

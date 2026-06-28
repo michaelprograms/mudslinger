@@ -19,11 +19,13 @@ export class AliasManager {
     }
 
     public saveAliases() {
+        this.aliases.sort((a, b) => a.pattern.localeCompare(b.pattern));
         this.config.set("aliases", this.aliases);
     }
 
     private loadAliases() {
         this.aliases = this.config.get("aliases") || [];
+        this.aliases.sort((a, b) => a.pattern.localeCompare(b.pattern));
     }
 
     // return the result of the alias if any (string with embedded lines)

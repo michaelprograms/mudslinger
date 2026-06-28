@@ -5,15 +5,6 @@ import { FitAddon } from "@xterm/addon-fit";
 import { Unicode11Addon } from "@xterm/addon-unicode11";
 import { EventHook } from "../core/event";
 
-const CSS_TO_PX: Record<string, number> = {
-    "xx-small": 8,
-    "x-small":  10,
-    "small":    12,
-    "medium":   14,
-    "large":    18,
-    "x-large":  24,
-    "xx-large": 32,
-};
 
 export class MudTerminal {
     public EvtLine = new EventHook<string>();
@@ -78,8 +69,8 @@ export class MudTerminal {
         this.xterm.write(data);
     }
 
-    public setFontSize(sz: string): void {
-        this.xterm.options.fontSize = CSS_TO_PX[sz] ?? 14;
+    public setFontSize(sz: number): void {
+        this.xterm.options.fontSize = sz;
         this.fitAddon.fit();
     }
 
@@ -103,20 +94,8 @@ export class MudTerminal {
         this.writeStatus("[[Disconnected]]");
     }
 
-    handleWsConnect(): void {
-        this.writeStatus("[[Websocket connected]]");
-    }
-
-    handleWsDisconnect(): void {
-        this.writeStatus("[[Websocket disconnected]]");
-    }
-
     handleTelnetError(data: string): void {
         this.writeError(`[[${data}]]`);
-    }
-
-    handleWsError(): void {
-        this.writeError("[[Websocket error]]");
     }
 
     handleSendCommand(cmd: string): void {

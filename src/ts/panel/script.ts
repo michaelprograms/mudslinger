@@ -229,13 +229,12 @@ export class JsScriptWin {
         const item = { name: this.nameInput.value, code: this.codeMirror.state.doc.toString() };
         if (ind < 0) {
             this.scripts.push(item);
-            this.updateListBox();
-            this.listBox.selectedIndex = this.scripts.length - 1;
         } else {
             this.scripts[ind] = item;
-            this.updateListBox();
-            this.listBox.selectedIndex = ind;
         }
+        this.scripts.sort((a, b) => a.name.localeCompare(b.name));
+        this.updateListBox();
+        this.listBox.selectedIndex = this.scripts.findIndex(s => s.name === item.name);
         this.persist();
     }
 
