@@ -22,7 +22,7 @@ export class MudTerminal {
 
     constructor() {
         this.xterm = new Terminal({
-            convertEol: false,
+            convertEol: true,
             scrollback: 5000,
             theme: {
                 background: "#000000",
