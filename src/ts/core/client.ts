@@ -160,6 +160,8 @@ export class Client {
             this.triggerManager.handleLine(line);
         });
 
+        this.terminal.EvtRequestInputFocus.handle(() => this.commandInput.focus());
+
         window.onbeforeunload = () => "";
 
         this.socket.open().then((success) => {

@@ -170,6 +170,10 @@ export class CommandInput {
         }
     }
 
+    focus(): void {
+        this.cmdInput.focus();
+    }
+
     setFontSize(sz: string): void {
         this.cmdInput.style.fontSize = sz;
     }

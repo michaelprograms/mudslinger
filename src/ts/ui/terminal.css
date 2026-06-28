@@ -1,5 +1,6 @@
 #winOutput {
-    height: calc(100% - 21px);
+    flex: 1;
+    min-height: 0;
     margin: 0;
     padding: 0;
 }

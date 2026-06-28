@@ -2,6 +2,7 @@ import "@xterm/xterm/css/xterm.css";
 import "./terminal.css";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
+import { Unicode11Addon } from "@xterm/addon-unicode11";
 import { EventHook } from "../core/event";
 
 const CSS_TO_PX: Record<string, number> = {
@@ -16,26 +17,58 @@ const CSS_TO_PX: Record<string, number> = {
 
 export class MudTerminal {
     public EvtLine = new EventHook<string>();
+    public EvtRequestInputFocus = new EventHook<void>();
 
     private xterm: Terminal;
     private fitAddon: FitAddon;
 
     constructor() {
         this.xterm = new Terminal({
+            allowProposedApi: true,
             convertEol: true,
             scrollback: 5000,
+            cursorInactiveStyle: "none",
             theme: {
-                background: "#000000",
-                foreground: "#00bb00",
+                background:     "#000000",
+                foreground:     "#c0c0c0",
+                black:          "#000000",
+                red:            "#800000",
+                green:          "#008000",
+                yellow:         "#808000",
+                blue:           "#000080",
+                magenta:        "#800080",
+                cyan:           "#008080",
+                white:          "#c0c0c0",
+                brightBlack:    "#808080",
+                brightRed:      "#ff0000",
+                brightGreen:    "#00ff00",
+                brightYellow:   "#ffff00",
+                brightBlue:     "#0000ff",
+                brightMagenta:  "#ff00ff",
+                brightCyan:     "#00ffff",
+                brightWhite:    "#ffffff",
             },
         });
 
         this.fitAddon = new FitAddon();
         this.xterm.loadAddon(this.fitAddon);
-        this.xterm.open(document.getElementById("winOutput")!);
+        const unicode11 = new Unicode11Addon();
+        this.xterm.loadAddon(unicode11);
+        this.xterm.unicode.activeVersion = "11";
+        const winOutput = document.getElementById("winOutput")!;
+        this.xterm.open(winOutput);
         this.fitAddon.fit();
 
-        window.addEventListener("resize", () => this.fitAddon.fit());
+        // Remove xterm's hidden textarea from tab order so Tab stays in cmdInput
+        const helperTextarea = this.xterm.element?.querySelector(".xterm-helper-textarea") as HTMLElement | null;
+        if (helperTextarea) helperTextarea.tabIndex = -1;
+
+        // Refocus cmdInput on click unless the user is selecting terminal text
+        winOutput.addEventListener("mouseup", () => {
+            if (!this.xterm.getSelection()) this.EvtRequestInputFocus.fire();
+        });
+
+        new ResizeObserver(() => this.fitAddon.fit()).observe(winOutput);
         window.onerror = (message, source, lineno, colno) => {
             this.writeError(`[[Web Client Error\r\n${message}\r\n${source}\r\n${lineno}\r\n${colno}\r\n]]`);
         };

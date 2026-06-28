@@ -11,6 +11,13 @@
     font-family: "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
     font-size: small;
     display: inline;
+    caret-color: #ffffff;
+    outline: 2px solid transparent;
+    transition: outline-color 0.1s;
+}
+
+#cmdInput:focus {
+    outline-color: #4a9eff;
 }
 
 .chkCmdInputCmdStackCont .toolTipText {
