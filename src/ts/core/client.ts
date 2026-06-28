@@ -2,17 +2,15 @@ import "../base.css";
 import { UserConfig } from "./userConfig";
 import { AppInfo } from "./appInfo";
 
-import { AliasEditor } from "../panel/alias";
 import { AliasManager } from "../manager/alias";
 import { CommandInput } from "../ui/commandInput";
 import { JsScript, EvtScriptEmitCmd, EvtScriptEmitPrint, EvtScriptEmitEvalError, EvtScriptEmitError } from "./script";
-import { JsScriptWin } from "../panel/script";
+import { EditorWin } from "../panel/editor";
 import { MenuBar } from "../ui/menuBar";
 
 import { StreamManager } from "../manager/stream";
 import { MudTerminal } from "../ui/terminal";
 import { Socket } from "../net/socket";
-import { TriggerEditor } from "../panel/trigger";
 import { TriggerManager } from "../manager/trigger";
 import { AboutWin } from "../panel/about";
 import { ConfigWin } from "../panel/config";
@@ -24,16 +22,14 @@ interface ConnectionTarget {
 }
 
 export class Client {
-    private aliasEditor: AliasEditor;
+    private editorWin: EditorWin;
     private aliasManager: AliasManager;
     private commandInput: CommandInput;
     private jsScript: JsScript;
-    private jsScriptWin: JsScriptWin;
     private menuBar: MenuBar;
     private stream: StreamManager;
     private terminal: MudTerminal;
     private socket: Socket;
-    private triggerEditor: TriggerEditor;
     private triggerManager: TriggerManager;
     private aboutWin: AboutWin;
     private configWin: ConfigWin;
@@ -44,7 +40,6 @@ export class Client {
         this.aboutWin = new AboutWin();
         this.configWin = new ConfigWin();
         this.jsScript = new JsScript();
-        this.jsScriptWin = new JsScriptWin(this.jsScript);
         this.triggerManager = new TriggerManager(this.jsScript, UserConfig);
         this.aliasManager = new AliasManager(this.jsScript, UserConfig);
         this.commandInput = new CommandInput(this.aliasManager);
@@ -52,11 +47,10 @@ export class Client {
         this.terminal = new MudTerminal();
         this.stream = new StreamManager(this.terminal, UserConfig);
 
-        this.aliasEditor = new AliasEditor(this.aliasManager);
-        this.triggerEditor = new TriggerEditor(this.triggerManager);
+        this.editorWin = new EditorWin(this.aliasManager, this.triggerManager, this.jsScript);
 
         this.socket = new Socket(this.stream);
-        this.menuBar = new MenuBar(this.aliasEditor, this.triggerEditor, this.jsScriptWin, this.aboutWin, this.configWin);
+        this.menuBar = new MenuBar(this.editorWin, this.aboutWin, this.configWin);
 
         // Initialize font size from saved config
         const savedFontSize: number | undefined = UserConfig.get("fontSize");
@@ -80,6 +74,15 @@ export class Client {
         });
 
         // Socket events
+        this.socket.EvtGmcp.handle(({pkg, data}: {pkg: string; data: any}) => {
+            if (pkg === 'Char.Name' && data?.name) {
+                const name = String(data.name);
+                UserConfig.set('activeChar', name);
+                const known: string[] = UserConfig.getDef('knownChars', []);
+                if (!known.includes(name)) UserConfig.set('knownChars', [...known, name]);
+            }
+        });
+
         this.socket.EvtServerEcho.handle((val: boolean) => {
             this.serverEcho = val;
             this.commandInput.setPasswordMode(val);

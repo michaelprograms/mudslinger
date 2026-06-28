@@ -1,4 +1,5 @@
 import { EditorItem } from "../panel/base";
+import { UserConfig } from "../core/userConfig";
 
 
 export interface ConfigIf {
@@ -33,46 +34,40 @@ export class AliasManager {
     // return null if no match
     public checkAlias(cmd: string): boolean | string | null {
         if (this.config.getDef("aliasesEnabled", true) !== true) return null;
+        const activeChar: string = UserConfig.getDef('activeChar', '');
 
-        for (let i = 0; i < this.aliases.length; i++) {
-            let alias = this.aliases[i];
+        // character-scoped aliases take priority over global ones
+        if (activeChar) {
+            const r = this.tryMatch(cmd, a => a.scope === activeChar);
+            if (r !== null) return r;
+        }
+        return this.tryMatch(cmd, a => !a.scope || a.scope === 'global');
+    }
+
+    private tryMatch(cmd: string, filter: (a: EditorItem) => boolean): boolean | string | null {
+        for (const alias of this.aliases) {
+            if (!filter(alias)) continue;
 
             if (alias.regex) {
-                let re = alias.pattern;
-                let match = cmd.match(re);
-                if (!match) {
-                    continue;
-                }
-
+                const match = cmd.match(alias.pattern);
+                if (!match) continue;
                 if (alias.is_script) {
-                    let script = this.jsScript.makeScript(alias.value, "match, input");
-                    if (script) { script(match, cmd); };
+                    const script = this.jsScript.makeScript(alias.value, "match, input");
+                    if (script) { script(match, cmd); }
                     return true;
-                } else {
-                    let value = alias.value;
-
-                    value = value.replace(/\$(\d+)/g, function(m, d) {
-                        return match[parseInt(d)] || "";
-                    });
-                    return value;
                 }
+                return alias.value.replace(/\$(\d+)/g, (_m, d) => match[parseInt(d)] || "");
             } else {
-                let re = "^" + alias.pattern + "\\s*(.*)$";
-                let match = cmd.match(re);
-                if (!match) {
-                    continue;
-                }
-
+                const match = cmd.match("^" + alias.pattern + "\\s*(.*)$");
+                if (!match) continue;
                 if (alias.is_script) {
-                    let script = this.jsScript.makeScript(alias.value, "input");
-                    if (script) { script(cmd); };
+                    const script = this.jsScript.makeScript(alias.value, "input");
+                    if (script) { script(cmd); }
                     return true;
-                } else {
-                    let value = alias.value.replace("$1", match[1] || "");
-                    return value;
                 }
+                return alias.value.replace("$1", match[1] || "");
             }
         }
         return null;
-    };
+    }
 }

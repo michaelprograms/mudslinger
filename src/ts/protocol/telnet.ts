@@ -13,11 +13,13 @@ const TTYPES: string[] = [
 
 export class TelnetClient extends Telnet {
     public EvtServerEcho = new EventHook<boolean>();
+    public EvtGmcp = new EventHook<{pkg: string; data: unknown}>();
 
     private ttypeIndex: number = 0;
 
     private doNewEnviron: boolean = false;
     private doCharset: boolean = false;
+    private doGmcp: boolean = false;
 
     constructor(writeFunc: (data: ArrayBuffer) => void) {
         super(writeFunc);
@@ -122,6 +124,14 @@ export class TelnetClient extends Telnet {
             } else if (this.doNewEnviron && sb.length > 0 && sb[0] == Opt.NEW_ENVIRON) {
                 let seq = sb.slice(1);
                 this.handleNewEnvSeq(seq);
+            } else if (this.doGmcp && sb.length > 0 && sb[0] === ExtOpt.GMCP) {
+                const str = String.fromCharCode(...sb.slice(1));
+                const space = str.indexOf(' ');
+                const pkg = space >= 0 ? str.slice(0, space) : str;
+                const jsonStr = space >= 0 ? str.slice(space + 1) : '';
+                let data: unknown = null;
+                try { if (jsonStr) data = JSON.parse(jsonStr); } catch {}
+                this.EvtGmcp.fire({pkg, data});
             }
             return;
         }
@@ -139,6 +149,9 @@ export class TelnetClient extends Telnet {
                 this.doCharset = true;
             } else if (opt === Opt.SGA) {
                 this.writeArr([Cmd.IAC, Cmd.DO, Opt.SGA]);
+            } else if (opt === ExtOpt.GMCP) {
+                this.writeArr([Cmd.IAC, Cmd.DO, ExtOpt.GMCP]);
+                this.doGmcp = true;
             } else {
                 this.writeArr([Cmd.IAC, Cmd.DONT, opt]);
             }
@@ -158,6 +171,9 @@ export class TelnetClient extends Telnet {
                 this.doCharset = true;
                 this.writeArr([Cmd.IAC, Cmd.SB, Opt.CHARSET, 1 /* REQUEST */]
                     .concat(arrayFromString(";UTF-8"), [Cmd.IAC, Cmd.SE]));
+            } else if (opt === ExtOpt.GMCP) {
+                this.writeArr([Cmd.IAC, Cmd.WILL, ExtOpt.GMCP]);
+                this.doGmcp = true;
             } else {
                 this.writeArr([Cmd.IAC, Cmd.WONT, opt]);
             }
@@ -176,6 +192,7 @@ export namespace ExtOpt {
     export const MSP = 90;
     export const MXP = 91;
     export const ATCP = 200;
+    export const GMCP = 201;
 }
 
 export namespace SubNeg {

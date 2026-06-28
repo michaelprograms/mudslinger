@@ -10,6 +10,7 @@ export interface TelnetDataHandlerIf {
 
 export class Socket {
     public EvtServerEcho = new EventHook<boolean>();
+    public EvtGmcp = new EventHook<{pkg: string; data: unknown}>();
     public EvtTelnetTryConnect = new EventHook<[string, number]>();
     public EvtTelnetConnect = new EventHook<[string, number]>();
     public EvtTelnetDisconnect = new EventHook<void>();
@@ -33,6 +34,10 @@ export class Socket {
 
             this.telnetClient.EvtServerEcho.handle((data) => {
                 this.EvtServerEcho.fire(data);
+            });
+
+            this.telnetClient.EvtGmcp.handle((data) => {
+                this.EvtGmcp.fire(data);
             });
 
             this.EvtTelnetConnect.fire(val);

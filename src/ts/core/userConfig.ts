@@ -25,6 +25,7 @@ export namespace UserConfig {
     }
 
     export function getDef(key: string, def: any): any {
+        if (!cfgVals) return def;
         let res = cfgVals[key];
         return (res === undefined) ? def : res;
     }

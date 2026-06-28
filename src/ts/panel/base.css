@@ -74,6 +74,68 @@
     flex-shrink: 0;
 }
 
+.winEdit-char-selector {
+    padding: 4px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border-bottom: 1px solid var(--ui-border);
+}
+
+.winEdit-char-selector label { font-size: small; }
+
+.winEdit-char-selector select {
+    width: 100%;
+    background: var(--ui-bg-deep);
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
+    padding: 2px;
+}
+
+.winEdit-char-add {
+    display: flex;
+    gap: 3px;
+}
+
+.winEdit-char-add input {
+    flex: 1;
+    min-width: 0;
+    background: var(--ui-bg-deep);
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
+    padding: 2px;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.winEdit-char-add button {
+    background: none;
+    border: 1px solid var(--ui-border);
+    color: var(--ui-text);
+    cursor: pointer;
+    padding: 1px 6px;
+    font-size: inherit;
+}
+
+.winEdit-char-add button:hover { background: var(--ui-bg-hover); }
+
+.winEdit-list-filters {
+    padding: 4px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.winEdit-list-filters select {
+    width: 100%;
+    background: var(--ui-bg-deep);
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
+    padding: 2px;
+}
+
 .winEdit-list-buttons { padding: 4px; flex-shrink: 0; }
 
 .winEdit-listBox {

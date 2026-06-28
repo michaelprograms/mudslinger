@@ -35,3 +35,10 @@ a:link, a:visited { text-decoration: none; }
     min-height: 0;
     width: 100%;
 }
+
+#outputArea {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    min-height: 0;
+}

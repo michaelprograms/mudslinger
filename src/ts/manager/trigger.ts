@@ -1,5 +1,6 @@
 import { EventHook } from "../core/event";
 import { EditorItem } from "../panel/base";
+import { UserConfig } from "../core/userConfig";
 
 
 export interface ConfigIf {
@@ -42,40 +43,46 @@ export class TriggerManager {
 
     public handleLine(line: string): void {
         if (this.config.getDef("triggersEnabled", true) !== true) return;
-//        console.log("TRIGGER: " + line);
-        for (let i = 0; i < this.triggers.length; i++) {
-            let trig = this.triggers[i];
-            if (trig.regex) {
-                let match = line.match(trig.pattern);
-                if (!match) {
-                    continue;
-                }
+        const activeChar: string = UserConfig.getDef('activeChar', '');
+        const claimedPatterns = new Set<string>();
 
-                if (trig.is_script) {
-                    let script = this.jsScript.makeScript(trig.value, "match, line");
-                    if (script) { script(match, line); };
-                } else {
-                    let value = trig.value;
-
-                    value = value.replace(/\$(\d+)/g, function(m, d) {
-                        return match[parseInt(d)] || "";
-                    });
-
-                    let cmds = value.replace("\r", "").split("\n");
-                    this.EvtEmitTriggerCmds.fire(cmds);
-                }
-            } else {
-                if (line.includes(trig.pattern)) {
-                    if (trig.is_script) {
-                        let script = this.jsScript.makeScript(trig.value, "line");
-                        if (script) { script(line); };
-                    } else {
-                        let cmds = trig.value.replace("\r", "").split("\n");
-                        this.EvtEmitTriggerCmds.fire(cmds);
-                    }
-                }
+        // scoped triggers run first; their pattern shadows any global trigger with the same pattern string
+        if (activeChar) {
+            for (const trig of this.triggers) {
+                if (trig.scope !== activeChar) continue;
+                if (this.fireTrigger(trig, line)) claimedPatterns.add(trig.pattern);
             }
+        }
+
+        // global triggers, skipping patterns already handled by a scoped trigger
+        for (const trig of this.triggers) {
+            if (trig.scope && trig.scope !== 'global') continue;
+            if (claimedPatterns.has(trig.pattern)) continue;
+            this.fireTrigger(trig, line);
+        }
+    }
+
+    private fireTrigger(trig: EditorItem, line: string): boolean {
+        if (trig.regex) {
+            const match = line.match(trig.pattern);
+            if (!match) return false;
+            if (trig.is_script) {
+                const script = this.jsScript.makeScript(trig.value, "match, line");
+                if (script) { script(match, line); }
+            } else {
+                const value = trig.value.replace(/\$(\d+)/g, (_m, d) => match[parseInt(d)] || "");
+                this.EvtEmitTriggerCmds.fire(value.replace("\r", "").split("\n"));
+            }
+            return true;
+        } else {
+            if (!line.includes(trig.pattern)) return false;
+            if (trig.is_script) {
+                const script = this.jsScript.makeScript(trig.value, "line");
+                if (script) { script(line); }
+            } else {
+                this.EvtEmitTriggerCmds.fire(trig.value.replace("\r", "").split("\n"));
+            }
+            return true;
         }
     }
 }
-
