@@ -11,7 +11,11 @@ export namespace UserConfig {
         saveFunc = saveFunc_;
 
         if (userConfigStr) {
-            cfgVals = JSON.parse(userConfigStr);
+            try {
+                cfgVals = JSON.parse(userConfigStr);
+            } catch {
+                cfgVals = {};
+            }
         } else {
             cfgVals = {};
         }

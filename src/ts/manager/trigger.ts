@@ -23,7 +23,9 @@ export class TriggerManager {
         if (typeof localStorage !== 'undefined') {
             const savedTriggers = localStorage.getItem("triggers");
             if (savedTriggers) {
-                this.config.set("triggers", JSON.parse(savedTriggers));
+                try {
+                    this.config.set("triggers", JSON.parse(savedTriggers));
+                } catch { /* ignore corrupted legacy data */ }
                 localStorage.removeItem("triggers");
             }
         }

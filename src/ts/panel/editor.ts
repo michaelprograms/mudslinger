@@ -3,7 +3,7 @@ import { UserConfig } from "../core/userConfig";
 import { AliasManager } from "../manager/alias";
 import { TriggerManager } from "../manager/trigger";
 import { JsScript } from "../core/script";
-import { EditorItem } from "./base";
+import { EditorItem, initDrag } from "./base";
 import { basicSetup } from "codemirror";
 import { EditorView } from "@codemirror/view";
 import { EditorState, Compartment } from "@codemirror/state";
@@ -211,21 +211,7 @@ export class EditorWin {
     }
 
     private initDrag(): void {
-        let dragging = false, ox = 0, oy = 0;
-        this.titlebar.addEventListener('mousedown', e => {
-            if (this.mode !== 'float') return;
-            if ((e.target as HTMLElement).closest('button')) return;
-            dragging = true;
-            ox = e.clientX - this.panel.offsetLeft;
-            oy = e.clientY - this.panel.offsetTop;
-            e.preventDefault();
-        });
-        document.addEventListener('mousemove', e => {
-            if (!dragging) return;
-            this.panel.style.left = (e.clientX - ox) + 'px';
-            this.panel.style.top  = (e.clientY - oy) + 'px';
-        });
-        document.addEventListener('mouseup', () => { dragging = false; });
+        initDrag(this.panel, this.titlebar, () => this.mode);
     }
 
     private setEditorDisabled(state: boolean): void {

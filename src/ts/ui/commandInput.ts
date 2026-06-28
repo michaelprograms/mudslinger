@@ -75,15 +75,30 @@ export class CommandInput {
     };
 
     private keydown(event: KeyboardEvent): boolean {
-        switch (event.which) {
-            case 13: // enter
+        if (event.location === KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
+            const numpadCmds: Record<string, string> = {
+                '1': 'southwest', '2': 'south',  '3': 'southeast',
+                '4': 'west',      '5': 'look',   '6': 'east',
+                '7': 'northwest', '8': 'north',  '9': 'northeast',
+                '+': 'down',      '-': 'up',
+            };
+            const cmd = numpadCmds[event.key];
+            if (cmd) {
+                this.cmdInput.value = cmd;
+                this.sendCmd();
+                return false;
+            }
+        }
+
+        switch (event.key) {
+            case 'Enter':
                 if (event.shiftKey) {
                     return true;
                 } else {
                     this.sendCmd();
                     return false;
                 }
-            case 38: // up
+            case 'ArrowUp':
                 if (this.cmd_index === -1) {
                     this.cmd_entered = this.cmdInput.value;
                     this.cmd_index = this.cmd_history.length - 1;
@@ -95,11 +110,10 @@ export class CommandInput {
                 this.inputChange();
                 this.cmdInput.select();
                 return false;
-            case 40: // down
+            case 'ArrowDown':
                 if (this.cmd_index === -1) {
                     break;
                 }
-
                 if (this.cmd_index === (this.cmd_history.length - 1)) {
                     // Already at latest, grab entered but unsent value
                     this.cmd_index = -1;
@@ -108,53 +122,8 @@ export class CommandInput {
                     this.cmd_index += 1;
                     this.cmdInput.value = this.cmd_history[this.cmd_index];
                 }
-                this.cmdInput.value = this.cmd_history[this.cmd_index];
                 this.inputChange();
                 this.cmdInput.select();
-                return false;
-            case 97:
-                this.cmdInput.value = "southwest";
-                this.sendCmd();
-                return false;
-            case 98:
-                this.cmdInput.value = "south";
-                this.sendCmd()
-                return false;
-            case 99:
-                this.cmdInput.value = "southeast";
-                this.sendCmd();
-                return false;
-            case 100:
-                this.cmdInput.value = "west";
-                this.sendCmd();
-                return false;
-            case 101:
-                this.cmdInput.value = "look";
-                this.sendCmd();
-                return false;
-            case 102:
-                this.cmdInput.value = "east";
-                this.sendCmd();
-                return false;
-            case 103:
-                this.cmdInput.value = "northwest";
-                this.sendCmd();
-                return false;
-            case 104:
-                this.cmdInput.value = "north";
-                this.sendCmd();
-                return false;
-            case 105:
-                this.cmdInput.value = "northeast";
-                this.sendCmd();
-                return false;
-            case 107:
-                this.cmdInput.value = "down";
-                this.sendCmd();
-                return false;
-            case 109:
-                this.cmdInput.value = "up";
-                this.sendCmd();
                 return false;
             default:
                 this.cmd_index = -1;
@@ -176,7 +145,9 @@ export class CommandInput {
     private loadHistory(): void {
         let cmds = localStorage.getItem("cmd_history");
         if (cmds) {
-            this.cmd_history = JSON.parse(cmds);
+            try {
+                this.cmd_history = JSON.parse(cmds);
+            } catch { /* start with empty history if data is corrupted */ }
         }
     }
 

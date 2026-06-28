@@ -1,5 +1,6 @@
 import "./about.css";
 import { AppInfo } from "../core/appInfo";
+import { initDrag } from "./base";
 
 type PanelMode = 'float' | 'top' | 'bottom' | 'left' | 'right' | 'maximize';
 
@@ -139,21 +140,7 @@ if (this.deadOrcs &lt; 10) {
     }
 
     private initDrag(): void {
-        let dragging = false, ox = 0, oy = 0;
-        this.titlebar.addEventListener('mousedown', e => {
-            if (this.mode !== 'float') return;
-            if ((e.target as HTMLElement).closest('button')) return;
-            dragging = true;
-            ox = e.clientX - this.panel.offsetLeft;
-            oy = e.clientY - this.panel.offsetTop;
-            e.preventDefault();
-        });
-        document.addEventListener('mousemove', e => {
-            if (!dragging) return;
-            this.panel.style.left = (e.clientX - ox) + 'px';
-            this.panel.style.top  = (e.clientY - oy) + 'px';
-        });
-        document.addEventListener('mouseup', () => { dragging = false; });
+        initDrag(this.panel, this.titlebar, () => this.mode);
     }
 
     private initTabs(): void {

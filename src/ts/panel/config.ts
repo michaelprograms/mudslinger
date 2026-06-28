@@ -2,6 +2,7 @@ import "./base.css";
 import "./config.css";
 import { EventHook } from "../core/event";
 import { UserConfig } from "../core/userConfig";
+import { initDrag } from "./base";
 
 const DEFAULT_FONT_SIZE = 14;
 
@@ -130,21 +131,7 @@ export class ConfigWin {
     }
 
     private initDrag(): void {
-        let dragging = false, ox = 0, oy = 0;
-        this.titlebar.addEventListener('mousedown', e => {
-            if (this.mode !== 'float') return;
-            if ((e.target as HTMLElement).closest('button')) return;
-            dragging = true;
-            ox = e.clientX - this.panel.offsetLeft;
-            oy = e.clientY - this.panel.offsetTop;
-            e.preventDefault();
-        });
-        document.addEventListener('mousemove', e => {
-            if (!dragging) return;
-            this.panel.style.left = (e.clientX - ox) + 'px';
-            this.panel.style.top  = (e.clientY - oy) + 'px';
-        });
-        document.addEventListener('mouseup', () => { dragging = false; });
+        initDrag(this.panel, this.titlebar, () => this.mode);
     }
 
     public show(): void {

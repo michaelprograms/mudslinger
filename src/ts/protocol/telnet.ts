@@ -282,7 +282,7 @@ export function parseNewEnvSeq(seq: number[]): [number, number | null, string][]
                 i++;
             }
             let varNameArr = seq.slice(start, i);
-            varName = String.fromCharCode.apply(String, varNameArr);
+            varName = String.fromCharCode(...varNameArr);
         }
     }
 
