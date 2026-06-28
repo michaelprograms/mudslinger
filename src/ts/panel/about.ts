@@ -26,7 +26,6 @@ export class AboutWin {
             <div class="about-tabs">
                 <button class="about-tab active" data-tab="about">About</button>
                 <button class="about-tab" data-tab="scripting">Scripting API</button>
-                <button class="about-tab" data-tab="license">License</button>
             </div>
             <div class="about-body">
                 <div class="about-pane" data-pane="about">
@@ -68,14 +67,6 @@ if (this.deadOrcs &lt; 10) {
 } else {
   send("say Already killed 10 orcs.");
 }</code></pre>
-                </div>
-                <div class="about-pane" data-pane="license" hidden>
-                    <h2>License</h2>
-                    <p>The MIT License (MIT)<br>
-                    Mudslinger Client Copyright &copy; 2017 Clayton Richey</p>
-                    <p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
-                    <p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
-                    <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
                 </div>
             </div>
         `;
