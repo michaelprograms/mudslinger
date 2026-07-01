@@ -46,20 +46,10 @@ export class TriggerManager {
     public handleLine(line: string): void {
         if (this.config.getDef("triggersEnabled", true) !== true) return;
         const activeChar: string = UserConfig.getDef('activeChar', '');
-        const claimedPatterns = new Set<string>();
 
-        // scoped triggers run first; their pattern shadows any global trigger with the same pattern string
-        if (activeChar) {
-            for (const trig of this.triggers) {
-                if (trig.scope !== activeChar) continue;
-                if (this.fireTrigger(trig, line)) claimedPatterns.add(trig.pattern);
-            }
-        }
-
-        // global triggers, skipping patterns already handled by a scoped trigger
         for (const trig of this.triggers) {
-            if (trig.scope && trig.scope !== 'global') continue;
-            if (claimedPatterns.has(trig.pattern)) continue;
+            const scoped = !!trig.scope && trig.scope !== 'global';
+            if (scoped && trig.scope !== activeChar) continue;
             this.fireTrigger(trig, line);
         }
     }
