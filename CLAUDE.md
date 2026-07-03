@@ -7,9 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A self-hosted, web-based MUD client. The browser connects **directly** to a MUD's
 native WebSocket port (e.g. FluffOS `external_port ... websocket`), which carries
 the raw telnet byte stream as binary WebSocket frames. There is no server-side
-proxy — the entire telnet protocol stack (IAC negotiation, MXP, color) runs in the
-browser. Consequence: the MUD never sees the player's real IP, and `wss://` is
-required when the page is served over HTTPS (else mixed-content block).
+proxy — the telnet protocol stack (IAC negotiation) runs in the browser and
+`@xterm/xterm` renders the output stream (ANSI color included). Consequence: the
+MUD never sees the player's real IP, and `wss://` is required when the page is
+served over HTTPS (else mixed-content block).
 
 ## Commands
 
@@ -23,9 +24,10 @@ npm run typecheck  # tsc --noEmit
 
 Run one test: `npx vitest run src/ts/protocol/telnet.test.ts` or `npx vitest run -t "name"`.
 
-Note: the build writes into `static/public/` with `emptyOutDir: false` — it does
-**not** wipe checked-in assets there (favicon). CSS is co-located with components
-as `*.css` files imported in TypeScript; Vite bundles them automatically.
+Note: the build empties and rewrites `static/public/` (`emptyOutDir: true`).
+Checked-in static assets that must survive a build (favicon) live in the root
+`public/` dir — Vite copies them into the output. CSS is co-located with
+components as `*.css` files imported in TypeScript; Vite bundles them automatically.
 
 ## Architecture
 
@@ -33,20 +35,22 @@ Layered, wired together in `src/ts/core/client.ts` (the `Client` god-object that
 constructs everything). Data flows up the layers on input from the MUD and down on
 player input:
 
-- **net/** — moving bytes. `transport.ts` defines the `Transport` interface;
-  `websocket.ts` is the only implementation. `socket.ts` (`Socket`) drives a
-  `TelnetClient` from the transport's raw `EvtData`.
-- **protocol/** — `telnet.ts`/`telnetlib.ts` (IAC/telnet negotiation), `mxp.ts`
-  (MUD eXtension Protocol), `color.ts` (ANSI/xterm-256 SGR → spans).
-- **manager/** — stateful processing: `output.ts` (renders the byte stream to the
-  output window, handles SGR/UTF-8/MXP toggles), `trigger.ts`, `alias.ts`.
-- **ui/** — DOM widgets: `outputWin.ts`/`outputBase.ts` (the bespoke terminal
-  renderer), `commandInput.ts`, `menuBar.ts`.
-- **panel/** — floating `.mudpanel` editors (alias, trigger, script, about) sharing
-  `base.ts`.
+- **net/** — moving bytes. `websocket.ts` wraps the browser WebSocket; `socket.ts`
+  (`Socket`) runs telnet negotiation over it and forwards decoded data downstream.
+- **protocol/** — `telnet.ts`/`telnetlib.ts` (IAC/telnet negotiation).
+- **manager/** — stateful processing: `stream.ts` (`StreamManager`: UTF-8 decode +
+  line extraction, forwards the raw ANSI stream to the terminal), `trigger.ts`,
+  `alias.ts`.
+- **ui/** — DOM widgets: `terminal.ts` (`MudTerminal`, an `@xterm/xterm` wrapper —
+  renders output, handles ANSI color natively), `commandInput.ts`, `menuBar.ts`.
+- **panel/** — floating `.mudpanel` windows sharing `base.ts`: `editor.ts` (combined
+  alias/trigger/script editor, CodeMirror-backed, **lazy-loaded** via dynamic
+  `import()` on first open so CodeMirror stays out of the initial bundle),
+  `config.ts`, `about.ts`.
 - **core/** — `script.ts` (user JS scripting sandbox + `EvtScriptEmit*` events),
   `config.ts` (build/deploy config, fed by Vite `define` + `VITE_*` env vars) vs
-  `userConfig.ts` (per-user settings persisted in the browser), `appInfo.ts`.
+  `userConfig.ts` (per-user settings persisted in the browser), `appInfo.ts`,
+  `event.ts`, `util.ts`.
 
 **Eventing**: everything is decoupled through `core/event.ts` `EventHook<T>` — a
 tiny pub/sub (`.handle(cb)` / `.fire(data)`). Layers communicate by firing hooks,

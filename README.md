@@ -2,12 +2,12 @@
 
 A self-hosted, web-based MUD client. Players open a page in their browser and
 are connected to a MUD automatically; there is nothing to install on the client
-side. It renders MUD output (ANSI, XTERM 256 color, UTF-8, MXP) and sends
+side. It renders MUD output (ANSI, XTERM 256 color, UTF-8) and sends
 player input.
 
 The client connects directly to a MUD's native WebSocket port (e.g. a FluffOS
 `external_port ... websocket`), which carries the telnet byte stream as binary
-WebSocket frames. The telnet protocol stack (IAC negotiation, MXP, MSDP) runs
+WebSocket frames. The telnet protocol stack (IAC negotiation, GMCP) runs
 entirely in the browser. Use a `wss://` URL when serving the page over HTTPS,
 or the browser will block the connection as mixed content. The player's real IP
 is not available to the MUD, since there is no proxy to report it.
