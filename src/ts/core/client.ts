@@ -5,7 +5,6 @@ import { AppInfo } from "./appInfo";
 import { AliasManager } from "../manager/alias";
 import { CommandInput } from "../ui/commandInput";
 import { JsScript, EvtScriptEmitCmd, EvtScriptEmitPrint, EvtScriptEmitEvalError, EvtScriptEmitError } from "./script";
-import { EditorWin } from "../panel/editor";
 import { MenuBar } from "../ui/menuBar";
 
 import { StreamManager } from "../manager/stream";
@@ -22,7 +21,7 @@ interface ConnectionTarget {
 }
 
 export class Client {
-    private editorWin: EditorWin;
+    private editorWin?: import("../panel/editor").EditorWin;
     private aliasManager: AliasManager;
     private commandInput: CommandInput;
     private jsScript: JsScript;
@@ -47,10 +46,17 @@ export class Client {
         this.terminal = new MudTerminal();
         this.stream = new StreamManager(this.terminal, UserConfig);
 
-        this.editorWin = new EditorWin(this.aliasManager, this.triggerManager, this.jsScript);
-
         this.socket = new Socket(this.stream);
-        this.menuBar = new MenuBar(this.editorWin, this.aboutWin, this.configWin);
+        this.menuBar = new MenuBar(this.aboutWin, this.configWin);
+
+        // Lazily load the CodeMirror-backed editor panel on first open (keeps it out of the initial bundle)
+        this.menuBar.EvtEditorClicked.handle(async () => {
+            if (!this.editorWin) {
+                const { EditorWin } = await import("../panel/editor");
+                this.editorWin = new EditorWin(this.aliasManager, this.triggerManager, this.jsScript);
+            }
+            this.editorWin.show();
+        });
 
         // Initialize font size from saved config
         const savedFontSize: number | undefined = UserConfig.get("fontSize");

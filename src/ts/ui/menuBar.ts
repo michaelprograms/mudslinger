@@ -1,15 +1,14 @@
 import "./menuBar.css";
 import { EventHook } from "../core/event";
-import { EditorWin } from "../panel/editor";
 import { AboutWin } from "../panel/about";
 import { ConfigWin } from "../panel/config";
 
 export class MenuBar {
     public EvtConnectClicked = new EventHook<void>();
     public EvtDisconnectClicked = new EventHook<void>();
+    public EvtEditorClicked = new EventHook<void>();
 
     constructor(
-        private editorWin: EditorWin,
         private aboutWin: AboutWin,
         private configWin: ConfigWin,
     ) {
@@ -20,7 +19,7 @@ export class MenuBar {
         const actions: {[k: string]: () => void} = {
             'Connect':    () => this.EvtConnectClicked.fire(),
             'Disconnect': () => this.EvtDisconnectClicked.fire(),
-            'Editor':     () => this.editorWin.show(),
+            'Editor':     () => this.EvtEditorClicked.fire(),
             'Config':     () => this.configWin.show(),
             'About':      () => this.aboutWin.show(),
         };

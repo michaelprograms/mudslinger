@@ -14,11 +14,10 @@ export default defineConfig(({ mode }) => {
 
     return {
         base: '/play/',
-        publicDir: 'static/public',
+        // publicDir defaults to <root>/public
         build: {
             outDir: 'static/public',
-            emptyOutDir: false,
-            copyPublicDir: false,
+            emptyOutDir: true,
         },
         define: {
             __APP_VERSION__: JSON.stringify(version),
