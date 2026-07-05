@@ -62,6 +62,26 @@ export class MudTerminal {
             if (!this.xterm.getSelection()) this.EvtRequestInputFocus.fire();
         });
 
+        // Touch-drag scrollback. xterm 6 doesn't wire up its touch Gesture
+        // (Gesture.addTarget is never called), so drag-scrolling the terminal
+        // is dead on mobile. Translate finger movement into scrollLines().
+        let touchY: number | null = null;
+        winOutput.addEventListener("touchstart", (e) => {
+            touchY = e.touches[0].clientY;
+        }, { passive: true });
+        winOutput.addEventListener("touchmove", (e) => {
+            if (touchY === null) return;
+            const y = e.touches[0].clientY;
+            const cell = winOutput.clientHeight / this.xterm.rows || 20;
+            const lines = Math.trunc((y - touchY) / cell);
+            if (lines !== 0) {
+                this.xterm.scrollLines(-lines);   // drag down -> older lines
+                touchY += lines * cell;           // keep the sub-cell remainder
+            }
+            e.preventDefault();
+        }, { passive: false });
+        winOutput.addEventListener("touchend", () => { touchY = null; }, { passive: true });
+
         // fit() on next frame to avoid the "ResizeObserver loop" warning
         let fitPending = false;
         new ResizeObserver(() => {
