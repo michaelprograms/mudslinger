@@ -162,6 +162,6 @@ export class CommandInput {
     }
 
     setFontSize(sz: number): void {
-        this.cmdInput.style.fontSize = sz + 'px';
+        document.documentElement.style.setProperty('--cmd-font-size', sz + 'px');
     }
 }
