@@ -14,7 +14,7 @@ export class ConfigWin {
     private panel: HTMLElement;
     private titlebar: HTMLElement;
     private mode: PanelMode = 'float';
-    private floatStyle = { top: '10%', left: '20%', width: '300px', height: '200px' };
+    private floatStyle = { top: '10%', left: '20%', width: '300px', height: '300px' };
 
     constructor() {
         this.panel = document.createElement('div');
