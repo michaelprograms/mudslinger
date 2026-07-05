@@ -52,15 +52,26 @@ export class MudTerminal {
 
         // Remove xterm's hidden textarea from tab order so Tab stays in cmdInput
         const helperTextarea = this.xterm.element?.querySelector(".xterm-helper-textarea") as HTMLElement | null;
-        if (helperTextarea) helperTextarea.tabIndex = -1;
+        if (helperTextarea) {
+            helperTextarea.tabIndex = -1;
+            helperTextarea.setAttribute("name", "xterm-input");
+        }
 
         // Refocus cmdInput on click unless the user is selecting terminal text
         winOutput.addEventListener("mouseup", () => {
             if (!this.xterm.getSelection()) this.EvtRequestInputFocus.fire();
         });
 
-        new ResizeObserver(() => this.fitAddon.fit()).observe(winOutput);
+        // fit() on next frame to avoid the "ResizeObserver loop" warning
+        let fitPending = false;
+        new ResizeObserver(() => {
+            if (fitPending) return;
+            fitPending = true;
+            requestAnimationFrame(() => { fitPending = false; this.fitAddon.fit(); });
+        }).observe(winOutput);
         window.onerror = (message, source, lineno, colno) => {
+            // benign browser noise, not an app error — don't dump it into the terminal
+            if (typeof message === "string" && message.includes("ResizeObserver loop")) return;
             this.writeError(`[[Web Client Error\r\n${message}\r\n${source}\r\n${lineno}\r\n${colno}\r\n]]`);
         };
     }
