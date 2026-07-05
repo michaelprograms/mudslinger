@@ -38,6 +38,7 @@ export class ConfigWin {
                 <label><input type="checkbox" class="config-chk-trig"> Enable Triggers</label>
                 <label><input type="checkbox" class="config-chk-alias"> Enable Aliases</label>
                 <label><input type="checkbox" class="config-chk-echo"> Local echo</label>
+                <label><input type="checkbox" class="config-chk-movepad"> Show movement pad</label>
             </div>
         `;
         document.body.appendChild(this.panel);
@@ -49,12 +50,14 @@ export class ConfigWin {
         const chkTrig   = this.panel.querySelector<HTMLInputElement>('.config-chk-trig')!;
         const chkAlias  = this.panel.querySelector<HTMLInputElement>('.config-chk-alias')!;
         const chkEcho   = this.panel.querySelector<HTMLInputElement>('.config-chk-echo')!;
+        const chkMovePad = this.panel.querySelector<HTMLInputElement>('.config-chk-movepad')!;
 
         sizeInput.value  = String(UserConfig.getDef('fontSize', DEFAULT_FONT_SIZE));
         chkUtf8.checked  = UserConfig.getDef('utf8Enabled',     true);
         chkTrig.checked  = UserConfig.getDef('triggersEnabled', true);
         chkAlias.checked = UserConfig.getDef('aliasesEnabled',  true);
         chkEcho.checked  = UserConfig.getDef('localEcho',       true);
+        chkMovePad.checked = UserConfig.getDef('movementPad', false);
 
         sizeInput.addEventListener('change', () => {
             const px = Math.max(8, Math.min(48, Number(sizeInput.value)));
@@ -66,6 +69,7 @@ export class ConfigWin {
         chkTrig.addEventListener( 'change', () => UserConfig.set('triggersEnabled', chkTrig.checked));
         chkAlias.addEventListener('change', () => UserConfig.set('aliasesEnabled',  chkAlias.checked));
         chkEcho.addEventListener( 'change', () => UserConfig.set('localEcho',       chkEcho.checked));
+        chkMovePad.addEventListener('change', () => UserConfig.set('movementPad', chkMovePad.checked));
 
         this.applyFloatStyle();
         this.initModeButtons();

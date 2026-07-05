@@ -6,6 +6,7 @@ import { AliasManager } from "../manager/alias";
 import { CommandInput } from "../ui/commandInput";
 import { JsScript, EvtScriptEmitCmd, EvtScriptEmitPrint, EvtScriptEmitEvalError, EvtScriptEmitError } from "./script";
 import { MenuBar } from "../ui/menuBar";
+import { MovementPad } from "../ui/movementPad";
 
 import { StreamManager } from "../manager/stream";
 import { MudTerminal } from "../ui/terminal";
@@ -24,6 +25,7 @@ export class Client {
     private editorWin?: import("../panel/editor").EditorWin;
     private aliasManager: AliasManager;
     private commandInput: CommandInput;
+    private movementPad: MovementPad;
     private jsScript: JsScript;
     private menuBar: MenuBar;
     private stream: StreamManager;
@@ -42,6 +44,7 @@ export class Client {
         this.triggerManager = new TriggerManager(this.jsScript, UserConfig);
         this.aliasManager = new AliasManager(this.jsScript, UserConfig);
         this.commandInput = new CommandInput(this.aliasManager);
+        this.movementPad = new MovementPad();
 
         this.terminal = new MudTerminal();
         this.stream = new StreamManager(this.terminal, UserConfig);
@@ -113,13 +116,9 @@ export class Client {
             this.terminal.handleTelnetError(data);
         });
 
-        // CommandInput events
-        this.commandInput.EvtEmitCmd.handle((data: string) => {
-            if (!this.serverEcho && UserConfig.getDef('localEcho', true)) {
-                this.terminal.handleSendCommand(data);
-            }
-            this.socket.sendCmd(data);
-        });
+        // CommandInput + MovementPad events (both echo locally then send)
+        this.commandInput.EvtEmitCmd.handle((data: string) => this.sendUserCommand(data));
+        this.movementPad.EvtEmitCmd.handle((data: string) => this.sendUserCommand(data));
 
         this.commandInput.EvtEmitAliasCmds.handle((data) => {
             this.terminal.handleAliasSendCommands(data.orig, data.commands);
@@ -167,6 +166,13 @@ export class Client {
             if (!success) return;
             this.socket.openTelnet(this.connectionTarget.host, this.connectionTarget.port);
         });
+    }
+
+    private sendUserCommand(data: string): void {
+        if (!this.serverEcho && UserConfig.getDef('localEcho', true)) {
+            this.terminal.handleSendCommand(data);
+        }
+        this.socket.sendCmd(data);
     }
 
     public readonly UserConfig = UserConfig;
