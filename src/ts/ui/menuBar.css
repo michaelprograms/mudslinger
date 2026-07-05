@@ -70,3 +70,7 @@ nav#menuBar label {
     white-space: nowrap;
 }
 nav#menuBar label:hover { background: var(--ui-bg-hover); }
+
+@media (pointer: coarse) {
+    nav#menuBar button { padding: 10px 14px; min-height: 44px; }
+}
