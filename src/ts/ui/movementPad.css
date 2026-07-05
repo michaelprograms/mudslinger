@@ -7,8 +7,8 @@
     display: grid;
     /* Fixed equal cells so every button is the same square (auto-width + 1fr sized
        columns to their content, making 2-char diagonals wider than 1-char cardinals). */
-    grid-template-columns: repeat(5, 48px);
-    grid-template-rows: repeat(3, 48px);
+    grid-template-columns: repeat(3, 48px);
+    grid-template-rows: repeat(5, 48px);
     gap: 4px;
     padding: 6px;
     background: rgba(30, 30, 30, 0.6);
@@ -33,19 +33,19 @@
 }
 .movepad-btn:active { background: var(--ui-bg-hover); }
 
-.movepad-nw   { grid-area: 1 / 1; }
-.movepad-n    { grid-area: 1 / 2; }
-.movepad-ne   { grid-area: 1 / 3; }
-.movepad-w    { grid-area: 2 / 1; }
-.movepad-look { grid-area: 2 / 2; }
-.movepad-e    { grid-area: 2 / 3; }
-.movepad-sw   { grid-area: 3 / 1; }
-.movepad-s    { grid-area: 3 / 2; }
-.movepad-se   { grid-area: 3 / 3; }
-/* Up    Enter  (row 1, cols 4-5)
-   Down  Out    (row 2, cols 4-5)
-   [blank][blank] (row 3) */
-.movepad-up    { grid-area: 1 / 4; }
-.movepad-enter { grid-area: 1 / 5; }
-.movepad-down  { grid-area: 2 / 4; }
-.movepad-out   { grid-area: 2 / 5; }
+/* [blank] Up    Enter   (row 1: col 1 blank, Enter on right edge)
+   [blank] Down  Out     (row 2: col 1 blank, Out on right edge)
+   NW      N     NE      (rows 3-5: the 3x3 compass) */
+.movepad-up    { grid-area: 1 / 2; }
+.movepad-enter { grid-area: 1 / 3; }
+.movepad-down  { grid-area: 2 / 2; }
+.movepad-out   { grid-area: 2 / 3; }
+.movepad-nw   { grid-area: 3 / 1; }
+.movepad-n    { grid-area: 3 / 2; }
+.movepad-ne   { grid-area: 3 / 3; }
+.movepad-w    { grid-area: 4 / 1; }
+.movepad-look { grid-area: 4 / 2; }
+.movepad-e    { grid-area: 4 / 3; }
+.movepad-sw   { grid-area: 5 / 1; }
+.movepad-s    { grid-area: 5 / 2; }
+.movepad-se   { grid-area: 5 / 3; }
