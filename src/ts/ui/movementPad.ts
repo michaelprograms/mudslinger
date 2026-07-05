@@ -7,7 +7,7 @@ export const MOVE_BUTTONS: { cmd: string; label: string; cls: string }[] = [
     { cmd: "north",     label: "N",     cls: "n"     },
     { cmd: "northeast", label: "NE",    cls: "ne"    },
     { cmd: "west",      label: "W",     cls: "w"     },
-    { cmd: "look",      label: "LK",    cls: "look"  },
+    { cmd: "look",      label: "Look",  cls: "look"  },
     { cmd: "east",      label: "E",     cls: "e"     },
     { cmd: "southwest", label: "SW",    cls: "sw"    },
     { cmd: "south",     label: "S",     cls: "s"     },
