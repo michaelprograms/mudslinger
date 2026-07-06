@@ -13,6 +13,10 @@ export interface ScriptIf {
     makeScript(text: string, argsSig: string): any;
 }
 
+function splitCmds(value: string): string[] {
+    return value.replace("\r", "").split("\n").flatMap(line => line.split(";"));
+}
+
 export class TriggerManager {
     public EvtEmitTriggerCmds = new EventHook<string[]>();
 
@@ -63,7 +67,7 @@ export class TriggerManager {
                 if (script) { script(match, line); }
             } else {
                 const value = trig.value.replace(/\$(\d+)/g, (_m, d) => match[parseInt(d)] || "");
-                this.EvtEmitTriggerCmds.fire(value.replace("\r", "").split("\n"));
+                this.EvtEmitTriggerCmds.fire(splitCmds(value));
             }
             return true;
         } else {
@@ -72,7 +76,7 @@ export class TriggerManager {
                 const script = this.jsScript.makeScript(trig.value, "line");
                 if (script) { script(line); }
             } else {
-                this.EvtEmitTriggerCmds.fire(trig.value.replace("\r", "").split("\n"));
+                this.EvtEmitTriggerCmds.fire(splitCmds(trig.value));
             }
             return true;
         }
