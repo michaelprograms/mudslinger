@@ -164,4 +164,12 @@ export class CommandInput {
     setFontSize(sz: number): void {
         document.documentElement.style.setProperty('--cmd-font-size', sz + 'px');
     }
+
+    setFontFamily(family: string): void {
+        if (family) {
+            document.documentElement.style.setProperty('--cmd-font-family', family);
+        } else {
+            document.documentElement.style.removeProperty('--cmd-font-family');
+        }
+    }
 }

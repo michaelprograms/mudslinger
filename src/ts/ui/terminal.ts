@@ -105,6 +105,11 @@ export class MudTerminal {
         this.fitAddon.fit();
     }
 
+    public setFontFamily(family: string): void {
+        this.xterm.options.fontFamily = family || "monospace";
+        this.fitAddon.fit();
+    }
+
     private writeStatus(text: string): void {
         this.xterm.writeln(`\x1b[36m${text}\x1b[0m`);
     }

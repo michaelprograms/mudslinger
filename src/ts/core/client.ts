@@ -61,17 +61,26 @@ export class Client {
             this.editorWin.show();
         });
 
-        // Initialize font size from saved config
+        // Initialize font size/family from saved config
         const savedFontSize: number | undefined = UserConfig.get("fontSize");
         if (savedFontSize) {
             this.terminal.setFontSize(savedFontSize);
             this.commandInput.setFontSize(savedFontSize);
+        }
+        const savedFontFamily: string | undefined = UserConfig.get("fontFamily");
+        if (savedFontFamily) {
+            this.terminal.setFontFamily(savedFontFamily);
+            this.commandInput.setFontFamily(savedFontFamily);
         }
 
         // ConfigWin events
         this.configWin.EvtChangeFontSize.handle((sz: number) => {
             this.terminal.setFontSize(sz);
             this.commandInput.setFontSize(sz);
+        });
+        this.configWin.EvtChangeFontFamily.handle((family: string) => {
+            this.terminal.setFontFamily(family);
+            this.commandInput.setFontFamily(family);
         });
 
         this.menuBar.EvtConnectClicked.handle(() => {

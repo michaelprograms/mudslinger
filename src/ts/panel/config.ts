@@ -6,10 +6,24 @@ import { initDrag } from "./base";
 
 const DEFAULT_FONT_SIZE = 14;
 
+// value = CSS font-family stack; "" = browser/system default (no override).
+// All picked from fonts commonly preinstalled on Windows/Mac/Linux, or with a
+// metric-compatible fallback, so no webfont hosting/CDN is needed.
+const FONT_FAMILIES: [string, string][] = [
+    ["System Default", ""],
+    ["Consolas", "Consolas, 'DejaVu Sans Mono', 'Courier New', monospace"],
+    ["Bitstream Vera Sans Mono", "'Bitstream Vera Sans Mono', 'DejaVu Sans Mono', monospace"],
+    ["DejaVu Sans Mono", "'DejaVu Sans Mono', monospace"],
+    ["Menlo / Monaco", "Menlo, Monaco, monospace"],
+    ["Cascadia Code", "'Cascadia Code', Consolas, monospace"],
+    ["Courier New", "'Courier New', monospace"],
+];
+
 type PanelMode = 'float' | 'top' | 'bottom' | 'left' | 'right' | 'maximize';
 
 export class ConfigWin {
     public EvtChangeFontSize = new EventHook<number>();
+    public EvtChangeFontFamily = new EventHook<string>();
 
     private panel: HTMLElement;
     private titlebar: HTMLElement;
@@ -34,6 +48,11 @@ export class ConfigWin {
                 <label>Font Size (px)
                     <input type="number" class="config-font-size" min="8" max="48" step="1">
                 </label>
+                <label>Font
+                    <select class="config-font-family">
+                        ${FONT_FAMILIES.map(([label, value]) => `<option value="${value}">${label}</option>`).join('')}
+                    </select>
+                </label>
                 <label><input type="checkbox" class="config-chk-utf8"> Enable UTF-8</label>
                 <label><input type="checkbox" class="config-chk-trig"> Enable Triggers</label>
                 <label><input type="checkbox" class="config-chk-alias"> Enable Aliases</label>
@@ -46,6 +65,7 @@ export class ConfigWin {
         this.titlebar = this.panel.querySelector('.mudpanel-titlebar') as HTMLElement;
 
         const sizeInput = this.panel.querySelector<HTMLInputElement>('.config-font-size')!;
+        const familySelect = this.panel.querySelector<HTMLSelectElement>('.config-font-family')!;
         const chkUtf8   = this.panel.querySelector<HTMLInputElement>('.config-chk-utf8')!;
         const chkTrig   = this.panel.querySelector<HTMLInputElement>('.config-chk-trig')!;
         const chkAlias  = this.panel.querySelector<HTMLInputElement>('.config-chk-alias')!;
@@ -53,6 +73,7 @@ export class ConfigWin {
         const chkMovePad = this.panel.querySelector<HTMLInputElement>('.config-chk-movepad')!;
 
         sizeInput.value  = String(UserConfig.getDef('fontSize', DEFAULT_FONT_SIZE));
+        familySelect.value = UserConfig.getDef('fontFamily', '');
         chkUtf8.checked  = UserConfig.getDef('utf8Enabled',     true);
         chkTrig.checked  = UserConfig.getDef('triggersEnabled', true);
         chkAlias.checked = UserConfig.getDef('aliasesEnabled',  true);
@@ -64,6 +85,10 @@ export class ConfigWin {
             sizeInput.value = String(px);
             UserConfig.set('fontSize', px);
             this.EvtChangeFontSize.fire(px);
+        });
+        familySelect.addEventListener('change', () => {
+            UserConfig.set('fontFamily', familySelect.value);
+            this.EvtChangeFontFamily.fire(familySelect.value);
         });
         chkUtf8.addEventListener( 'change', () => UserConfig.set('utf8Enabled',     chkUtf8.checked));
         chkTrig.addEventListener( 'change', () => UserConfig.set('triggersEnabled', chkTrig.checked));
