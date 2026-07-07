@@ -4,11 +4,21 @@ import { initDrag } from "./base";
 
 type PanelMode = 'float' | 'top' | 'bottom' | 'left' | 'right' | 'maximize';
 
+const EXAMPLE_SCRIPT = `this.deadOrcs = this.deadOrcs || 0;
+this.deadOrcs++;
+print("deadOrcs: " + this.deadOrcs);
+if (this.deadOrcs < 10) {
+  send("kill orc");
+} else {
+  send("say Already killed 10 orcs.");
+}`;
+
 export class AboutWin {
     private panel: HTMLElement;
     private titlebar: HTMLElement;
     private mode: PanelMode = 'float';
     private floatStyle = { top: '10%', left: '20%', width: '620px', height: '500px' };
+    private codeExampleLoaded = false;
 
     constructor() {
         this.panel = document.createElement('div');
@@ -51,23 +61,27 @@ export class AboutWin {
                         <li><strong>print(text)</strong> — Print text to the output window.</li>
                         <li><strong>send(text)</strong> — Send text to the game.</li>
                     </ul>
-                    <p>All scripts share the same <code>this</code> object, allowing state to be shared between scripts or between calls of the same script.</p>
+                    <h3>Shared state via <code>this</code></h3>
+                    <p>Every alias, trigger, and standalone script runs against the <em>same</em> <code>this</code> object —
+                    there is only one, shared across all of them for the whole session. Writing
+                    <code>this.foo = ...</code> in one script makes <code>this.foo</code> visible to every other
+                    alias/trigger/script, and to later runs of the same one. It's the closest thing this client has to a
+                    global variable: use it for counters, flags, or anything that needs to persist or be shared
+                    between separate triggers and aliases. It resets on page reload — nothing is saved to disk.</p>
                     <h3>Alias Scripts</h3>
                     <p><strong>Non-regex:</strong> receives <code>input</code> — the full command typed.</p>
                     <p><strong>Regex:</strong> receives <code>input</code> and <code>match</code> — the regex match array.</p>
                     <h3>Trigger Scripts</h3>
                     <p><strong>Non-regex:</strong> receives <code>line</code> — the full matched line.</p>
                     <p><strong>Regex:</strong> receives <code>line</code> and <code>match</code> — the regex match array.</p>
+                    <h3>Standalone Scripts</h3>
+                    <p>Scripts created under the "Scripts" list in the editor take no arguments and are not triggered
+                    automatically — they only run when you press <strong>RUN</strong> in the editor. They still share the
+                    same <code>this</code>, so they're useful for inspecting or resetting shared state (e.g. a script
+                    named <code>reset</code> that sets <code>this.deadOrcs = 0</code>).</p>
                     <h3>Example: Kill 10 orcs then stop</h3>
                     <p>Trigger pattern: <code>An orc is DEAD!!</code></p>
-                    <pre><code>this.deadOrcs = this.deadOrcs || 0;
-this.deadOrcs++;
-print("deadOrcs: " + this.deadOrcs);
-if (this.deadOrcs &lt; 10) {
-  send("kill orc");
-} else {
-  send("say Already killed 10 orcs.");
-}</code></pre>
+                    <div class="about-code-example"></div>
                 </div>
             </div>
         `;
@@ -152,7 +166,28 @@ if (this.deadOrcs &lt; 10) {
                 this.panel.querySelectorAll<HTMLElement>('.about-pane').forEach(p => {
                     p.hidden = p.dataset.pane !== t;
                 });
+                if (t === 'scripting') { this.loadCodeExample(); }
             });
+        });
+    }
+
+    private async loadCodeExample(): Promise<void> {
+        if (this.codeExampleLoaded) { return; }
+        this.codeExampleLoaded = true;
+        const [{ basicSetup }, { EditorView }, { EditorState }, { javascript }, { oneDark }] = await Promise.all([
+            import("codemirror"),
+            import("@codemirror/view"),
+            import("@codemirror/state"),
+            import("@codemirror/lang-javascript"),
+            import("@codemirror/theme-one-dark"),
+        ]);
+        const container = this.panel.querySelector('.about-code-example') as HTMLElement;
+        new EditorView({
+            state: EditorState.create({
+                doc: EXAMPLE_SCRIPT,
+                extensions: [basicSetup, javascript(), oneDark, EditorState.readOnly.of(true)]
+            }),
+            parent: container
         });
     }
 

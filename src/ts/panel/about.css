@@ -32,3 +32,6 @@
 .about-pane code { background: var(--ui-bg-deep); padding: 1px 4px; border-radius: 3px; font-family: inherit; }
 .about-pane pre code { background: none; padding: 0; }
 .about-pane a { color: var(--ui-border-active); }
+
+.about-code-example { border: 1px solid var(--ui-border); }
+.about-code-example .cm-editor { height: auto; }
