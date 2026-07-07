@@ -23,7 +23,7 @@ export class EditorWin {
     private titleSpan: HTMLElement;
     private activeCharSelect: HTMLSelectElement;
     private newCharInput: HTMLInputElement;
-    private typeSelect: HTMLSelectElement;
+    private typeButtons: NodeListOf<HTMLButtonElement>;
     private listBox: HTMLSelectElement;
     private patternInput: HTMLInputElement;
     private nameInput: HTMLInputElement;
@@ -66,6 +66,11 @@ export class EditorWin {
             </div>
             <div class="mudpanel-body">
                 <div class="winEdit-list-pane">
+                    <div class="winEdit-type-toggle">
+                        <button class="winEdit-typeBtn active" data-type="alias">Aliases</button>
+                        <button class="winEdit-typeBtn" data-type="trigger">Triggers</button>
+                        <button class="winEdit-typeBtn" data-type="script">Scripts</button>
+                    </div>
                     <div class="winEdit-char-selector">
                         <label>Character</label>
                         <select class="winEdit-activeChar">
@@ -76,13 +81,6 @@ export class EditorWin {
                             <input type="text" class="winEdit-newChar" placeholder="add character...">
                             <button class="winEdit-btnAddChar">+</button>
                         </div>
-                    </div>
-                    <div class="winEdit-list-filters">
-                        <select class="winEdit-typeSelect">
-                            <option value="alias">Aliases</option>
-                            <option value="trigger">Triggers</option>
-                            <option value="script">Scripts</option>
-                        </select>
                     </div>
                     <div class="winEdit-list-buttons">
                         <button class="winEdit-btnNew">NEW</button>
@@ -115,7 +113,7 @@ export class EditorWin {
         this.titleSpan        = this.panel.querySelector('.mudpanel-title')!;
         this.activeCharSelect = this.panel.querySelector('.winEdit-activeChar')!;
         this.newCharInput     = this.panel.querySelector('.winEdit-newChar')!;
-        this.typeSelect       = this.panel.querySelector('.winEdit-typeSelect')!;
+        this.typeButtons      = this.panel.querySelectorAll('.winEdit-typeBtn');
         this.listBox          = this.panel.querySelector('.winEdit-listBox')!;
         this.patternInput     = this.panel.querySelector('.winEdit-pattern')!;
         this.nameInput        = this.panel.querySelector('.winEdit-name')!;
@@ -150,7 +148,9 @@ export class EditorWin {
         });
         this.panel.querySelector('.winEdit-btnAddChar')!.addEventListener('click', () => { this.handleAddChar(); });
         this.newCharInput.addEventListener('keydown', e => { if (e.key === 'Enter') this.handleAddChar(); });
-        this.typeSelect.addEventListener('change', () => { this.handleTypeChange(); });
+        this.typeButtons.forEach(btn => {
+            btn.addEventListener('click', () => { this.handleTypeChange(btn.dataset.type as EditorType); });
+        });
         this.listBox.addEventListener('change', () => { this.handleListBoxChange(); });
         this.panel.querySelector('.winEdit-btnNew')!.addEventListener('click', () => { this.handleNew(); });
         this.panel.querySelector('.winEdit-btnDelete')!.addEventListener('click', () => { this.handleDelete(); });
@@ -229,8 +229,9 @@ export class EditorWin {
         });
     }
 
-    private handleTypeChange(): void {
-        this.type = this.typeSelect.value as EditorType;
+    private handleTypeChange(type: EditorType): void {
+        this.type = type;
+        this.typeButtons.forEach(btn => { btn.classList.toggle('active', btn.dataset.type === type); });
         const isScript = this.type === 'script';
         const titles: Record<EditorType, string> = { alias: 'ALIASES', trigger: 'TRIGGERS', script: 'SCRIPTS' };
         this.titleSpan.textContent = titles[this.type];
