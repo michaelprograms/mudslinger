@@ -5,10 +5,15 @@ export interface NegotiationData {
     opt: number | null;
 }
 
+// Cap on a single subnegotiation payload. Anything larger is a protocol
+// error or an attack; the frame is dropped rather than growing without bound.
+export const MAX_SB_LEN = 2 * 1024 * 1024;
+
 export class Telnet {
     private iacSeq: number[] = [];
     private buf: Array<Array<number>> = [[], []];
     private sb: number = 0;
+    private sbOverflow: boolean = false;
 
     constructor(writeFunc: (data: ArrayBuffer) => void) {
         this.writeFunc = writeFunc;
@@ -37,6 +42,18 @@ export class Telnet {
         return sb;
     }
 
+    // Push a data byte into the active buffer, enforcing the SB payload cap.
+    private pushByte(c: number): void {
+        if (this.sb === 1 && this.buf[1].length >= MAX_SB_LEN) {
+            if (!this.sbOverflow) {
+                this.sbOverflow = true;
+                console.warn("Telnet: subnegotiation payload exceeded " + MAX_SB_LEN + " bytes; dropping frame");
+            }
+            return;
+        }
+        this.buf[this.sb].push(c);
+    }
+
     public handleData(data: ArrayBuffer) {
         let view = new Uint8Array(data);
         let rxLen = view.length;
@@ -52,7 +69,7 @@ export class Telnet {
                     continue;
                 }
                 if (c !== Cmd.IAC) {
-                    this.buf[this.sb].push(c);
+                    this.pushByte(c);
                     continue;
                 } else {
                     this.iacSeq.push(c);
@@ -65,15 +82,22 @@ export class Telnet {
 
                 this.iacSeq = [];
                 if (c === Cmd.IAC) {
-                    this.buf[this.sb].push(c);
+                    this.pushByte(c);
                 } else if (c === Cmd.SB) {
                     this.sb = 1;
                     this.buf[1] = [];
+                    this.sbOverflow = false;
                     this.EvtNegotiation.fire({cmd: c, opt: null});
                 } else if (c === Cmd.SE) {
                     this.sb = 0;
-                    this.EvtNegotiation.fire({cmd: c, opt: null});
-                    this.buf[1] = [];
+                    if (this.sbOverflow) {
+                        // Oversized frame: discard rather than deliver a truncated payload.
+                        this.sbOverflow = false;
+                        this.buf[1] = [];
+                    } else {
+                        this.EvtNegotiation.fire({cmd: c, opt: null});
+                        this.buf[1] = [];
+                    }
                 } else if (c === Cmd.GA) {
                     // GA (Go Ahead) is a valid no-arg command; consume silently
                 } else {

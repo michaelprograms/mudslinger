@@ -7,6 +7,7 @@ export class MenuBar {
     public EvtConnectClicked = new EventHook<void>();
     public EvtDisconnectClicked = new EventHook<void>();
     public EvtEditorClicked = new EventHook<void>();
+    public EvtIdeClicked = new EventHook<void>();
 
     constructor(
         private aboutWin: AboutWin,
@@ -20,6 +21,7 @@ export class MenuBar {
             'Connect':    () => this.EvtConnectClicked.fire(),
             'Disconnect': () => this.EvtDisconnectClicked.fire(),
             'Editor':     () => this.EvtEditorClicked.fire(),
+            'IDE':        () => this.EvtIdeClicked.fire(),
             'Config':     () => this.configWin.show(),
             'About':      () => this.aboutWin.show(),
         };

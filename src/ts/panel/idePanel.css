@@ -1,0 +1,137 @@
+/* IDE panel (see idePanel.ts). Shares .mudpanel chrome from base.css. */
+
+.winIde-authbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    background: var(--ui-bg-raised);
+    border-bottom: 1px solid var(--ui-border);
+    flex-shrink: 0;
+}
+
+.winIde-authbar[hidden] { display: none; }
+
+.winIde-token { flex: 1; min-width: 80px; }
+
+.winIde-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+.winIde-tree-pane {
+    width: 220px;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--ui-border);
+    overflow: hidden;
+}
+
+.winIde-tree-buttons {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-bottom: 1px solid var(--ui-border);
+    flex-shrink: 0;
+}
+
+.winIde-tree {
+    flex: 1;
+    overflow: auto;
+    padding: 4px 0;
+}
+
+.winIde-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 6px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.winIde-row:hover { background: var(--ui-bg-raised); }
+
+.winIde-caret { width: 12px; display: inline-block; flex-shrink: 0; }
+
+.winIde-children { padding-left: 14px; }
+
+.winIde-loading { padding: 2px 8px; opacity: 0.6; }
+
+.winIde-edit-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.winIde-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 3px 4px 0 4px;
+    border-bottom: 1px solid var(--ui-border);
+    flex-shrink: 0;
+}
+
+.winIde-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border: 1px solid var(--ui-border);
+    border-bottom: none;
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.winIde-tab.active { background: var(--ui-bg-raised); opacity: 1; }
+
+.winIde-tab.dirty .winIde-tab-label::after { content: " \25CF"; }
+
+.winIde-tab-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+.winIde-editor {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.winIde-editor .cm-editor { height: 100%; }
+.winIde-editor .cm-scroller { overflow: auto; }
+
+.winIde-problems {
+    max-height: 30%;
+    overflow: auto;
+    border-top: 1px solid var(--ui-border);
+    flex-shrink: 0;
+}
+
+.winIde-problem {
+    padding: 1px 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.winIde-problem:hover { background: var(--ui-bg-raised); }
+.winIde-problem-error { color: #ff6b6b; }
+.winIde-problem-warning { color: #e8a33d; }
+
+.winIde-status {
+    padding: 3px 8px;
+    border-top: 1px solid var(--ui-border);
+    background: var(--ui-bg-raised);
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
