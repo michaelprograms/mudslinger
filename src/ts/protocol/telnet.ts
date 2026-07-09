@@ -162,7 +162,17 @@ export class TelnetClient extends Telnet {
                 } catch (e) {
                     // A dropped payload becomes a silent request timeout
                     // downstream (e.g. Ide.Dir), so make it diagnosable.
-                    console.warn("GMCP: unparseable JSON payload for " + pkg, e, jsonStr.slice(0, 200));
+                    console.warn("GMCP: unparseable JSON payload for " + pkg, e);
+                    // Corruption has been observed at the ~2048-byte seam of
+                    // the server's websocket write chunks; log a window
+                    // around the parse-error position plus the full payload.
+                    const m = /column (\d+)/.exec(String(e));
+                    const at = m ? Number(m[1]) : 0;
+                    if (at > 0) {
+                        console.warn("GMCP: bytes around error position " + at + ":",
+                            JSON.stringify(jsonStr.slice(Math.max(0, at - 120), at + 120)));
+                    }
+                    console.warn("GMCP: full payload (" + jsonStr.length + " chars):", jsonStr);
                 }
                 this.EvtGmcp.fire({pkg, data});
             }
