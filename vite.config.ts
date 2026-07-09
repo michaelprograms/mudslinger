@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
     return {
-        base: '/play/',
+        base: env.VITE_BASE_PATH ?? '/play/',
         // publicDir defaults to <root>/public
         build: {
             outDir: 'static/public',

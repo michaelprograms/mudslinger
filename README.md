@@ -26,6 +26,7 @@ environment variables (see `vite.config.ts`):
 | `VITE_MUD_URL`    | `ws://localhost:10002`                                | MUD WebSocket URL (`ws://` or `wss://`)    |
 | `VITE_MUD_NAME`   | `My MUD`                                              | Display name shown in the UI               |
 | `VITE_REPO_URL`   | `https://github.com/michaelprograms/mudslinger`       | Repo link in the About panel               |
+| `VITE_BASE_PATH`  | `/play/`                                              | URL path the app is served under           |
 
 Set them in a `.env` file (gitignored) or pass inline:
 
