@@ -103,7 +103,6 @@ export class Client {
         this.menuBar.EvtDisconnectClicked.handle(() => {
             this.socket.closeTelnet();
         });
-
         // Socket events
         this.socket.EvtGmcp.handle(({pkg, data}: {pkg: string; data: any}) => {
             if (pkg.startsWith('Ide.')) {
