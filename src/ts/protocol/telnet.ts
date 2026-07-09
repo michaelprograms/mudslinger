@@ -157,7 +157,13 @@ export class TelnetClient extends Telnet {
                 const pkg = space >= 0 ? str.slice(0, space) : str;
                 const jsonStr = space >= 0 ? str.slice(space + 1) : '';
                 let data: unknown = null;
-                try { if (jsonStr) data = JSON.parse(jsonStr); } catch {}
+                try {
+                    if (jsonStr) data = JSON.parse(jsonStr);
+                } catch (e) {
+                    // A dropped payload becomes a silent request timeout
+                    // downstream (e.g. Ide.Dir), so make it diagnosable.
+                    console.warn("GMCP: unparseable JSON payload for " + pkg, e, jsonStr.slice(0, 200));
+                }
                 this.EvtGmcp.fire({pkg, data});
             }
             return;
