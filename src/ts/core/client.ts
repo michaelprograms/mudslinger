@@ -4,7 +4,7 @@ import { AppInfo } from "./appInfo";
 
 import { AliasManager } from "../manager/alias";
 import { CommandInput } from "../ui/commandInput";
-import { JsScript, EvtScriptEmitCmd, EvtScriptEmitPrint, EvtScriptEmitEvalError, EvtScriptEmitError } from "./script";
+import { JsScript, EvtScriptEmitCmd, EvtScriptEmitPrint, EvtScriptEmitEvalError, EvtScriptEmitError, EvtScriptEmitGmcp } from "./script";
 import { MenuBar } from "../ui/menuBar";
 import { MovementPad } from "../ui/movementPad";
 
@@ -176,6 +176,10 @@ export class Client {
 
         EvtScriptEmitEvalError.handle((data: { stack: any }) => {
             this.terminal.handleScriptEvalError(data);
+        });
+
+        EvtScriptEmitGmcp.handle(({pkg, data}: {pkg: string; data?: unknown}) => {
+            this.socket.sendGmcp(pkg, data);
         });
 
         // TriggerManager events

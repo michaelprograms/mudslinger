@@ -4,6 +4,7 @@ export let EvtScriptEmitCmd = new EventHook<string>();
 export let EvtScriptEmitPrint = new EventHook<string>();
 export let EvtScriptEmitError = new EventHook<any>();
 export let EvtScriptEmitEvalError = new EventHook<any>();
+export let EvtScriptEmitGmcp = new EventHook<{pkg: string; data?: unknown}>();
 
 function makeScript(this: any, text: string, argsSig: string, gmcpData: any) {
     let _scriptFunc_: any;
@@ -13,7 +14,12 @@ function makeScript(this: any, text: string, argsSig: string, gmcpData: any) {
     };
 
     let print = function(message: string) {
-       EvtScriptEmitPrint.fire(message);
+        EvtScriptEmitPrint.fire(message);
+    };
+
+    // Mudlet-style send_gmcp(pkg, data?), e.g. send_gmcp("Char.Vitals.Get").
+    let send_gmcp = function(pkg: string, data?: unknown) {
+        EvtScriptEmitGmcp.fire({pkg, data});
     };
 
     // Mudlet-style nested GMCP state, e.g. gmcp.Char.Vitals.hp.

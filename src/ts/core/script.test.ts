@@ -5,12 +5,14 @@ let sends: string[];
 let prints: string[];
 let evalErrors: {}[];
 let scriptErrors: {}[];
+let gmcpSends: {pkg: string; data?: unknown}[];
 let clss: jsScript.JsScript;
 
 jsScript.EvtScriptEmitCmd.handle((data) => { sends.push(data); });
 jsScript.EvtScriptEmitPrint.handle((data) => { prints.push(data); });
 jsScript.EvtScriptEmitEvalError.handle((data) => { evalErrors.push(data); });
 jsScript.EvtScriptEmitError.handle((data) => { scriptErrors.push(data); });
+jsScript.EvtScriptEmitGmcp.handle((data) => { gmcpSends.push(data); });
 
 describe("jsScript", () => {
     beforeEach(() => {
@@ -18,6 +20,7 @@ describe("jsScript", () => {
         prints = [];
         evalErrors = [];
         scriptErrors = [];
+        gmcpSends = [];
         clss = new jsScript.JsScript();
     });
 
@@ -25,6 +28,15 @@ describe("jsScript", () => {
         const scr = clss.makeScript(`send('hello world'); send('second message'); send('third mess');`, "");
         scr();
         expect(sends).toEqual(["hello world", "second message", "third mess"]);
+    });
+
+    it("send_gmcp", () => {
+        const scr = clss.makeScript(`send_gmcp('Char.Vitals.Get'); send_gmcp('Ide.Save', {data: 'x'});`, "");
+        scr();
+        expect(gmcpSends).toEqual([
+            {pkg: "Char.Vitals.Get", data: undefined},
+            {pkg: "Ide.Save", data: {data: "x"}},
+        ]);
     });
 
     it("print", () => {
