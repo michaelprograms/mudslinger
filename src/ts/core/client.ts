@@ -7,6 +7,7 @@ import { CommandInput } from "../ui/commandInput";
 import { JsScript, EvtScriptEmitCmd, EvtScriptEmitPrint, EvtScriptEmitEvalError, EvtScriptEmitError, EvtScriptEmitGmcp } from "./script";
 import { MenuBar } from "../ui/menuBar";
 import { MovementPad } from "../ui/movementPad";
+import { VitalsGauges } from "../ui/vitalsGauges";
 
 import { StreamManager } from "../manager/stream";
 import { MudTerminal } from "../ui/terminal";
@@ -28,6 +29,7 @@ export class Client {
     private aliasManager: AliasManager;
     private commandInput: CommandInput;
     private movementPad: MovementPad;
+    private vitalsGauges: VitalsGauges;
     private jsScript: JsScript;
     private menuBar: MenuBar;
     private stream: StreamManager;
@@ -48,6 +50,7 @@ export class Client {
         this.aliasManager = new AliasManager(this.jsScript, UserConfig);
         this.commandInput = new CommandInput(this.aliasManager);
         this.movementPad = new MovementPad();
+        this.vitalsGauges = new VitalsGauges();
 
         this.terminal = new MudTerminal();
         this.stream = new StreamManager(this.terminal, UserConfig);
@@ -110,6 +113,9 @@ export class Client {
                 return; // out-of-band editing traffic; kept out of the gmcp object
             }
             this.jsScript.setGmcp(pkg, data);
+            if (pkg === 'Char.Vitals') {
+                this.vitalsGauges.update(data);
+            }
             if (pkg === 'Char.Info') {
                 this.menuBar.setImmortal(Number(data?.immortal) === 1);
                 this.ideWin?.followCwd(); // in-game cd resends Char.Info
@@ -141,6 +147,7 @@ export class Client {
         this.socket.EvtTelnetDisconnect.handle(() => {
             this.ideClient.reset();
             this.jsScript.clearGmcp();
+            this.vitalsGauges.reset();
             this.menuBar.handleTelnetDisconnect();
             this.terminal.handleTelnetDisconnect();
         });

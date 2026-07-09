@@ -58,6 +58,7 @@ export class ConfigWin {
                 <label><input type="checkbox" class="config-chk-alias"> Enable Aliases</label>
                 <label><input type="checkbox" class="config-chk-echo"> Local echo</label>
                 <label><input type="checkbox" class="config-chk-movepad"> Show movement pad</label>
+                <label><input type="checkbox" class="config-chk-vitals"> Show vitals gauges</label>
             </div>
         `;
         document.body.appendChild(this.panel);
@@ -71,6 +72,7 @@ export class ConfigWin {
         const chkAlias  = this.panel.querySelector<HTMLInputElement>('.config-chk-alias')!;
         const chkEcho   = this.panel.querySelector<HTMLInputElement>('.config-chk-echo')!;
         const chkMovePad = this.panel.querySelector<HTMLInputElement>('.config-chk-movepad')!;
+        const chkVitals = this.panel.querySelector<HTMLInputElement>('.config-chk-vitals')!;
 
         sizeInput.value  = String(UserConfig.getDef('fontSize', DEFAULT_FONT_SIZE));
         familySelect.value = UserConfig.getDef('fontFamily', '');
@@ -79,6 +81,7 @@ export class ConfigWin {
         chkAlias.checked = UserConfig.getDef('aliasesEnabled',  true);
         chkEcho.checked  = UserConfig.getDef('localEcho',       true);
         chkMovePad.checked = UserConfig.getDef('movementPad', false);
+        chkVitals.checked = UserConfig.getDef('vitalsGaugesEnabled', true);
 
         sizeInput.addEventListener('change', () => {
             const px = Math.max(8, Math.min(48, Number(sizeInput.value)));
@@ -95,6 +98,7 @@ export class ConfigWin {
         chkAlias.addEventListener('change', () => UserConfig.set('aliasesEnabled',  chkAlias.checked));
         chkEcho.addEventListener( 'change', () => UserConfig.set('localEcho',       chkEcho.checked));
         chkMovePad.addEventListener('change', () => UserConfig.set('movementPad', chkMovePad.checked));
+        chkVitals.addEventListener('change', () => UserConfig.set('vitalsGaugesEnabled', chkVitals.checked));
 
         this.applyFloatStyle();
         this.initModeButtons();

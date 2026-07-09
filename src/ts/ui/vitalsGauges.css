@@ -1,0 +1,53 @@
+#vitalsGauges {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    padding: 4px;
+    background: var(--ui-bg-raised);
+    border-top: 1px solid var(--ui-border);
+}
+
+#vitalsGauges[hidden] { display: none; }
+
+.vgauge {
+    position: relative;
+    flex: 1;
+    height: 20px;
+    background: var(--ui-bg-deep);
+    border: 1px solid var(--ui-border);
+    overflow: hidden;
+}
+
+.vgauge-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0%;
+    transition: width 0.2s linear;
+}
+
+.vgauge-hp .vgauge-fill { background: #a00; }
+.vgauge-sp .vgauge-fill { background: #090; }
+.vgauge-mp .vgauge-fill { background: #06c; }
+.vgauge-xp .vgauge-fill { background: #c90; }
+
+.vgauge-fill.vgauge-critical { animation: vgauge-pulse 1s infinite; }
+
+@keyframes vgauge-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
+.vgauge-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+    font-size: small;
+    color: var(--ui-text);
+    text-shadow: 0 0 2px #000, 0 0 2px #000;
+    white-space: nowrap;
+}
