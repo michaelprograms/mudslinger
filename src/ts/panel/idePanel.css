@@ -1,19 +1,5 @@
 /* IDE panel (see idePanel.ts). Shares .mudpanel chrome from base.css. */
 
-.winIde-authbar {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px;
-    background: var(--ui-bg-raised);
-    border-bottom: 1px solid var(--ui-border);
-    flex-shrink: 0;
-}
-
-.winIde-authbar[hidden] { display: none; }
-
-.winIde-token { flex: 1; min-width: 80px; }
-
 .winIde-body {
     display: flex;
     flex: 1;
@@ -68,14 +54,43 @@
     min-height: 0;
 }
 
+.winIde-tabbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    border-bottom: 1px solid var(--ui-border);
+    flex-shrink: 0;
+}
+
 .winIde-tabs {
     display: flex;
     flex-wrap: wrap;
     gap: 2px;
     padding: 3px 4px 0 4px;
-    border-bottom: 1px solid var(--ui-border);
+    flex: 1;
+    min-width: 0;
+}
+
+.winIde-btnSave {
+    margin: 2px 4px;
     flex-shrink: 0;
 }
+
+.winIde-row-del {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0 2px;
+    margin-left: auto;
+    visibility: hidden;
+    opacity: 0.6;
+}
+
+.winIde-row:hover .winIde-row-del { visibility: visible; }
+.winIde-row-del:hover { opacity: 1; background: var(--ui-danger); }
+
+.winIde-tab-close:hover { background: var(--ui-danger); }
 
 .winIde-tab {
     display: inline-flex;

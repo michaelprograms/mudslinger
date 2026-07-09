@@ -19,6 +19,12 @@ nav#menuBar > ul {
 
 nav#menuBar li { position: relative; list-style: none; }
 
+nav#menuBar li[hidden] { display: none; }
+
+/* right-aligned group: immortal-only tools live here, apart from the
+ * regular buttons */
+nav#menuBar > ul > li.menu-right { margin-left: auto; }
+
 nav#menuBar li > ul {
     display: none;
     position: absolute;

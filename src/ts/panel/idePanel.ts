@@ -1,12 +1,13 @@
 import "./base.css";
 import "./idePanel.css";
-import { initDrag } from "./base";
+import { initDrag, inlineConfirm, inlinePrompt } from "./base";
 import { IdeClient, IdeContent, IdeDiagnostic, IdeDirEntry, IdeError } from "../core/ideClient";
 import { basicSetup } from "codemirror";
 import { EditorView, keymap } from "@codemirror/view";
 import { EditorState, Compartment } from "@codemirror/state";
 import { cpp } from "@codemirror/lang-cpp";
 import { javascript } from "@codemirror/lang-javascript";
+import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { lintGutter, setDiagnostics, Diagnostic } from "@codemirror/lint";
 
@@ -30,8 +31,6 @@ let zTop = 1000;
 export class IdeWin {
     private panel: HTMLElement;
     private titlebar: HTMLElement;
-    private authBar: HTMLElement;
-    private tokenInput: HTMLInputElement;
     private treeEl: HTMLElement;
     private tabsEl: HTMLElement;
     private editorHost: HTMLElement;
@@ -47,7 +46,7 @@ export class IdeWin {
     private files: OpenFile[] = [];
     private active: OpenFile | null = null;
 
-    constructor(private ide: IdeClient) {
+    constructor(private ide: IdeClient, private getGmcp?: () => any) {
         this.panel = document.createElement('div');
         this.panel.className = 'mudpanel mudpanel-float';
         this.panel.hidden = true;
@@ -61,21 +60,21 @@ export class IdeWin {
                 </span>
                 <button class="mudpanel-close" title="Close">&#x2715;</button>
             </div>
-            <div class="winIde-authbar">
-                <span>Type <b>idetoken</b> in game, then paste the token:</span>
-                <input type="password" class="winIde-token" placeholder="token...">
-                <button class="winIde-btnAuth">Authorize</button>
-            </div>
             <div class="mudpanel-body winIde-body">
                 <div class="winIde-tree-pane">
                     <div class="winIde-tree-buttons">
-                        <button class="winIde-btnRefresh" title="Reload file tree">&#x21BB;</button>
-                        <button class="winIde-btnNewFile" title="New file">+</button>
+                        <button class="winIde-btnRefresh mudpanel-btn" title="Reload file tree">&#x21BB;</button>
+                        <button class="winIde-btnNewFile mudpanel-btn" title="New file">+</button>
+                        <button class="winIde-btnNewDir mudpanel-btn" title="New directory">+/</button>
+                        <button class="winIde-btnCwd mudpanel-btn" title="Go to your working directory">cwd</button>
                     </div>
                     <div class="winIde-tree"></div>
                 </div>
                 <div class="winIde-edit-pane">
-                    <div class="winIde-tabs"></div>
+                    <div class="winIde-tabbar">
+                        <div class="winIde-tabs"></div>
+                        <button class="winIde-btnSave mudpanel-btn" title="Save and compile (Ctrl-S)">Save</button>
+                    </div>
                     <div class="winIde-editor"></div>
                     <div class="winIde-problems" hidden></div>
                     <div class="winIde-status">Not connected.</div>
@@ -85,8 +84,6 @@ export class IdeWin {
         document.body.appendChild(this.panel);
 
         this.titlebar   = this.panel.querySelector('.mudpanel-titlebar')!;
-        this.authBar    = this.panel.querySelector('.winIde-authbar')!;
-        this.tokenInput = this.panel.querySelector('.winIde-token')!;
         this.treeEl     = this.panel.querySelector('.winIde-tree')!;
         this.tabsEl     = this.panel.querySelector('.winIde-tabs')!;
         this.editorHost = this.panel.querySelector('.winIde-editor')!;
@@ -104,18 +101,18 @@ export class IdeWin {
         this.panel.addEventListener('mousedown', () => { this.panel.style.zIndex = String(++zTop); });
         this.panel.querySelector('.mudpanel-close')!.addEventListener('click', () => { this.panel.hidden = true; });
 
-        this.panel.querySelector('.winIde-btnAuth')!.addEventListener('click', () => this.doAuth());
-        this.tokenInput.addEventListener('keydown', e => { if (e.key === 'Enter') this.doAuth(); });
-        this.panel.querySelector('.winIde-btnRefresh')!.addEventListener('click', () => this.renderRoots());
+        this.panel.querySelector('.winIde-btnRefresh')!.addEventListener('click', () => this.refreshTree());
         this.panel.querySelector('.winIde-btnNewFile')!.addEventListener('click', () => this.newFile());
+        this.panel.querySelector('.winIde-btnNewDir')!.addEventListener('click', () => this.newDir());
+        this.panel.querySelector('.winIde-btnCwd')!.addEventListener('click', () => this.focusCwd());
+        this.panel.querySelector('.winIde-btnSave')!.addEventListener('click', () => this.saveActive());
 
-        this.ide.EvtAuthChanged.handle((authed) => {
-            this.authBar.hidden = authed;
-            if (authed) {
-                this.setStatus("Authorized. Scopes: " + (this.ide.welcome?.scopes ?? []).join(", "));
-                this.renderRoots();
+        this.ide.EvtSessionChanged.handle((ready) => {
+            if (ready) {
+                this.setStatus("Connected. Scopes: " + (this.ide.welcome?.scopes ?? []).join(", "));
+                this.refreshTree();
             } else {
-                this.setStatus("Authorization expired or lost. Re-run idetoken in game.");
+                this.setStatus("IDE session lost. Reconnect and reopen the panel.");
             }
         });
         this.ide.EvtEvent.handle((ev) => {
@@ -130,9 +127,24 @@ export class IdeWin {
     public show(): void {
         this.panel.hidden = false;
         this.panel.style.zIndex = String(++zTop);
-        this.authBar.hidden = this.ide.authed;
-        if (this.ide.authed && !this.treeEl.hasChildNodes()) this.renderRoots();
-        if (!this.ide.authed) this.tokenInput.focus();
+        if (this.ide.ready) {
+            if (!this.treeEl.hasChildNodes()) this.refreshTree();
+        } else {
+            this.connect();
+        }
+    }
+
+    /** Perform the Hello handshake; the server derives scopes from the character. */
+    private async connect(): Promise<void> {
+        this.setStatus("Connecting...");
+        try {
+            await this.ide.hello();
+            // EvtSessionChanged renders the tree and sets the status.
+        } catch (e) {
+            this.setStatus(e instanceof IdeError
+                ? e.message + " (are you logged in as a creator?)"
+                : String(e));
+        }
     }
 
     /* ----- CodeMirror ----- */
@@ -140,6 +152,7 @@ export class IdeWin {
     private langFor(path: string) {
         if (path.endsWith('.c') || path.endsWith('.h')) return cpp();
         if (path.endsWith('.js')) return javascript();
+        if (path.endsWith('.md')) return markdown();
         return [];
     }
 
@@ -163,53 +176,116 @@ export class IdeWin {
         });
     }
 
-    /* ----- auth ----- */
+    /* ----- file tree ----- */
 
-    private async doAuth(): Promise<void> {
-        const token = this.tokenInput.value.trim();
-        if (!token) return;
-        this.setStatus("Authorizing...");
-        try {
-            const w = await this.ide.auth(token);
-            this.tokenInput.value = "";  // token lives in memory server-side only
-            this.setStatus("Authorized until " + new Date(w.expires * 1000).toLocaleTimeString());
-        } catch (e) {
-            this.setStatus(e instanceof IdeError ? e.message : String(e));
-        }
+    /** The character's working directory from GMCP Char.Info, or null. */
+    private charCwd(): string | null {
+        const cwd = this.getGmcp?.()?.Char?.Info?.cwd;
+        if (typeof cwd !== "string" || !cwd.startsWith("/")) return null;
+        return cwd.length > 1 ? cwd.replace(/\/+$/, "") : "/";
     }
 
-    /* ----- file tree ----- */
+    /** Expand the tree to the character's current working directory. */
+    private focusCwd(): void {
+        const cwd = this.charCwd();
+        if (cwd) void this.expandTo(cwd);
+        else this.setStatus("No working directory known (no Char.Info yet).");
+    }
+
+    /** Char.Info arrived (e.g. after an in-game cd, or on reconnect):
+     * follow the new cwd when the panel is actually in use. If the IDE
+     * session was lost to a disconnect, restore it first. */
+    public followCwd(): void {
+        if (this.panel.hidden) return;
+        if (!this.ide.ready) {
+            void this.connect(); // refreshTree focuses cwd once Welcome lands
+            return;
+        }
+        const cwd = this.charCwd();
+        if (cwd) void this.expandTo(cwd);
+    }
+
+    /** Re-render the scope roots and focus the tree on the character's cwd. */
+    private refreshTree(): void {
+        this.renderRoots();
+        const cwd = this.charCwd();
+        if (cwd) void this.expandTo(cwd);
+    }
+
+    /** Expand the tree down to the given directory, loading levels as needed. */
+    private async expandTo(path: string): Promise<void> {
+        let host: HTMLElement = this.treeEl;
+        for (;;) {
+            let next: any = null;
+            for (const el of Array.from(host.children)) {
+                const nodePath = (el as any)._idePath as string | undefined;
+                if (nodePath === undefined) continue;
+                if (nodePath === "/" || path === nodePath || path.startsWith(nodePath + "/")) {
+                    next = el;
+                    break;
+                }
+            }
+            if (!next) return;
+            host = await next._ideExpand();
+            if (next._idePath === path) {
+                (next as HTMLElement).scrollIntoView({ block: 'nearest' });
+                return;
+            }
+        }
+    }
 
     private renderRoots(): void {
         this.treeEl.innerHTML = '';
         const scopes = this.ide.welcome?.scopes ?? [];
         for (const scope of scopes) {
             const path = scope === "/" ? "" : scope.replace(/\/$/, "");
-            this.treeEl.appendChild(this.makeDirNode(scope === "/" ? "/" : path, scope));
+            this.treeEl.appendChild(this.makeDirNode(scope === "/" ? "/" : path, scope, false));
         }
     }
 
-    private makeDirNode(path: string, label: string): HTMLElement {
+    private makeDeleteButton(path: string, isDir: boolean, row: HTMLElement): HTMLElement {
+        const btn = document.createElement('button');
+        btn.className = 'winIde-row-del';
+        btn.title = 'Delete ' + path;
+        btn.innerHTML = '&#x2715;';
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.deleteEntry(path, isDir, row);
+        });
+        return btn;
+    }
+
+    private makeDirNode(path: string, label: string, deletable = true): HTMLElement {
         const node = document.createElement('div');
         node.className = 'winIde-node winIde-dir';
         const row = document.createElement('div');
         row.className = 'winIde-row';
         row.innerHTML = `<span class="winIde-caret">&#x25B8;</span><span class="winIde-label"></span>`;
         row.querySelector('.winIde-label')!.textContent = label;
+        if (deletable) row.appendChild(this.makeDeleteButton(path, true, row));
         const children = document.createElement('div');
         children.className = 'winIde-children';
         children.hidden = true;
         node.append(row, children);
 
         let loaded = false;
-        row.addEventListener('click', async () => {
+        const expand = async (): Promise<HTMLElement> => {
             if (children.hidden) {
                 children.hidden = false;
                 row.querySelector('.winIde-caret')!.innerHTML = '&#x25BE;';
-                if (!loaded) {
-                    loaded = true;
-                    await this.loadDir(path === "/" ? "/" : path, children);
-                }
+            }
+            if (!loaded) {
+                loaded = true;
+                await this.loadDir(path === "/" ? "/" : path, children);
+            }
+            return children;
+        };
+        // handles for expandTo(): programmatic expansion outside click flow
+        (node as any)._idePath = path;
+        (node as any)._ideExpand = expand;
+        row.addEventListener('click', () => {
+            if (children.hidden) {
+                void expand();
             } else {
                 children.hidden = true;
                 row.querySelector('.winIde-caret')!.innerHTML = '&#x25B8;';
@@ -241,6 +317,7 @@ export class IdeWin {
                 row.innerHTML = `<span class="winIde-caret"></span><span class="winIde-label"></span>`;
                 row.querySelector('.winIde-label')!.textContent = ent.name;
                 row.addEventListener('click', () => this.openFile(child));
+                row.appendChild(this.makeDeleteButton(child, false, row));
                 host.appendChild(row);
             }
         }
@@ -266,11 +343,43 @@ export class IdeWin {
         this.setStatus(path + " (" + content.size + " bytes)");
     }
 
-    private newFile(): void {
-        const path = prompt("New file path (absolute, e.g. /realms/you/thing.c):");
+    private async newFile(): Promise<void> {
+        const cwd = this.charCwd();
+        const path = await inlinePrompt(this.panel, "New file:", "/realms/you/thing.c", cwd ? cwd + "/" : "");
         if (!path) return;
         this.addTab(path, "", null);
         this.setStatus(path + " (new file, will be created on save)");
+    }
+
+    private async newDir(): Promise<void> {
+        const cwd = this.charCwd();
+        const path = await inlinePrompt(this.panel, "New directory:", "/realms/you/dir (intermediate dirs created too)", cwd ? cwd + "/" : "");
+        if (!path) return;
+        try {
+            await this.ide.mkdir(path);
+            this.setStatus(path + " created.");
+            this.renderRoots();
+        } catch (e) {
+            this.setStatus(e instanceof IdeError ? e.message : String(e));
+        }
+    }
+
+    private async deleteEntry(path: string, isDir: boolean, row: HTMLElement): Promise<void> {
+        if (!await inlineConfirm(this.panel, "Delete " + path + (isDir ? " (must be empty)" : "") + "?", "Delete")) return;
+        try {
+            await this.ide.delete(path);
+        } catch (e) {
+            this.setStatus(e instanceof IdeError ? e.message : String(e));
+            return;
+        }
+        this.setStatus(path + " deleted.");
+        // dir nodes are wrapped in .winIde-node; file rows sit directly in the list
+        (row.closest('.winIde-node') ?? row).remove();
+        const open = this.files.find(f => f.path === path);
+        if (open) {
+            open.baseHash = null; // saving again would recreate the file
+            this.markDirty(open, true);
+        }
     }
 
     private addTab(path: string, doc: string, baseHash: string | null): void {
@@ -301,8 +410,8 @@ export class IdeWin {
         this.renderProblems([]);
     }
 
-    private closeTab(file: OpenFile): void {
-        if (file.dirty && !confirm(file.path + " has unsaved changes. Close anyway?")) return;
+    private async closeTab(file: OpenFile): Promise<void> {
+        if (file.dirty && !await inlineConfirm(this.panel, file.path + " has unsaved changes. Close anyway?", "Close")) return;
         try { this.ide.close(file.path); } catch { /* disconnected is fine */ }
         file.tabEl.remove();
         this.files = this.files.filter(f => f !== file);
@@ -343,7 +452,7 @@ export class IdeWin {
         } catch (e) {
             if (e instanceof IdeError && e.code === "stale") {
                 this.setStatus(file.path + " changed on the server since you opened it.");
-                if (confirm(file.path + " changed on the server. Reload server version? (Your local changes stay in the editor history via undo.)")) {
+                if (await inlineConfirm(this.panel, file.path + " changed on the server. Reload server version? (Your local changes stay in undo history.)", "Reload")) {
                     try {
                         const c = await this.ide.open(file.path);
                         this.codeMirror.dispatch({

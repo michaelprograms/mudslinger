@@ -34,6 +34,11 @@ export class MenuBar {
         });
     }
 
+    setImmortal(immortal: boolean) {
+        const li = document.getElementById('menuBar-immortal');
+        if (li) li.hidden = !immortal;
+    }
+
     handleTelnetConnect() {
         const btn = document.getElementById('menuBar-conn-disconn');
         if (btn) btn.textContent = 'Disconnect';
@@ -42,5 +47,6 @@ export class MenuBar {
     handleTelnetDisconnect() {
         const btn = document.getElementById('menuBar-conn-disconn');
         if (btn) btn.textContent = 'Connect';
+        this.setImmortal(false);
     }
 }
