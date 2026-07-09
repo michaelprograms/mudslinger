@@ -5,9 +5,11 @@ import { EventHook } from "./event";
  * Protocol spec: ide-over-gmcp-design.md in the workspace root; server side
  * is merentha lib/secure/daemon/ide.c.
  *
- * Handles auth, request/ref correlation, chunked content assembly and
- * chunked save transactions. UI-free: the IDE panel consumes the promise
- * API and the event hooks.
+ * Handles the Hello handshake, request/ref correlation, chunked content
+ * assembly and chunked save transactions. UI-free: the IDE panel consumes
+ * the promise API and the event hooks. There is no auth step: the MUD
+ * connection is already authenticated and the server derives edit scopes
+ * from the character's privileges.
  */
 
 export interface IdeDirEntry {
@@ -34,7 +36,6 @@ export interface IdeLimits {
 export interface IdeWelcome {
     version: number;
     scopes: string[];
-    expires: number;
     limits: IdeLimits;
 }
 
@@ -83,7 +84,13 @@ export interface IdeTransport {
     sendGmcp(pkg: string, data?: unknown): boolean;
 }
 
-/* ---------- crc32 (IEEE, matches the FluffOS crc32 efun) ---------- */
+/* ---------- content hashing ----------
+ *
+ * The server negotiates the algorithm via Welcome.limits.hashAlgo
+ * ("sha256" on current servers). crc32 (standard IEEE, final xor included)
+ * is kept as a legacy fallback. When the algorithm is unknown or Web Crypto
+ * is unavailable (non-localhost http page), the content hash is simply
+ * omitted; the server treats it as optional transport-integrity data. */
 
 const crcTable = (() => {
     const t = new Uint32Array(256);
@@ -105,6 +112,16 @@ export function crc32str(str: string): string {
         c = crcTable[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
     }
     return ((c ^ 0xffffffff) >>> 0).toString(10);
+}
+
+/** Hash str's UTF-8 bytes with the negotiated algorithm, or null to skip. */
+export async function contentHash(str: string, algo: string): Promise<string | null> {
+    if (algo === "crc32") return crc32str(str);
+    if (algo === "sha256" && globalThis.crypto?.subtle) {
+        const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+    return null;
 }
 
 /** Split into pieces of at most maxBytes UTF-8 bytes, never splitting a code point. */
@@ -144,7 +161,7 @@ const SAVE_TIMEOUT = 60000;
 export class IdeClient {
     public EvtEvent = new EventHook<IdeEvent>();
     public EvtError = new EventHook<IdeError>();       // unsolicited errors
-    public EvtAuthChanged = new EventHook<boolean>();
+    public EvtSessionChanged = new EventHook<boolean>();
 
     private pending = new Map<number, Pending>();
     private nextRef = 1;
@@ -157,11 +174,12 @@ export class IdeClient {
         return this.welcome_;
     }
 
-    public get authed(): boolean {
+    /** True once the Hello handshake has completed. */
+    public get ready(): boolean {
         return this.welcome_ !== null;
     }
 
-    /** Call on disconnect: drop auth state and fail all in-flight requests. */
+    /** Call on disconnect: drop session state and fail all in-flight requests. */
     public reset(): void {
         for (const [, p] of this.pending) {
             clearTimeout(p.timer);
@@ -170,7 +188,7 @@ export class IdeClient {
         this.pending.clear();
         if (this.welcome_) {
             this.welcome_ = null;
-            this.EvtAuthChanged.fire(false);
+            this.EvtSessionChanged.fire(false);
         }
     }
 
@@ -235,15 +253,14 @@ export class IdeClient {
                 this.welcome_ = {
                     version: Number(data.version ?? 0),
                     scopes: Array.isArray(data.scopes) ? data.scopes : [],
-                    expires: Number(data.expires ?? 0),
                     limits: {
                         maxChunk: Number(data.limits?.maxChunk ?? 32768),
                         maxFile: Number(data.limits?.maxFile ?? 500000),
-                        hashAlgo: String(data.limits?.hashAlgo ?? "crc32"),
+                        hashAlgo: String(data.limits?.hashAlgo ?? "sha256"),
                     },
                 };
                 if (ref !== undefined) this.finish(ref, this.welcome_);
-                this.EvtAuthChanged.fire(true);
+                this.EvtSessionChanged.fire(true);
                 break;
 
             case "Dir":
@@ -303,6 +320,8 @@ export class IdeClient {
                 break;
 
             case "LockResult":
+            case "DeleteResult":
+            case "MkdirResult":
                 if (ref !== undefined) this.finish(ref, data);
                 break;
 
@@ -317,10 +336,6 @@ export class IdeClient {
                     data?.path !== undefined ? String(data.path) : undefined,
                     data?.currentHash !== undefined ? String(data.currentHash) : undefined,
                 );
-                if (err.code === "auth" && this.welcome_) {
-                    this.welcome_ = null;
-                    this.EvtAuthChanged.fire(false);
-                }
                 if (ref !== undefined && this.pending.has(ref)) this.fail(ref, err);
                 else this.EvtError.fire(err);
                 break;
@@ -330,9 +345,14 @@ export class IdeClient {
 
     /* ----- public API ----- */
 
-    public auth(token: string): Promise<IdeWelcome> {
+    /**
+     * Announce the IDE to the server and fetch grant scopes + limits.
+     * No credentials: the MUD session is already authenticated; the server
+     * derives the scopes from the character's privileges.
+     */
+    public hello(): Promise<IdeWelcome> {
         this.transport.sendGmcp("Core.Supports.Add", ["Ide 1"]);
-        return this.request<IdeWelcome>("Auth", { token });
+        return this.request<IdeWelcome>("Hello", {});
     }
 
     public list(path: string): Promise<IdeDirEntry[]> {
@@ -352,10 +372,12 @@ export class IdeClient {
      * (null asserts the file must not exist yet). Automatically uses the
      * chunked transaction flow when content exceeds the negotiated maxChunk.
      */
-    public save(path: string, content: string, baseHash: string | null, noReload = false): Promise<IdeSaveResult> {
+    public async save(path: string, content: string, baseHash: string | null, noReload = false): Promise<IdeSaveResult> {
         const maxChunk = this.welcome_?.limits.maxChunk ?? 32768;
-        const hash = crc32str(content);
-        const base: Record<string, unknown> = { path, hash, noReload };
+        const algo = this.welcome_?.limits.hashAlgo ?? "sha256";
+        const hash = await contentHash(content, algo);
+        const base: Record<string, unknown> = { path, noReload };
+        if (hash !== null) base.hash = hash;
         if (baseHash !== null) base.baseHash = baseHash;
 
         const pieces = chunkString(content, maxChunk);
@@ -373,6 +395,16 @@ export class IdeClient {
     /** Compile-check content without writing the file. */
     public check(path: string, content: string): Promise<IdeSaveResult> {
         return this.request<IdeSaveResult>("Check", { path, data: content }, SAVE_TIMEOUT);
+    }
+
+    /** Delete a file, or a directory when it is empty. */
+    public delete(path: string): Promise<{ path: string; ok: boolean }> {
+        return this.request("Delete", { path });
+    }
+
+    /** Create a directory; intermediate directories are created as needed. */
+    public mkdir(path: string): Promise<{ path: string; ok: boolean }> {
+        return this.request("Mkdir", { path });
     }
 
     public lock(path: string): Promise<{ path: string; ok: boolean; holder?: string; expires?: number }> {

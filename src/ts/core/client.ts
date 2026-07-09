@@ -69,7 +69,7 @@ export class Client {
         this.menuBar.EvtIdeClicked.handle(async () => {
             if (!this.ideWin) {
                 const { IdeWin } = await import("../panel/idePanel");
-                this.ideWin = new IdeWin(this.ideClient);
+                this.ideWin = new IdeWin(this.ideClient, () => this.jsScript.getGmcp());
             }
             this.ideWin.show();
         });
@@ -103,14 +103,19 @@ export class Client {
         this.menuBar.EvtDisconnectClicked.handle(() => {
             this.socket.closeTelnet();
         });
-
         // Socket events
         this.socket.EvtGmcp.handle(({pkg, data}: {pkg: string; data: any}) => {
             if (pkg.startsWith('Ide.')) {
                 this.ideClient.handleGmcp(pkg, data);
-                return;
+                return; // out-of-band editing traffic; kept out of the gmcp object
             }
-            if (pkg === 'Char.Name' && data?.name) {
+            this.jsScript.setGmcp(pkg, data);
+            if (pkg === 'Char.Info') {
+                this.menuBar.setImmortal(Number(data?.immortal) === 1);
+                this.ideWin?.followCwd(); // in-game cd resends Char.Info
+            }
+            // Char.Name (IRE-style) or Char.Info (Merentha) both identify the character
+            if ((pkg === 'Char.Name' || pkg === 'Char.Info') && data?.name) {
                 const name = String(data.name);
                 UserConfig.set('activeChar', name);
                 const known: string[] = UserConfig.getDef('knownChars', []);
@@ -135,6 +140,7 @@ export class Client {
 
         this.socket.EvtTelnetDisconnect.handle(() => {
             this.ideClient.reset();
+            this.jsScript.clearGmcp();
             this.menuBar.handleTelnetDisconnect();
             this.terminal.handleTelnetDisconnect();
         });

@@ -23,7 +23,7 @@ environment variables (see `vite.config.ts`):
 
 | Variable          | Default                                              | Meaning                                    |
 | ----------------- | ---------------------------------------------------- | ------------------------------------------ |
-| `VITE_MUD_URL`    | `ws://localhost:5000`                                 | MUD WebSocket URL (`ws://` or `wss://`)    |
+| `VITE_MUD_URL`    | `ws://localhost:10002`                                | MUD WebSocket URL (`ws://` or `wss://`)    |
 | `VITE_MUD_NAME`   | `My MUD`                                              | Display name shown in the UI               |
 | `VITE_REPO_URL`   | `https://github.com/michaelprograms/mudslinger`       | Repo link in the About panel               |
 

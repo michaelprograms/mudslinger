@@ -67,9 +67,9 @@ export class EditorWin {
             <div class="mudpanel-body">
                 <div class="winEdit-list-pane">
                     <div class="winEdit-type-toggle">
-                        <button class="winEdit-typeBtn active" data-type="alias">Aliases</button>
-                        <button class="winEdit-typeBtn" data-type="trigger">Triggers</button>
-                        <button class="winEdit-typeBtn" data-type="script">Scripts</button>
+                        <button class="winEdit-typeBtn active" data-type="alias">Alias</button>
+                        <button class="winEdit-typeBtn" data-type="trigger">Trigger</button>
+                        <button class="winEdit-typeBtn" data-type="script">Script</button>
                     </div>
                     <div class="winEdit-char-selector">
                         <label>Character</label>
@@ -79,12 +79,12 @@ export class EditorWin {
                         </select>
                         <div class="winEdit-char-add">
                             <input type="text" class="winEdit-newChar" placeholder="add character...">
-                            <button class="winEdit-btnAddChar">+</button>
+                            <button class="winEdit-btnAddChar mudpanel-btn" title="Add character">+</button>
                         </div>
                     </div>
                     <div class="winEdit-list-buttons">
-                        <button class="winEdit-btnNew">NEW</button>
-                        <button class="winEdit-btnDelete">DELETE</button>
+                        <button class="winEdit-btnNew mudpanel-btn" title="New">+</button>
+                        <button class="winEdit-btnDelete mudpanel-btn mudpanel-btn-danger" title="Delete selected">&#x2715;</button>
                     </div>
                     <select class="winEdit-listBox" size="10"></select>
                 </div>
@@ -94,10 +94,10 @@ export class EditorWin {
                         <label class="winEdit-alias-trig-only"><input type="checkbox" class="winEdit-chkRegex" disabled> Regex</label>
                         <label class="winEdit-alias-trig-only"><input type="checkbox" class="winEdit-chkScript" disabled> Script</label>
                         <label class="winEdit-script-only" style="display:none">Name <input type="text" class="winEdit-name" disabled></label>
-                        <button class="winEdit-btnRun winEdit-script-only" style="display:none" disabled>RUN</button>
+                        <button class="winEdit-btnRun mudpanel-btn winEdit-script-only" style="display:none" disabled>RUN</button>
                         <label>Scope <select class="winEdit-scope" disabled><option value="">Global</option></select></label>
-                        <button class="winEdit-btnSave" disabled>SAVE</button>
-                        <button class="winEdit-btnCancel" disabled>CANCEL</button>
+                        <button class="winEdit-btnSave mudpanel-btn" disabled>SAVE</button>
+                        <button class="winEdit-btnCancel mudpanel-btn" disabled>CANCEL</button>
                     </div>
                     <div class="winEdit-value-label winEdit-alias-trig-only">Value:</div>
                     <div class="winEdit-value-area">

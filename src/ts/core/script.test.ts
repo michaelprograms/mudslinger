@@ -78,3 +78,54 @@ describe("jsScript", () => {
         expect(prints).toEqual(['abcdefghi']);
     });
 });
+
+describe("jsScript gmcp store", () => {
+    beforeEach(() => {
+        sends = [];
+        prints = [];
+        evalErrors = [];
+        scriptErrors = [];
+        clss = new jsScript.JsScript();
+    });
+
+    it("nests packages Mudlet-style under dot-separated paths", () => {
+        clss.setGmcp("Char.Info", { name: "diavolo", immortal: 1 });
+        clss.setGmcp("Char.Vitals", { hp: 100, maxhp: 200 });
+        expect(clss.getGmcp().Char.Info.name).toBe("diavolo");
+        expect(clss.getGmcp().Char.Vitals.maxhp).toBe(200);
+    });
+
+    it("merges partial updates without dropping sibling keys", () => {
+        clss.setGmcp("Char.Vitals", { hp: 100, maxhp: 200 });
+        clss.setGmcp("Char.Vitals", { hp: 90 });
+        expect(clss.getGmcp().Char.Vitals).toEqual({ hp: 90, maxhp: 200 });
+    });
+
+    it("replaces non-object leaves and tolerates missing payloads", () => {
+        clss.setGmcp("Comm.Channel.Text", { msg: "hi" });
+        clss.setGmcp("Core.Ping", undefined);
+        expect(clss.getGmcp().Comm.Channel.Text.msg).toBe("hi");
+        expect(clss.getGmcp().Core.Ping).toEqual({});
+    });
+
+    it("keeps root identity across updates and clear, exposes this.gmcp", () => {
+        const root = clss.getGmcp();
+        clss.setGmcp("Char.Vitals", { hp: 1 });
+        clss.clearGmcp();
+        clss.setGmcp("Room.Info", { name: "Somewhere" });
+        expect(clss.getGmcp()).toBe(root);           // closures stay live
+        expect(root.Char).toBeUndefined();           // clear removed old data
+        expect(clss.getScriptThis().gmcp).toBe(root); // this.gmcp in scripts
+    });
+
+    it("scripts can read gmcp and this.gmcp directly", () => {
+        clss.setGmcp("Char.Vitals", { hp: 42 });
+        clss.makeScript(`print(gmcp.Char.Vitals.hp + this.gmcp.Char.Vitals.hp);`, "")();
+        expect(prints).toEqual([84]);
+
+        // updates after script creation are visible (live object)
+        clss.setGmcp("Char.Vitals", { hp: 50 });
+        clss.makeScript(`print(gmcp.Char.Vitals.hp);`, "")();
+        expect(prints).toEqual([84, 50]);
+    });
+});

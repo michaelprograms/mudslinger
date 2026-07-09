@@ -63,6 +63,67 @@
     overflow: hidden;
 }
 
+/* Shared action-button style (IDE tree/save buttons, editor list buttons,
+ * etc.): dark background, light text, tight padding — matches the
+ * segmented type-toggle buttons. */
+.mudpanel-btn {
+    background: var(--ui-bg-deep);
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
+    padding: 1px 6px;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.mudpanel-btn:hover:not(:disabled) { background: var(--ui-bg-hover); }
+
+.mudpanel-btn:disabled { opacity: 0.4; cursor: default; }
+
+.mudpanel-btn-danger:hover:not(:disabled) {
+    background: var(--ui-danger);
+    border-color: var(--ui-danger);
+}
+
+/* Inline prompt/confirm bar (see inlinePrompt/inlineConfirm in base.ts) */
+.mudpanel-inlinebar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    background: var(--ui-bg-raised);
+    border-bottom: 1px solid var(--ui-border);
+    flex-shrink: 0;
+}
+
+.mudpanel-inlinebar span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mudpanel-inlinebar input {
+    flex: 1;
+    min-width: 60px;
+    background: var(--ui-bg-deep);
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
+    padding: 1px 4px;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+/* Keyboard-focus outline: :focus-visible only matches when focus arrived
+ * via keyboard (Tab), so mouse clicks stay outline-free. */
+.mudpanel button:focus-visible,
+.mudpanel input:focus-visible,
+.mudpanel select:focus-visible,
+.mudpanel textarea:focus-visible {
+    outline: 1px solid var(--ui-border-active);
+    outline-offset: 1px;
+}
+
 .winEdit-list-pane {
     display: flex;
     flex-direction: column;
@@ -109,17 +170,6 @@
     font-size: inherit;
 }
 
-.winEdit-char-add button {
-    background: none;
-    border: 1px solid var(--ui-border);
-    color: var(--ui-text);
-    cursor: pointer;
-    padding: 1px 6px;
-    font-size: inherit;
-}
-
-.winEdit-char-add button:hover { background: var(--ui-bg-hover); }
-
 .winEdit-type-toggle {
     display: flex;
     flex-shrink: 0;
@@ -127,7 +177,8 @@
 }
 
 .winEdit-typeBtn {
-    flex: 1;
+    flex: 1 1 33%;
+    min-width: 0;
     background: var(--ui-bg-deep);
     color: var(--ui-text);
     border: none;
@@ -139,6 +190,9 @@
 }
 
 .winEdit-typeBtn:last-child { border-right: none; }
+
+/* "Trigger" is the widest label; give it the extra 1% */
+.winEdit-typeBtn:nth-child(2) { flex-basis: 34%; }
 
 .winEdit-typeBtn:hover { background: var(--ui-bg-hover); }
 
