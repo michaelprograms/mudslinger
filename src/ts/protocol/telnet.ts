@@ -4,6 +4,8 @@ import { UserConfig } from "../core/userConfig";
 import { AppInfo } from "../core/appInfo";
 
 
+const utf8Decoder = new TextDecoder("utf-8");
+
 const TTYPES: string[] = [
     "Mudslinger",
     "ANSI",
@@ -24,6 +26,29 @@ export class TelnetClient extends Telnet {
     constructor(writeFunc: (data: ArrayBuffer) => void) {
         super(writeFunc);
         this.EvtNegotiation.handle((data) => { this.onNegotiation(data); });
+    }
+
+    public get gmcpEnabled(): boolean {
+        return this.doGmcp;
+    }
+
+    /**
+     * Send a GMCP message: IAC SB 201 "Pkg.Msg" [SP json] IAC SE.
+     * Payload is UTF-8 encoded; IAC bytes are doubled per the telnet spec
+     * (0xFF never occurs in valid UTF-8, but escape defensively).
+     */
+    public sendGmcp(pkg: string, data?: unknown): void {
+        const payload = data === undefined ? pkg : pkg + " " + JSON.stringify(data);
+        const bytes = new TextEncoder().encode(payload);
+        const arr: number[] = [Cmd.IAC, Cmd.SB, ExtOpt.GMCP];
+        for (let i = 0; i < bytes.length; i++) {
+            arr.push(bytes[i]);
+            if (bytes[i] === Cmd.IAC) {
+                arr.push(Cmd.IAC);
+            }
+        }
+        arr.push(Cmd.IAC, Cmd.SE);
+        this.writeArr(arr);
     }
 
     private writeNewEnvVar(varName: string, varVal: string) {
@@ -125,7 +150,9 @@ export class TelnetClient extends Telnet {
                 let seq = sb.slice(1);
                 this.handleNewEnvSeq(seq);
             } else if (this.doGmcp && sb.length > 0 && sb[0] === ExtOpt.GMCP) {
-                const str = String.fromCharCode(...sb.slice(1));
+                // GMCP payloads are UTF-8 JSON; decode properly (String.fromCharCode
+                // would mangle multi-byte sequences).
+                const str = utf8Decoder.decode(new Uint8Array(sb.slice(1)));
                 const space = str.indexOf(' ');
                 const pkg = space >= 0 ? str.slice(0, space) : str;
                 const jsonStr = space >= 0 ? str.slice(space + 1) : '';

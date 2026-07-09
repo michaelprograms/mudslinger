@@ -15,6 +15,7 @@ import { TriggerManager } from "../manager/trigger";
 import { AboutWin } from "../panel/about";
 import { ConfigWin } from "../panel/config";
 import { getConfig } from "./config";
+import { IdeClient } from "./ideClient";
 
 interface ConnectionTarget {
     host: string;
@@ -23,6 +24,7 @@ interface ConnectionTarget {
 
 export class Client {
     private editorWin?: import("../panel/editor").EditorWin;
+    private ideWin?: import("../panel/idePanel").IdeWin;
     private aliasManager: AliasManager;
     private commandInput: CommandInput;
     private movementPad: MovementPad;
@@ -31,6 +33,7 @@ export class Client {
     private stream: StreamManager;
     private terminal: MudTerminal;
     private socket: Socket;
+    private ideClient: IdeClient;
     private triggerManager: TriggerManager;
     private aboutWin: AboutWin;
     private configWin: ConfigWin;
@@ -50,6 +53,7 @@ export class Client {
         this.stream = new StreamManager(this.terminal, UserConfig);
 
         this.socket = new Socket(this.stream);
+        this.ideClient = new IdeClient(this.socket);
         this.menuBar = new MenuBar(this.aboutWin, this.configWin);
 
         // Lazily load the CodeMirror-backed editor panel on first open (keeps it out of the initial bundle)
@@ -59,6 +63,15 @@ export class Client {
                 this.editorWin = new EditorWin(this.aliasManager, this.triggerManager, this.jsScript);
             }
             this.editorWin.show();
+        });
+
+        // IDE panel: same lazy-load pattern (CodeMirror stays out of the initial bundle)
+        this.menuBar.EvtIdeClicked.handle(async () => {
+            if (!this.ideWin) {
+                const { IdeWin } = await import("../panel/idePanel");
+                this.ideWin = new IdeWin(this.ideClient);
+            }
+            this.ideWin.show();
         });
 
         // Initialize font size/family from saved config
@@ -93,6 +106,10 @@ export class Client {
 
         // Socket events
         this.socket.EvtGmcp.handle(({pkg, data}: {pkg: string; data: any}) => {
+            if (pkg.startsWith('Ide.')) {
+                this.ideClient.handleGmcp(pkg, data);
+                return;
+            }
             if (pkg === 'Char.Name' && data?.name) {
                 const name = String(data.name);
                 UserConfig.set('activeChar', name);
@@ -117,6 +134,7 @@ export class Client {
         });
 
         this.socket.EvtTelnetDisconnect.handle(() => {
+            this.ideClient.reset();
             this.menuBar.handleTelnetDisconnect();
             this.terminal.handleTelnetDisconnect();
         });

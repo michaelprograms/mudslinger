@@ -70,6 +70,15 @@ export class Socket {
         this.transport.closeMud();
     }
 
+    /** Send a GMCP message. Returns false when not connected or GMCP not negotiated. */
+    public sendGmcp(pkg: string, data?: unknown): boolean {
+        if (!this.telnetClient || !this.telnetClient.gmcpEnabled) {
+            return false;
+        }
+        this.telnetClient.sendGmcp(pkg, data);
+        return true;
+    }
+
     sendCmd(cmd: string) {
         cmd += "\r\n";
         let arr: Uint8Array;
