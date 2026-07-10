@@ -62,6 +62,17 @@ export class MudTerminal {
             if (!this.xterm.getSelection()) this.EvtRequestInputFocus.fire();
         });
 
+        // Ctrl/Cmd+C copies the selection (xterm's selection isn't a DOM
+        // selection, so the browser's native copy can't see it). With no
+        // selection, fall through so ^C still reaches the MUD.
+        this.xterm.attachCustomKeyEventHandler((e) => {
+            if (e.type === "keydown" && (e.ctrlKey || e.metaKey) && e.key === "c") {
+                const sel = this.xterm.getSelection();
+                if (sel) { navigator.clipboard?.writeText(sel); return false; }
+            }
+            return true;
+        });
+
         // Touch-drag scrollback. xterm 6 doesn't wire up its touch Gesture
         // (Gesture.addTarget is never called), so drag-scrolling the terminal
         // is dead on mobile. Translate finger movement into scrollLines().

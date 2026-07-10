@@ -23,6 +23,7 @@ export class EditorWin {
     private titleSpan: HTMLElement;
     private activeCharSelect: HTMLSelectElement;
     private newCharInput: HTMLInputElement;
+    private removeCharBtn: HTMLButtonElement;
     private typeButtons: NodeListOf<HTMLButtonElement>;
     private listBox: HTMLSelectElement;
     private patternInput: HTMLInputElement;
@@ -80,11 +81,15 @@ export class EditorWin {
                         <div class="winEdit-char-add">
                             <input type="text" class="winEdit-newChar" placeholder="add character...">
                             <button class="winEdit-btnAddChar mudpanel-btn" title="Add character">+</button>
+                            <button class="winEdit-btnRemoveChar mudpanel-btn mudpanel-btn-danger" title="Remove selected character (must have no aliases, triggers or scripts)" disabled>&#x2212;</button>
                         </div>
                     </div>
                     <div class="winEdit-list-buttons">
                         <button class="winEdit-btnNew mudpanel-btn" title="New">+</button>
                         <button class="winEdit-btnDelete mudpanel-btn mudpanel-btn-danger" title="Delete selected">&#x2715;</button>
+                        <button class="winEdit-btnExport mudpanel-btn" title="Export aliases, triggers &amp; scripts to a JSON file">&#x2193;</button>
+                        <button class="winEdit-btnImport mudpanel-btn" title="Import aliases, triggers &amp; scripts from a JSON file">&#x2191;</button>
+                        <input type="file" class="winEdit-importFile" accept=".json,application/json" hidden>
                     </div>
                     <select class="winEdit-listBox" size="10"></select>
                 </div>
@@ -113,6 +118,7 @@ export class EditorWin {
         this.titleSpan        = this.panel.querySelector('.mudpanel-title')!;
         this.activeCharSelect = this.panel.querySelector('.winEdit-activeChar')!;
         this.newCharInput     = this.panel.querySelector('.winEdit-newChar')!;
+        this.removeCharBtn    = this.panel.querySelector('.winEdit-btnRemoveChar')!;
         this.typeButtons      = this.panel.querySelectorAll('.winEdit-typeBtn');
         this.listBox          = this.panel.querySelector('.winEdit-listBox')!;
         this.patternInput     = this.panel.querySelector('.winEdit-pattern')!;
@@ -147,6 +153,7 @@ export class EditorWin {
             this.updateListBox();
         });
         this.panel.querySelector('.winEdit-btnAddChar')!.addEventListener('click', () => { this.handleAddChar(); });
+        this.removeCharBtn.addEventListener('click', () => { this.handleRemoveChar(); });
         this.newCharInput.addEventListener('keydown', e => { if (e.key === 'Enter') this.handleAddChar(); });
         this.typeButtons.forEach(btn => {
             btn.addEventListener('click', () => { this.handleTypeChange(btn.dataset.type as EditorType); });
@@ -154,6 +161,14 @@ export class EditorWin {
         this.listBox.addEventListener('change', () => { this.handleListBoxChange(); });
         this.panel.querySelector('.winEdit-btnNew')!.addEventListener('click', () => { this.handleNew(); });
         this.panel.querySelector('.winEdit-btnDelete')!.addEventListener('click', () => { this.handleDelete(); });
+        const importFile = this.panel.querySelector<HTMLInputElement>('.winEdit-importFile')!;
+        this.panel.querySelector('.winEdit-btnExport')!.addEventListener('click', () => { this.handleExport(); });
+        this.panel.querySelector('.winEdit-btnImport')!.addEventListener('click', () => { importFile.click(); });
+        importFile.addEventListener('change', () => {
+            const f = importFile.files?.[0];
+            if (f) this.handleImport(f);
+            importFile.value = '';
+        });
         this.saveButton.addEventListener('click', () => { this.handleSave(); });
         this.cancelButton.addEventListener('click', () => { this.handleCancel(); });
         this.runButton.addEventListener('click', () => { this.handleRun(); });
@@ -245,7 +260,7 @@ export class EditorWin {
     }
 
     private handleAddChar(): void {
-        const name = this.newCharInput.value.trim();
+        const name = this.newCharInput.value.trim().toLowerCase();
         if (!name) return;
         const known: string[] = UserConfig.getDef('knownChars', []);
         if (!known.includes(name)) UserConfig.set('knownChars', [...known, name]);
@@ -282,6 +297,32 @@ export class EditorWin {
             opts.push(opt);
         }
         this.listBox.replaceChildren(...opts);
+        this.refreshRemoveCharState();
+    }
+
+    /** Count items (across all types) scoped to a character. */
+    private charItemCount(name: string): number {
+        const lists = [this.aliasManager.aliases, this.triggerManager.triggers, this.scripts];
+        return lists.reduce((n, list) => n + list.filter(i => (i as any).scope === name).length, 0);
+    }
+
+    /** Enable the remove button only for a real, empty character. */
+    private refreshRemoveCharState(): void {
+        const name = this.activeCharSelect.value;
+        const real = name !== '' && name !== 'global';
+        this.removeCharBtn.disabled = !real || this.charItemCount(name) > 0;
+    }
+
+    private handleRemoveChar(): void {
+        const name = this.activeCharSelect.value;
+        if (name === '' || name === 'global') return;
+        if (this.charItemCount(name) > 0) return;   // guard: only empty scopes are removable
+        const known: string[] = UserConfig.getDef('knownChars', []);
+        UserConfig.set('knownChars', known.filter(n => n !== name));
+        UserConfig.set('activeChar', '');
+        this.updateCharSelect();
+        this.updateScopeOptions();
+        this.updateListBox();
     }
 
     private updateScopeOptions(): void {
@@ -397,6 +438,33 @@ export class EditorWin {
         } else {
             this.scripts.splice(realInd, 1);
             UserConfig.set('scripts', this.scripts);
+        }
+        this.clearEditor();
+        this.setEditorDisabled(true);
+        this.updateListBox();
+    }
+
+    private handleExport(): void {
+        const data = {
+            aliases:  this.aliasManager.aliases,
+            triggers: this.triggerManager.triggers,
+            scripts:  this.scripts,
+        };
+        const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+        const a = Object.assign(document.createElement('a'), { href: url, download: 'mudslinger-config.json' });
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    private async handleImport(file: File): Promise<void> {
+        try {
+            const data = JSON.parse(await file.text());
+            if (Array.isArray(data.aliases))  { this.aliasManager.aliases   = data.aliases;  this.aliasManager.saveAliases(); }
+            if (Array.isArray(data.triggers)) { this.triggerManager.triggers = data.triggers; this.triggerManager.saveTriggers(); }
+            if (Array.isArray(data.scripts))  { this.scripts = data.scripts; UserConfig.set('scripts', this.scripts); }
+        } catch (e) {
+            alert('Import failed: ' + (e as Error).message);
+            return;
         }
         this.clearEditor();
         this.setEditorDisabled(true);

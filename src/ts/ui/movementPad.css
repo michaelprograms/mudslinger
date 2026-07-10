@@ -2,7 +2,8 @@
     position: absolute;
     /* ponytail: 48px clears the command bar; tuning knob. env() keeps it above the home indicator. */
     right: 8px;
-    bottom: calc(48px + env(safe-area-inset-bottom));
+    /* --gauges-h (set by vitalsGauges) lifts the pad above the vitals strip when it's shown. */
+    bottom: calc(48px + var(--gauges-h, 0px) + env(safe-area-inset-bottom));
     z-index: 100;
     display: grid;
     /* Fixed equal cells so every button is the same square (auto-width + 1fr sized

@@ -122,7 +122,7 @@ export class Client {
             }
             // Char.Name (IRE-style) or Char.Info (Merentha) both identify the character
             if ((pkg === 'Char.Name' || pkg === 'Char.Info') && data?.name) {
-                const name = String(data.name);
+                const name = String(data.name).toLowerCase();
                 UserConfig.set('activeChar', name);
                 const known: string[] = UserConfig.getDef('knownChars', []);
                 if (!known.includes(name)) UserConfig.set('knownChars', [...known, name]);

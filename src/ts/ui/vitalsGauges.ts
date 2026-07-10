@@ -38,6 +38,7 @@ export class VitalsGauges {
     private texts: Record<string, HTMLElement> = {};
     private enabled: boolean;
     private hasData = false;
+    private visible = false;
 
     constructor() {
         this.enabled = UserConfig.getDef("vitalsGaugesEnabled", true);
@@ -99,6 +100,13 @@ export class VitalsGauges {
     }
 
     private refreshVisibility(): void {
-        this.container.hidden = !(this.enabled && this.hasData);
+        const visible = this.enabled && this.hasData;
+        if (visible === this.visible) return;
+        this.visible = visible;
+        this.container.hidden = !visible;
+        // Publish the strip height so #movementPad can clear it (see movementPad.css).
+        this.container.parentElement!.style.setProperty(
+            "--gauges-h", visible ? `${this.container.offsetHeight}px` : "0px"
+        );
     }
 }
