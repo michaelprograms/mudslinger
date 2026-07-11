@@ -59,6 +59,7 @@ export class ConfigWin {
                 <label><input type="checkbox" class="config-chk-echo"> Local echo</label>
                 <label><input type="checkbox" class="config-chk-movepad"> Show movement pad</label>
                 <label><input type="checkbox" class="config-chk-vitals"> Show vitals gauges</label>
+                <label><input type="checkbox" class="config-chk-chat"> Show chat window</label>
             </div>
         `;
         document.body.appendChild(this.panel);
@@ -73,6 +74,7 @@ export class ConfigWin {
         const chkEcho   = this.panel.querySelector<HTMLInputElement>('.config-chk-echo')!;
         const chkMovePad = this.panel.querySelector<HTMLInputElement>('.config-chk-movepad')!;
         const chkVitals = this.panel.querySelector<HTMLInputElement>('.config-chk-vitals')!;
+        const chkChat   = this.panel.querySelector<HTMLInputElement>('.config-chk-chat')!;
 
         sizeInput.value  = String(UserConfig.getDef('fontSize', DEFAULT_FONT_SIZE));
         familySelect.value = UserConfig.getDef('fontFamily', '');
@@ -82,6 +84,7 @@ export class ConfigWin {
         chkEcho.checked  = UserConfig.getDef('localEcho',       true);
         chkMovePad.checked = UserConfig.getDef('movementPad', false);
         chkVitals.checked = UserConfig.getDef('vitalsGaugesEnabled', true);
+        chkChat.checked  = UserConfig.getDef('chatWindowEnabled', true);
 
         sizeInput.addEventListener('change', () => {
             const px = Math.max(8, Math.min(48, Number(sizeInput.value)));
@@ -99,6 +102,7 @@ export class ConfigWin {
         chkEcho.addEventListener( 'change', () => UserConfig.set('localEcho',       chkEcho.checked));
         chkMovePad.addEventListener('change', () => UserConfig.set('movementPad', chkMovePad.checked));
         chkVitals.addEventListener('change', () => UserConfig.set('vitalsGaugesEnabled', chkVitals.checked));
+        chkChat.addEventListener('change', () => UserConfig.set('chatWindowEnabled', chkChat.checked));
 
         this.applyFloatStyle();
         this.initModeButtons();

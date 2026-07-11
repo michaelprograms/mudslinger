@@ -8,6 +8,7 @@ import { JsScript, EvtScriptEmitCmd, EvtScriptEmitPrint, EvtScriptEmitEvalError,
 import { MenuBar } from "../ui/menuBar";
 import { MovementPad } from "../ui/movementPad";
 import { VitalsGauges } from "../ui/vitalsGauges";
+import { ChatWindow } from "../ui/chatWindow";
 
 import { StreamManager } from "../manager/stream";
 import { MudTerminal } from "../ui/terminal";
@@ -30,6 +31,7 @@ export class Client {
     private commandInput: CommandInput;
     private movementPad: MovementPad;
     private vitalsGauges: VitalsGauges;
+    private chatWindow: ChatWindow;
     private jsScript: JsScript;
     private menuBar: MenuBar;
     private stream: StreamManager;
@@ -51,6 +53,7 @@ export class Client {
         this.commandInput = new CommandInput(this.aliasManager);
         this.movementPad = new MovementPad();
         this.vitalsGauges = new VitalsGauges();
+        this.chatWindow = new ChatWindow();
 
         this.terminal = new MudTerminal();
         this.stream = new StreamManager(this.terminal, UserConfig);
@@ -116,6 +119,9 @@ export class Client {
             if (pkg === 'Char.Vitals') {
                 this.vitalsGauges.update(data);
             }
+            if (pkg === 'Comm.Channel.Text' && data?.msg) {
+                this.chatWindow.append(String(data.msg));
+            }
             if (pkg === 'Char.Info') {
                 this.menuBar.setImmortal(Number(data?.immortal) === 1);
                 this.ideWin?.followCwd(); // in-game cd resends Char.Info
@@ -148,6 +154,7 @@ export class Client {
             this.ideClient.reset();
             this.jsScript.clearGmcp();
             this.vitalsGauges.reset();
+            this.chatWindow.reset();
             this.menuBar.handleTelnetDisconnect();
             this.terminal.handleTelnetDisconnect();
         });
