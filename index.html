@@ -19,8 +19,10 @@
   <div id="mainWin">
     <div id="winOutput"></div>
     <div id="cmdCont">
-      <textarea rows="1" id="cmdInput" autofocus autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false"></textarea>
-      <input type="password" id="cmdInputPassword" style="display:none" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false">
+      <textarea rows="1" id="cmdInput" autofocus autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-bwignore="true" data-lpignore="true" data-1p-ignore data-form-type="other"></textarea>
+      <!-- data-*ignore: password managers (BitWarden/LastPass/1Password/Dashlane) attach an inline
+           menu to type=password fields even when display:none, anchoring it top-left at 0,0. These opt out. -->
+      <input type="password" id="cmdInputPassword" style="display:none" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-bwignore="true" data-lpignore="true" data-1p-ignore data-form-type="other">
       <div class="chkCmdInputCmdStackCont" style="border:1px solid green">
         <span class="toolTipText">Toggle command stacking</span>
         <input id="chkCmdStack" type="checkbox" checked>
