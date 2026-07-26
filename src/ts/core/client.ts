@@ -9,6 +9,7 @@ import { MenuBar } from "../ui/menuBar";
 import { MovementPad } from "../ui/movementPad";
 import { VitalsGauges } from "../ui/vitalsGauges";
 import { ChatWindow } from "../ui/chatWindow";
+import { BodyPanel } from "../ui/bodyPanel";
 
 import { StreamManager } from "../manager/stream";
 import { MudTerminal } from "../ui/terminal";
@@ -32,6 +33,7 @@ export class Client {
     private movementPad: MovementPad;
     private vitalsGauges: VitalsGauges;
     private chatWindow: ChatWindow;
+    private bodyPanel: BodyPanel;
     private jsScript: JsScript;
     private menuBar: MenuBar;
     private stream: StreamManager;
@@ -54,6 +56,7 @@ export class Client {
         this.movementPad = new MovementPad();
         this.vitalsGauges = new VitalsGauges();
         this.chatWindow = new ChatWindow();
+        this.bodyPanel = new BodyPanel();
 
         this.terminal = new MudTerminal();
         this.stream = new StreamManager(this.terminal, UserConfig);
@@ -122,6 +125,9 @@ export class Client {
             if (pkg === 'Comm.Channel.Text' && data?.msg) {
                 this.chatWindow.append(String(data.msg));
             }
+            if (pkg === 'Char.Body') {
+                this.bodyPanel.update(data);
+            }
             if (pkg === 'Char.Info') {
                 this.menuBar.setImmortal(Number(data?.immortal) === 1);
                 this.ideWin?.followCwd(); // in-game cd resends Char.Info
@@ -155,6 +161,7 @@ export class Client {
             this.jsScript.clearGmcp();
             this.vitalsGauges.reset();
             this.chatWindow.reset();
+            this.bodyPanel.reset();
             this.menuBar.handleTelnetDisconnect();
             this.terminal.handleTelnetDisconnect();
         });

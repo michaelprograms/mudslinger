@@ -1,0 +1,35 @@
+#bodyPanel {
+    position: absolute;
+    /* Sits below the chat window (top:8px, max-height:40vh) and above the movement pad.
+       ponytail: fixed top offset, not a dynamic stack — with the movement pad also
+       enabled on a short screen they could overlap; upgrade to a flex right-rail if it bites. */
+    top: 48vh;
+    right: 8px;
+    z-index: 90;
+    max-width: 60vw;
+    max-height: 30vh;
+    overflow-y: auto;
+    padding: 6px 8px;
+    background: rgba(30, 30, 30, 0.72);
+    border: 1px solid var(--ui-border);
+    border-radius: 6px;
+    color: #c0c0c0;
+    font-family: "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+    font-size: small;
+    line-height: 1.25;
+    overscroll-behavior: contain;
+}
+
+#bodyPanel[hidden] { display: none; }
+
+.body-table { border-collapse: collapse; }
+.body-table th, .body-table td { padding: 0 6px; white-space: nowrap; }
+.body-table th {
+    text-align: left;
+    color: #808080;
+    font-weight: normal;
+    border-bottom: 1px solid var(--ui-border);
+}
+.body-limb { text-align: left; }
+.body-num { text-align: right; }
+.body-severed { color: #ff0000; text-decoration: line-through; }
