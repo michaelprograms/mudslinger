@@ -32,4 +32,5 @@
 }
 .body-limb { text-align: left; }
 .body-num { text-align: right; }
+.body-hurt { color: #ff0000; }
 .body-severed { color: #ff0000; text-decoration: line-through; }

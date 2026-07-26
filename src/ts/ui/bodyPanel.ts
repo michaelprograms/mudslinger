@@ -13,6 +13,9 @@ function escapeHtml(s: string): string {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+// At/above this damage % a limb row is flagged red.
+const HURT_PCT = 70;
+
 // Build the <tbody> rows for the Char.Body table. Limb names are remote data,
 // so they're HTML-escaped; every other cell is a locally-formatted number.
 // Severed limbs (no numbers) render last, flagged.
@@ -22,8 +25,9 @@ export function bodyRowsHtml(data: BodyData): string {
         const dmg = Number(limb?.damage ?? 0);
         const arm = Number(limb?.armour ?? 0);
         const mag = Number(limb?.magic ?? 0);
+        const hurt = dmg >= HURT_PCT ? ' class="body-hurt"' : "";
         rows.push(
-            `<tr><td class="body-limb">${escapeHtml(cap(name))}</td>` +
+            `<tr${hurt}><td class="body-limb">${escapeHtml(cap(name))}</td>` +
             `<td class="body-num">${dmg}%</td>` +
             `<td class="body-num">${arm}</td>` +
             `<td class="body-num">${mag}</td></tr>`
