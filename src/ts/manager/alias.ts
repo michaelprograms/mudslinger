@@ -1,4 +1,4 @@
-import { EditorItem } from "../panel/base";
+import { EditorItem, migrateScopeToFolder } from "../panel/base";
 import { UserConfig } from "../core/userConfig";
 
 
@@ -10,6 +10,27 @@ export interface ConfigIf {
 
 export interface ScriptIf {
     makeScript(text: string, argsSig: string): any;
+}
+
+interface LegacyScript { name?: string; code?: string; folder?: string; }
+
+// ponytail: scripts→aliases migration, delete in 2.0
+/** Convert deprecated standalone scripts into is_script aliases, appended in
+ *  place. The script's name becomes the alias pattern so it can still be run by
+ *  typing it (they took no arguments, so a plain-text pattern is faithful). */
+export function scriptsToAliases(scripts: LegacyScript[], aliases: EditorItem[]): void {
+    scripts.forEach((s, i) => {
+        // ponytail: name used verbatim as a non-regex pattern; a name with
+        // regex-special chars won't match literally. Escape + regex-exact if it bites.
+        const item: EditorItem = {
+            pattern: (s.name || '').trim() || 'script' + i,
+            value: s.code || '',
+            regex: false,
+            is_script: true,
+        };
+        if (s.folder) item.folder = s.folder;
+        aliases.push(item);
+    });
 }
 
 export class AliasManager {
@@ -26,7 +47,17 @@ export class AliasManager {
 
     private loadAliases() {
         this.aliases = this.config.get("aliases") || [];
-        this.aliases.sort((a, b) => a.pattern.localeCompare(b.pattern));
+        // ponytail: scope→folder migration, delete in 2.0
+        let changed = migrateScopeToFolder(this.aliases);
+        // ponytail: scripts→aliases migration, delete in 2.0
+        const scripts = UserConfig.getDef("scripts", null);
+        if (Array.isArray(scripts) && scripts.length) {
+            scriptsToAliases(scripts, this.aliases);
+            UserConfig.set("scripts", undefined);
+            changed = true;
+        }
+        if (changed) this.saveAliases();
+        else this.aliases.sort((a, b) => a.pattern.localeCompare(b.pattern));
     }
 
     // return the result of the alias if any (string with embedded lines)
@@ -34,14 +65,8 @@ export class AliasManager {
     // return null if no match
     public checkAlias(cmd: string): boolean | string | null {
         if (this.config.getDef("aliasesEnabled", true) !== true) return null;
-        const activeChar: string = UserConfig.getDef('activeChar', '');
-
-        // character-scoped aliases take priority over global ones
-        if (activeChar) {
-            const r = this.tryMatch(cmd, a => a.scope === activeChar);
-            if (r !== null) return r;
-        }
-        return this.tryMatch(cmd, a => !a.scope || a.scope === 'global');
+        const disabled: string[] = UserConfig.getDef('disabledFolders', []);
+        return this.tryMatch(cmd, a => !a.folder || !disabled.includes(a.folder));
     }
 
     private tryMatch(cmd: string, filter: (a: EditorItem) => boolean): boolean | string | null {

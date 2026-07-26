@@ -1,6 +1,6 @@
 import "./base.css";
 import { UserConfig } from "../core/userConfig";
-import { AliasManager } from "../manager/alias";
+import { AliasManager, scriptsToAliases } from "../manager/alias";
 import { TriggerManager } from "../manager/trigger";
 import { JsScript } from "../core/script";
 import { EditorItem, initDrag } from "./base";
@@ -10,10 +10,8 @@ import { EditorState, Compartment } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
 
-type EditorType = 'alias' | 'trigger' | 'script';
+type EditorType = 'alias' | 'trigger';
 type PanelMode = 'float' | 'top' | 'bottom' | 'left' | 'right' | 'maximize';
-
-interface ScriptItem { name: string; code: string; scope?: string; }
 
 let zTop = 1000;
 
@@ -21,16 +19,16 @@ export class EditorWin {
     private panel: HTMLElement;
     private titlebar: HTMLElement;
     private titleSpan: HTMLElement;
-    private activeCharSelect: HTMLSelectElement;
-    private newCharInput: HTMLInputElement;
-    private removeCharBtn: HTMLButtonElement;
+    private folderListEl: HTMLElement;
+    private folderInput: HTMLInputElement;
+    private folderDatalist: HTMLDataListElement;
+    // null = All, '' = Ungrouped, else a folder name
+    private activeFolder: string | null = null;
     private typeButtons: NodeListOf<HTMLButtonElement>;
     private listBox: HTMLSelectElement;
     private patternInput: HTMLInputElement;
-    private nameInput: HTMLInputElement;
     private regexCheckbox: HTMLInputElement;
     private scriptCheckbox: HTMLInputElement;
-    private scopeSelect: HTMLSelectElement;
     private textArea: HTMLTextAreaElement;
     private scriptArea: HTMLElement;
     private codeMirror: EditorView;
@@ -42,7 +40,6 @@ export class EditorWin {
     private type: EditorType = 'alias';
     private mode: PanelMode = 'float';
     private floatStyle = { top: '10%', left: '15%', width: '700px', height: '500px' };
-    private scripts: ScriptItem[] = [];
     private filteredIndices: number[] = [];
 
     constructor(
@@ -50,8 +47,6 @@ export class EditorWin {
         private triggerManager: TriggerManager,
         private jsScript: JsScript
     ) {
-        this.scripts = UserConfig.getDef('scripts', []);
-
         this.panel = document.createElement('div');
         this.panel.className = 'mudpanel mudpanel-float';
         this.panel.hidden = true;
@@ -70,41 +65,40 @@ export class EditorWin {
                     <div class="winEdit-type-toggle">
                         <button class="winEdit-typeBtn active" data-type="alias">Alias</button>
                         <button class="winEdit-typeBtn" data-type="trigger">Trigger</button>
-                        <button class="winEdit-typeBtn" data-type="script">Script</button>
                     </div>
-                    <div class="winEdit-char-selector">
-                        <label>Character</label>
-                        <select class="winEdit-activeChar">
-                            <option value="">— All —</option>
-                            <option value="global">Global</option>
-                        </select>
-                        <div class="winEdit-char-add">
-                            <input type="text" class="winEdit-newChar" placeholder="add character...">
-                            <button class="winEdit-btnAddChar mudpanel-btn" title="Add character">+</button>
-                            <button class="winEdit-btnRemoveChar mudpanel-btn mudpanel-btn-danger" title="Remove selected character (must have no aliases, triggers or scripts)" disabled>&#x2212;</button>
-                        </div>
-                    </div>
+                    <div class="winEdit-folders"></div>
                     <div class="winEdit-list-buttons">
                         <button class="winEdit-btnNew mudpanel-btn" title="New">+</button>
                         <button class="winEdit-btnDelete mudpanel-btn mudpanel-btn-danger" title="Delete selected">&#x2715;</button>
-                        <button class="winEdit-btnExport mudpanel-btn" title="Export aliases, triggers &amp; scripts to a JSON file">&#x2193;</button>
-                        <button class="winEdit-btnImport mudpanel-btn" title="Import aliases, triggers &amp; scripts from a JSON file">&#x2191;</button>
+                        <button class="winEdit-btnExport mudpanel-btn" title="Export aliases &amp; triggers to a JSON file">&#x2193;</button>
+                        <button class="winEdit-btnImport mudpanel-btn" title="Import aliases &amp; triggers from a JSON file">&#x2191;</button>
                         <input type="file" class="winEdit-importFile" accept=".json,application/json" hidden>
                     </div>
                     <select class="winEdit-listBox" size="10"></select>
                 </div>
                 <div class="winEdit-edit-pane">
                     <div class="winEdit-meta">
-                        <label class="winEdit-alias-trig-only">Pattern <input type="text" class="winEdit-pattern" placeholder="^pattern$" disabled></label>
-                        <label class="winEdit-alias-trig-only"><input type="checkbox" class="winEdit-chkRegex" disabled> Regex</label>
-                        <label class="winEdit-alias-trig-only"><input type="checkbox" class="winEdit-chkScript" disabled> Script</label>
-                        <label class="winEdit-script-only" style="display:none">Name <input type="text" class="winEdit-name" disabled></label>
-                        <button class="winEdit-btnRun mudpanel-btn winEdit-script-only" style="display:none" disabled>RUN</button>
-                        <label>Scope <select class="winEdit-scope" disabled><option value="">Global</option></select></label>
-                        <button class="winEdit-btnSave mudpanel-btn" disabled>SAVE</button>
-                        <button class="winEdit-btnCancel mudpanel-btn" disabled>CANCEL</button>
+                        <div class="winEdit-metaRow">
+                            <label class="winEdit-field winEdit-field-grow">
+                                <span class="winEdit-fieldLabel">Pattern</span>
+                                <input type="text" class="winEdit-pattern" placeholder="^pattern$" disabled>
+                            </label>
+                            <label class="winEdit-check"><input type="checkbox" class="winEdit-chkRegex" disabled> Regex</label>
+                            <label class="winEdit-check"><input type="checkbox" class="winEdit-chkScript" disabled> Script</label>
+                            <button class="winEdit-btnRun mudpanel-btn" style="display:none" title="Run this script" disabled>RUN</button>
+                        </div>
+                        <div class="winEdit-metaRow">
+                            <label class="winEdit-field">
+                                <span class="winEdit-fieldLabel">Folder</span>
+                                <input type="text" class="winEdit-folder" list="winEdit-folderlist" placeholder="(none)" disabled>
+                            </label>
+                            <datalist id="winEdit-folderlist"></datalist>
+                            <span class="winEdit-spacer"></span>
+                            <button class="winEdit-btnSave mudpanel-btn" disabled>SAVE</button>
+                            <button class="winEdit-btnCancel mudpanel-btn" disabled>CANCEL</button>
+                        </div>
                     </div>
-                    <div class="winEdit-value-label winEdit-alias-trig-only">Value:</div>
+                    <div class="winEdit-value-label">Value:</div>
                     <div class="winEdit-value-area">
                         <textarea class="winEdit-textArea" disabled></textarea>
                         <div class="winEdit-scriptArea" style="display:none"></div>
@@ -116,16 +110,14 @@ export class EditorWin {
 
         this.titlebar         = this.panel.querySelector('.mudpanel-titlebar')!;
         this.titleSpan        = this.panel.querySelector('.mudpanel-title')!;
-        this.activeCharSelect = this.panel.querySelector('.winEdit-activeChar')!;
-        this.newCharInput     = this.panel.querySelector('.winEdit-newChar')!;
-        this.removeCharBtn    = this.panel.querySelector('.winEdit-btnRemoveChar')!;
+        this.folderListEl     = this.panel.querySelector('.winEdit-folders')!;
         this.typeButtons      = this.panel.querySelectorAll('.winEdit-typeBtn');
         this.listBox          = this.panel.querySelector('.winEdit-listBox')!;
         this.patternInput     = this.panel.querySelector('.winEdit-pattern')!;
-        this.nameInput        = this.panel.querySelector('.winEdit-name')!;
         this.regexCheckbox    = this.panel.querySelector('.winEdit-chkRegex')!;
         this.scriptCheckbox   = this.panel.querySelector('.winEdit-chkScript')!;
-        this.scopeSelect      = this.panel.querySelector('.winEdit-scope')!;
+        this.folderInput      = this.panel.querySelector('.winEdit-folder')!;
+        this.folderDatalist   = this.panel.querySelector('#winEdit-folderlist')!;
         this.textArea         = this.panel.querySelector('.winEdit-textArea')!;
         this.saveButton       = this.panel.querySelector('.winEdit-btnSave')!;
         this.cancelButton     = this.panel.querySelector('.winEdit-btnCancel')!;
@@ -146,15 +138,6 @@ export class EditorWin {
 
         this.panel.addEventListener('mousedown', () => { this.panel.style.zIndex = String(++zTop); });
         this.panel.querySelector('.mudpanel-close')!.addEventListener('click', () => { this.panel.hidden = true; });
-        this.activeCharSelect.addEventListener('change', () => {
-            const val = this.activeCharSelect.value;
-            // 'global' and '' (All) both mean no active character at runtime
-            UserConfig.set('activeChar', val === 'global' ? '' : val);
-            this.updateListBox();
-        });
-        this.panel.querySelector('.winEdit-btnAddChar')!.addEventListener('click', () => { this.handleAddChar(); });
-        this.removeCharBtn.addEventListener('click', () => { this.handleRemoveChar(); });
-        this.newCharInput.addEventListener('keydown', e => { if (e.key === 'Enter') this.handleAddChar(); });
         this.typeButtons.forEach(btn => {
             btn.addEventListener('click', () => { this.handleTypeChange(btn.dataset.type as EditorType); });
         });
@@ -174,6 +157,7 @@ export class EditorWin {
         this.runButton.addEventListener('click', () => { this.handleRun(); });
         this.scriptCheckbox.addEventListener('change', () => {
             if (this.scriptCheckbox.checked) { this.showScriptInput(); } else { this.showTextInput(); }
+            this.updateRunButton();
         });
     }
 
@@ -231,10 +215,9 @@ export class EditorWin {
 
     private setEditorDisabled(state: boolean): void {
         this.patternInput.disabled   = state;
-        this.nameInput.disabled      = state;
         this.regexCheckbox.disabled  = state;
         this.scriptCheckbox.disabled = state;
-        this.scopeSelect.disabled    = state;
+        this.folderInput.disabled    = state;
         this.textArea.disabled       = state;
         this.saveButton.disabled     = state;
         this.cancelButton.disabled   = state;
@@ -247,106 +230,127 @@ export class EditorWin {
     private handleTypeChange(type: EditorType): void {
         this.type = type;
         this.typeButtons.forEach(btn => { btn.classList.toggle('active', btn.dataset.type === type); });
-        const isScript = this.type === 'script';
-        const titles: Record<EditorType, string> = { alias: 'ALIASES', trigger: 'TRIGGERS', script: 'SCRIPTS' };
-        this.titleSpan.textContent = titles[this.type];
-        this.panel.querySelectorAll<HTMLElement>('.winEdit-alias-trig-only')
-            .forEach(el => { el.style.display = isScript ? 'none' : ''; });
-        this.panel.querySelectorAll<HTMLElement>('.winEdit-script-only')
-            .forEach(el => { el.style.display = isScript ? '' : 'none'; });
+        this.titleSpan.textContent = type === 'alias' ? 'ALIASES' : 'TRIGGERS';
         this.clearEditor();
         this.setEditorDisabled(true);
         this.updateListBox();
     }
 
-    private handleAddChar(): void {
-        const name = this.newCharInput.value.trim().toLowerCase();
-        if (!name) return;
-        const known: string[] = UserConfig.getDef('knownChars', []);
-        if (!known.includes(name)) UserConfig.set('knownChars', [...known, name]);
-        this.newCharInput.value = '';
-        this.updateCharSelect();
-        this.activeCharSelect.value = name;
-        UserConfig.set('activeChar', name);
-        this.updateScopeOptions();
-        this.updateListBox();
-    }
-
-    private currentItems(): (EditorItem | ScriptItem)[] {
-        if (this.type === 'alias') return this.aliasManager.aliases;
-        if (this.type === 'trigger') return this.triggerManager.triggers;
-        return this.scripts;
+    private currentItems(): EditorItem[] {
+        return this.type === 'alias' ? this.aliasManager.aliases : this.triggerManager.triggers;
     }
 
     private updateListBox(): void {
-        const char = this.activeCharSelect.value;
         const items = this.currentItems();
         this.filteredIndices = [];
-        const opts: HTMLOptionElement[] = [];
 
+        // Which items pass the active folder filter (null = All, '' = Ungrouped).
+        const visible: number[] = [];
         for (let i = 0; i < items.length; i++) {
-            const scope = (items[i] as any).scope || '';
-            // '' = All (show everything); 'global' = only unscoped; else = only that character
-            if (char === 'global' && scope !== '' && scope !== 'global') continue;
-            if (char !== '' && char !== 'global' && scope !== char) continue;
-            this.filteredIndices.push(i);
-            const opt = document.createElement('option');
-            opt.textContent = 'pattern' in items[i]
-                ? (items[i] as EditorItem).pattern
-                : (items[i] as ScriptItem).name;
-            opts.push(opt);
+            const folder = (items[i] as any).folder || '';
+            if (this.activeFolder === null) visible.push(i);
+            else if (folder === this.activeFolder) visible.push(i);
         }
-        this.listBox.replaceChildren(...opts);
-        this.refreshRemoveCharState();
+
+        const label = (i: number): string => items[i].pattern;
+
+        // Group visible items under an <optgroup> per folder (native grouping).
+        const groups = new Map<string, number[]>();
+        for (const i of visible) {
+            const key = (items[i] as any).folder || '';
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key)!.push(i);
+        }
+        const keys = [...groups.keys()].sort((a, b) => {
+            if (a === '') return 1;   // ungrouped last
+            if (b === '') return -1;
+            return a.localeCompare(b);
+        });
+
+        const nodes: HTMLElement[] = [];
+        for (const key of keys) {
+            const group = document.createElement('optgroup');
+            group.label = key || 'Ungrouped';
+            for (const i of groups.get(key)!) {
+                const opt = document.createElement('option');
+                opt.textContent = label(i);
+                opt.value = String(this.filteredIndices.length); // slot into filteredIndices
+                group.appendChild(opt);
+                this.filteredIndices.push(i);
+            }
+            nodes.push(group);
+        }
+        this.listBox.replaceChildren(...nodes);
+        this.renderFolderList();
+        this.updateFolderDatalist();
     }
 
-    /** Count items (across all types) scoped to a character. */
-    private charItemCount(name: string): number {
-        const lists = [this.aliasManager.aliases, this.triggerManager.triggers, this.scripts];
-        return lists.reduce((n, list) => n + list.filter(i => (i as any).scope === name).length, 0);
+    /** Distinct non-empty folder names on the current type's items, sorted. */
+    private folderNames(): string[] {
+        const set = new Set<string>();
+        for (const it of this.currentItems()) {
+            const f = (it as any).folder;
+            if (f) set.add(f);
+        }
+        return [...set].sort();
     }
 
-    /** Enable the remove button only for a real, empty character. */
-    private refreshRemoveCharState(): void {
-        const name = this.activeCharSelect.value;
-        const real = name !== '' && name !== 'global';
-        this.removeCharBtn.disabled = !real || this.charItemCount(name) > 0;
+    private hasUngrouped(): boolean {
+        return this.currentItems().some(it => !(it as any).folder);
     }
 
-    private handleRemoveChar(): void {
-        const name = this.activeCharSelect.value;
-        if (name === '' || name === 'global') return;
-        if (this.charItemCount(name) > 0) return;   // guard: only empty scopes are removable
-        const known: string[] = UserConfig.getDef('knownChars', []);
-        UserConfig.set('knownChars', known.filter(n => n !== name));
-        UserConfig.set('activeChar', '');
-        this.updateCharSelect();
-        this.updateScopeOptions();
+    private renderFolderList(): void {
+        const disabled: string[] = UserConfig.getDef('disabledFolders', []);
+        const rows: HTMLElement[] = [];
+
+        const makeRow = (label: string, value: string | null, checkbox: boolean): HTMLElement => {
+            const row = document.createElement('div');
+            row.className = 'winEdit-folderRow';
+            if (value === this.activeFolder) row.classList.add('active');
+            if (checkbox) {
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.checked = !disabled.includes(value as string);
+                cb.addEventListener('click', e => { e.stopPropagation(); this.toggleFolder(value as string, cb.checked); });
+                row.appendChild(cb);
+            } else {
+                const spacer = document.createElement('span');
+                spacer.className = 'winEdit-folderSpacer';
+                row.appendChild(spacer);
+            }
+            const name = document.createElement('span');
+            name.className = 'winEdit-folderName';
+            name.textContent = label;
+            row.appendChild(name);
+            row.addEventListener('click', () => this.setFolderFilter(value));
+            return row;
+        };
+
+        rows.push(makeRow('— All —', null, false));
+        if (this.hasUngrouped()) rows.push(makeRow('Ungrouped', '', false));
+        for (const f of this.folderNames()) rows.push(makeRow(f, f, true));
+
+        this.folderListEl.replaceChildren(...rows);
+    }
+
+    private setFolderFilter(folder: string | null): void {
+        this.activeFolder = folder;
+        this.clearEditor();
+        this.setEditorDisabled(true);
         this.updateListBox();
     }
 
-    private updateScopeOptions(): void {
-        const current = this.scopeSelect.value;
-        const known: string[] = UserConfig.getDef('knownChars', []);
-        const opts = [
-            Object.assign(document.createElement('option'), { value: '', textContent: 'Global' }),
-            ...known.map(n => Object.assign(document.createElement('option'), { value: n, textContent: n }))
-        ];
-        this.scopeSelect.replaceChildren(...opts);
-        this.scopeSelect.value = current;
+    private toggleFolder(folder: string, enabled: boolean): void {
+        const disabled: string[] = UserConfig.getDef('disabledFolders', []);
+        const next = enabled ? disabled.filter(f => f !== folder) : [...new Set([...disabled, folder])];
+        UserConfig.set('disabledFolders', next);
     }
 
-    private updateCharSelect(): void {
-        const known: string[] = UserConfig.getDef('knownChars', []);
-        const activeChar = UserConfig.getDef('activeChar', '');
-        const opts = [
-            Object.assign(document.createElement('option'), { value: '', textContent: '— All —' }),
-            Object.assign(document.createElement('option'), { value: 'global', textContent: 'Global' }),
-            ...known.map(n => Object.assign(document.createElement('option'), { value: n, textContent: n }))
-        ];
-        this.activeCharSelect.replaceChildren(...opts);
-        // 'global' view when no activeChar is set and we want to show that selection
-        this.activeCharSelect.value = activeChar || '';
+    /** Rebuild the folder datalist for the edit-pane folder input. */
+    private updateFolderDatalist(): void {
+        this.folderDatalist.replaceChildren(
+            ...this.folderNames().map(f => Object.assign(document.createElement('option'), { value: f }))
+        );
     }
 
     private cmSet(text: string): void {
@@ -366,78 +370,68 @@ export class EditorWin {
         this.textArea.style.display   = '';
     }
 
+    /** RUN is only meaningful for a script-backed alias (triggers fire on output). */
+    private updateRunButton(): void {
+        this.runButton.style.display = (this.type === 'alias' && this.scriptCheckbox.checked) ? '' : 'none';
+    }
+
     private clearEditor(): void {
         this.patternInput.value     = '';
-        this.nameInput.value        = '';
         this.textArea.value         = '';
         this.cmSet('');
         this.regexCheckbox.checked  = false;
         this.scriptCheckbox.checked = false;
-        this.scopeSelect.value      = '';
+        this.folderInput.value      = '';
         this.listBox.selectedIndex  = -1;
-        if (this.type === 'script') { this.showScriptInput(); } else { this.showTextInput(); }
+        this.showTextInput();
+        this.updateRunButton();
+    }
+
+    private selectedRealIndex(): number {
+        const opt = this.listBox.selectedOptions[0];
+        return opt ? this.filteredIndices[parseInt(opt.value)] : -1;
     }
 
     private handleListBoxChange(): void {
-        const listInd = this.listBox.selectedIndex;
-        if (listInd < 0) return;
-        const realInd = this.filteredIndices[listInd];
-        const item = this.currentItems()[realInd];
-        if (!item) return;
+        const realInd = this.selectedRealIndex();
+        if (realInd < 0) return;
+        const e = this.currentItems()[realInd];
+        if (!e) return;
         this.setEditorDisabled(false);
 
-        if (this.type === 'script') {
-            const s = item as ScriptItem;
-            this.nameInput.value   = s.name;
-            this.scopeSelect.value = s.scope || '';
+        this.patternInput.value     = e.pattern;
+        this.regexCheckbox.checked  = !!e.regex;
+        this.scriptCheckbox.checked = !!e.is_script;
+        this.folderInput.value      = e.folder || '';
+        if (e.is_script) {
             this.showScriptInput();
-            this.cmSet(s.code);
+            this.cmSet(e.value);
+            this.textArea.value = '';
         } else {
-            const e = item as EditorItem;
-            this.patternInput.value     = e.pattern;
-            this.regexCheckbox.checked  = !!e.regex;
-            this.scriptCheckbox.checked = !!e.is_script;
-            this.scopeSelect.value      = e.scope || '';
-            if (e.is_script) {
-                this.showScriptInput();
-                this.cmSet(e.value);
-                this.textArea.value = '';
-            } else {
-                this.showTextInput();
-                this.textArea.value = e.value;
-                this.cmSet('');
-            }
+            this.showTextInput();
+            this.textArea.value = e.value;
+            this.cmSet('');
         }
+        this.updateRunButton();
     }
 
     private handleNew(): void {
         this.clearEditor();
         this.setEditorDisabled(false);
-        // pre-fill scope to active character if one is selected
-        if (this.activeCharSelect.value) this.scopeSelect.value = this.activeCharSelect.value;
-        if (this.type === 'script') {
-            this.nameInput.value = 'New Script';
-            this.cmSet('// write script here');
-        } else if (this.type === 'alias') {
-            this.textArea.value = 'alias value here';
-        } else {
-            this.textArea.value = 'trigger value here';
-        }
+        // pre-fill folder to the active folder filter, if one is selected
+        if (this.activeFolder) this.folderInput.value = this.activeFolder;
+        this.textArea.value = this.type === 'alias' ? 'alias value here' : 'trigger value here';
     }
 
     private handleDelete(): void {
-        const listInd = this.listBox.selectedIndex;
-        if (listInd < 0) return;
-        const realInd = this.filteredIndices[listInd];
+        const realInd = this.selectedRealIndex();
+        if (realInd < 0) return;
         if (this.type === 'alias') {
             this.aliasManager.aliases.splice(realInd, 1);
             this.aliasManager.saveAliases();
-        } else if (this.type === 'trigger') {
+        } else {
             this.triggerManager.triggers.splice(realInd, 1);
             this.triggerManager.saveTriggers();
-        } else {
-            this.scripts.splice(realInd, 1);
-            UserConfig.set('scripts', this.scripts);
         }
         this.clearEditor();
         this.setEditorDisabled(true);
@@ -448,7 +442,6 @@ export class EditorWin {
         const data = {
             aliases:  this.aliasManager.aliases,
             triggers: this.triggerManager.triggers,
-            scripts:  this.scripts,
         };
         const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
         const a = Object.assign(document.createElement('a'), { href: url, download: 'mudslinger-config.json' });
@@ -461,7 +454,11 @@ export class EditorWin {
             const data = JSON.parse(await file.text());
             if (Array.isArray(data.aliases))  { this.aliasManager.aliases   = data.aliases;  this.aliasManager.saveAliases(); }
             if (Array.isArray(data.triggers)) { this.triggerManager.triggers = data.triggers; this.triggerManager.saveTriggers(); }
-            if (Array.isArray(data.scripts))  { this.scripts = data.scripts; UserConfig.set('scripts', this.scripts); }
+            // ponytail: scripts→aliases migration for legacy export files, delete in 2.0
+            if (Array.isArray(data.scripts) && data.scripts.length) {
+                scriptsToAliases(data.scripts, this.aliasManager.aliases);
+                this.aliasManager.saveAliases();
+            }
         } catch (e) {
             alert('Import failed: ' + (e as Error).message);
             return;
@@ -472,35 +469,23 @@ export class EditorWin {
     }
 
     private handleSave(): void {
-        const listInd = this.listBox.selectedIndex;
-        const realInd = listInd >= 0 ? this.filteredIndices[listInd] : -1;
-        const scope   = this.scopeSelect.value;
+        const realInd = this.selectedRealIndex();
+        const folder  = this.folderInput.value.trim();
 
-        if (this.type === 'script') {
-            const item: ScriptItem = {
-                name: this.nameInput.value,
-                code: this.codeMirror.state.doc.toString(),
-            };
-            if (scope) item.scope = scope;
-            if (realInd < 0) { this.scripts.push(item); } else { this.scripts[realInd] = item; }
-            this.scripts.sort((a, b) => a.name.localeCompare(b.name));
-            UserConfig.set('scripts', this.scripts);
+        const is_script = this.scriptCheckbox.checked;
+        const item: EditorItem = {
+            pattern: this.patternInput.value,
+            value: is_script ? this.codeMirror.state.doc.toString() : this.textArea.value,
+            regex: this.regexCheckbox.checked,
+            is_script,
+        };
+        if (folder) item.folder = folder;
+        if (this.type === 'alias') {
+            if (realInd < 0) { this.aliasManager.aliases.push(item); } else { this.aliasManager.aliases[realInd] = item; }
+            this.aliasManager.saveAliases();
         } else {
-            const is_script = this.scriptCheckbox.checked;
-            const item: EditorItem = {
-                pattern: this.patternInput.value,
-                value: is_script ? this.codeMirror.state.doc.toString() : this.textArea.value,
-                regex: this.regexCheckbox.checked,
-                is_script,
-            };
-            if (scope) item.scope = scope;
-            if (this.type === 'alias') {
-                if (realInd < 0) { this.aliasManager.aliases.push(item); } else { this.aliasManager.aliases[realInd] = item; }
-                this.aliasManager.saveAliases();
-            } else {
-                if (realInd < 0) { this.triggerManager.triggers.push(item); } else { this.triggerManager.triggers[realInd] = item; }
-                this.triggerManager.saveTriggers();
-            }
+            if (realInd < 0) { this.triggerManager.triggers.push(item); } else { this.triggerManager.triggers[realInd] = item; }
+            this.triggerManager.saveTriggers();
         }
         this.clearEditor();
         this.setEditorDisabled(true);
@@ -508,8 +493,7 @@ export class EditorWin {
     }
 
     private handleCancel(): void {
-        const listInd = this.listBox.selectedIndex;
-        if (listInd >= 0) {
+        if (this.selectedRealIndex() >= 0) {
             this.handleListBoxChange();
         } else {
             this.clearEditor();
@@ -523,9 +507,6 @@ export class EditorWin {
     }
 
     public show(): void {
-        this.scripts = UserConfig.getDef('scripts', []);
-        this.updateCharSelect();
-        this.updateScopeOptions();
         this.updateListBox();
         this.panel.hidden = false;
         this.panel.style.zIndex = String(++zTop);

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as triggerManager from "./trigger";
 import { EditorItem } from "../panel/base";
+import { UserConfig } from "../core/userConfig";
 
 function testConfig(triggers: EditorItem[]): triggerManager.ConfigIf {
     let triggers_ = triggers;
@@ -73,5 +74,20 @@ describe("triggerManager", () => {
         expect(scrCall[0][0]).toBe("test1 456 ");
         expect(scrCall[0][1]).toBe("456");
         expect(scrCall[1]).toBe("123 test1 456 more");
+    });
+
+    it("skips triggers in a disabled folder", () => {
+        UserConfig.init(null, () => {});
+        UserConfig.set('disabledFolders', ['combat']);
+        const trigs: EditorItem[] = [
+            { pattern: "you die", value: "say oops", regex: false, is_script: false, folder: "combat" },
+            { pattern: "you win", value: "cheer",    regex: false, is_script: false },
+        ];
+        const mgr = new triggerManager.TriggerManager(null as any, testConfig(trigs));
+        const catcher = new CmdCatcher(mgr);
+        mgr.handleLine("you die now");   // disabled folder -> no fire
+        mgr.handleLine("you win now");   // ungrouped -> fires
+        expect(catcher.cmds).toEqual(['cheer']);
+        UserConfig.set('disabledFolders', []);
     });
 });

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as aliasManager from "./alias";
 import { EditorItem } from "../panel/base";
+import { UserConfig } from "../core/userConfig";
 
 function testConfig(aliases: EditorItem[]): aliasManager.ConfigIf {
     let aliases_ = aliases;
@@ -92,5 +93,38 @@ describe("aliasManager", () => {
         expect(call2[0][0]).toBe("abcdef");
         expect(call2[0][1]).toBe("def");
         expect(call2[1]).toBe("abcdef");
+    });
+
+    it("migrates deprecated scripts into is_script aliases on load", () => {
+        UserConfig.init(null, () => {});
+        UserConfig.set('scripts', [
+            { name: 'heal', code: 'send("cast heal")' },
+            { name: '',     code: 'send("nameless")', folder: 'combat' },
+        ]);
+        const aliases: EditorItem[] = [];
+        const mgr = new aliasManager.AliasManager(new TestBasicScript(), testConfig(aliases));
+
+        const heal = mgr.aliases.find(a => a.pattern === 'heal')!;
+        expect(heal).toMatchObject({ value: 'send("cast heal")', regex: false, is_script: true });
+        const nameless = mgr.aliases.find(a => a.pattern === 'script1')!; // blank name -> script<index>
+        expect(nameless).toMatchObject({ value: 'send("nameless")', is_script: true, folder: 'combat' });
+
+        expect(UserConfig.getDef('scripts', null)).toBe(null); // key cleared, won't re-migrate
+        // running the migrated alias fires the script
+        expect(mgr.checkAlias('heal')).toBe(true);
+    });
+
+    it("skips aliases in a disabled folder", () => {
+        UserConfig.init(null, () => {});
+        UserConfig.set('disabledFolders', ['combat']);
+        const aliases: EditorItem[] = [
+            { pattern: "kill", value: "kill $1", regex: false, is_script: false, folder: "combat" },
+            { pattern: "look", value: "look",    regex: false, is_script: false },
+        ];
+        const mgr = new aliasManager.AliasManager(null as any, testConfig(aliases));
+        expect(mgr.checkAlias("kill orc")).toBe(null);   // disabled folder
+        expect(mgr.checkAlias("look")).toBe("look");     // ungrouped, always active
+        UserConfig.set('disabledFolders', []);
+        expect(mgr.checkAlias("kill orc")).toBe("kill orc"); // folder re-enabled
     });
 });

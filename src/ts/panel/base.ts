@@ -3,7 +3,20 @@ export interface EditorItem {
     value: string;
     regex: boolean;
     is_script: boolean;
-    scope?: string; // undefined/'global' = always active; char name = that character only
+    folder?: string; // undefined/'' = ungrouped (always active); else the folder name
+}
+
+// ponytail: scope→folder migration, delete in 2.0
+export function migrateScopeToFolder(items: { scope?: string; folder?: string }[]): boolean {
+    let changed = false;
+    for (const it of items) {
+        if ('scope' in it) {
+            it.folder = it.scope === 'global' ? undefined : it.scope;
+            delete it.scope;
+            changed = true;
+        }
+    }
+    return changed;
 }
 
 /**

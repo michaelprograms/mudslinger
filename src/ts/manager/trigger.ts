@@ -1,5 +1,5 @@
 import { EventHook } from "../core/event";
-import { EditorItem } from "../panel/base";
+import { EditorItem, migrateScopeToFolder } from "../panel/base";
 import { UserConfig } from "../core/userConfig";
 
 
@@ -44,16 +44,16 @@ export class TriggerManager {
 
     private loadTriggers() {
         this.triggers = this.config.get("triggers") || [];
-        this.triggers.sort((a, b) => a.pattern.localeCompare(b.pattern));
+        // ponytail: scope→folder migration, delete in 2.0
+        if (migrateScopeToFolder(this.triggers)) this.saveTriggers();
+        else this.triggers.sort((a, b) => a.pattern.localeCompare(b.pattern));
     }
 
     public handleLine(line: string): void {
         if (this.config.getDef("triggersEnabled", true) !== true) return;
-        const activeChar: string = UserConfig.getDef('activeChar', '');
-
+        const disabled: string[] = UserConfig.getDef('disabledFolders', []);
         for (const trig of this.triggers) {
-            const scoped = !!trig.scope && trig.scope !== 'global';
-            if (scoped && trig.scope !== activeChar) continue;
+            if (trig.folder && disabled.includes(trig.folder)) continue;
             this.fireTrigger(trig, line);
         }
     }
