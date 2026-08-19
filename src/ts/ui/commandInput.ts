@@ -55,6 +55,7 @@ export class CommandInput {
             for (let i = 0; i < lines.length; i++) {
                 cmds = cmds.concat(lines[i].split(";"));
             }
+            cmds = cmds.flatMap(c => this.aliasManager.expand(c));
             this.EvtEmitAliasCmds.fire({orig: cmd, commands: cmds});
         } /* else the script ran already */
 

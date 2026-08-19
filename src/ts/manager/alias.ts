@@ -69,6 +69,19 @@ export class AliasManager {
         return this.tryMatch(cmd, a => !a.folder || !disabled.includes(a.folder));
     }
 
+    // Resolve a command, recursively expanding alias-in-alias output into a flat
+    // list of final commands. Returns [] if a matched alias was a script (it ran).
+    // depth caps recursion so cyclic aliases (a→b→a) can't loop forever.
+    public expand(cmd: string, depth = 0): string[] {
+        if (depth > 10) return [cmd];
+        const result = this.checkAlias(cmd);
+        if (result === true) return [];
+        if (result == null) return [cmd];
+        return (result as string).replace("\r", "").split("\n")
+            .flatMap(line => line.split(";"))
+            .flatMap(c => this.expand(c, depth + 1));
+    }
+
     private tryMatch(cmd: string, filter: (a: EditorItem) => boolean): boolean | string | null {
         for (const alias of this.aliases) {
             if (!filter(alias)) continue;

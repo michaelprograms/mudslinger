@@ -42,6 +42,24 @@ describe("aliasManager", () => {
         expect(mgr.checkAlias("test2 123 456 more")).toBe("do a thing 123 456 more");
     });
 
+    it("expands alias-in-alias output", () => {
+        const aliases: EditorItem[] = [
+            { pattern: "ws_bal",     value: "n;e;e",         regex: false, is_script: false },
+            { pattern: "ws_airship", value: "ws_bal;u;u",    regex: false, is_script: false },
+        ];
+        const mgr = new aliasManager.AliasManager(null as any, testConfig(aliases));
+        expect(mgr.expand("ws_airship")).toEqual(["n", "e", "e", "u", "u"]);
+    });
+
+    it("cyclic aliases terminate", () => {
+        const aliases: EditorItem[] = [
+            { pattern: "a", value: "b", regex: false, is_script: false },
+            { pattern: "b", value: "a", regex: false, is_script: false },
+        ];
+        const mgr = new aliasManager.AliasManager(null as any, testConfig(aliases));
+        expect(() => mgr.expand("a")).not.toThrow();
+    });
+
     it("basic script", () => {
         const aliases: EditorItem[] = [
             { pattern: "test1", value: "n/a 1", regex: false, is_script: true },
