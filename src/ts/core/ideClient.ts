@@ -399,6 +399,9 @@ export class IdeClient {
         // measures the JSON-escaped size (what actually goes on the wire), so a
         // ", \ or newline-heavy chunk can't inflate past maxChunk.
         const pieces = chunkString(content, maxChunk);
+        // DEBUG(ide-save): confirm negotiated limits + chunking decision.
+        console.log("[ide] save " + path + " contentBytes=" + new TextEncoder().encode(content).length +
+            " maxChunk=" + maxChunk + " algo=" + algo + " pieces=" + pieces.length);
         if (pieces.length === 1) {
             return this.request<IdeSaveResult>("Save", { ...base, data: content }, SAVE_TIMEOUT);
         }

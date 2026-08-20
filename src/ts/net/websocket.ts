@@ -43,7 +43,9 @@ export class WebSocketTransport {
             }
         };
 
-        this.ws.onclose = () => {
+        this.ws.onclose = (ev: CloseEvent) => {
+            // DEBUG(ide-save): capture why the socket closed.
+            console.warn("[ws] closed code=" + ev.code + " reason=" + JSON.stringify(ev.reason) + " wasClean=" + ev.wasClean);
             this.EvtMudDisconnect.fire();
         };
 
@@ -54,7 +56,17 @@ export class WebSocketTransport {
 
     public write(data: ArrayBuffer): void {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(data);
+            // DEBUG(ide-save): log every outbound frame size + socket backlog.
+            if (data.byteLength > 512) {
+                console.log("[ws] send " + data.byteLength + " bytes, bufferedAmount=" + this.ws.bufferedAmount);
+            }
+            try {
+                this.ws.send(data);
+            } catch (e) {
+                console.error("[ws] send threw for " + data.byteLength + " bytes:", e);
+            }
+        } else {
+            console.warn("[ws] write dropped, readyState=" + (this.ws && this.ws.readyState));
         }
     }
 
