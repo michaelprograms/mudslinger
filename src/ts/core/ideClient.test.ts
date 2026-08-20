@@ -64,6 +64,18 @@ describe("chunkString", () => {
             expect(new TextEncoder().encode(p).length).toBeLessThanOrEqual(7);
         }
     });
+
+    it("budgets by JSON-escaped size so no encoded chunk exceeds the limit", () => {
+        // escape-heavy content: every char doubles once JSON-stringified
+        const s = '"\\'.repeat(1000);
+        const limit = 64;
+        const parts = chunkString(s, limit);
+        expect(parts.join("")).toBe(s);
+        for (const p of parts) {
+            // JSON.stringify wraps in quotes (+2); the data field itself must fit
+            expect(JSON.stringify(p).length - 2).toBeLessThanOrEqual(limit);
+        }
+    });
 });
 
 describe("IdeClient", () => {

@@ -124,15 +124,30 @@ export async function contentHash(str: string, algo: string): Promise<string | n
     return null;
 }
 
-/** Split into pieces of at most maxBytes UTF-8 bytes, never splitting a code point. */
+/** JSON-escaped UTF-8 byte cost of one code point, as it appears inside a
+ *  JSON string. This is what actually goes on the wire, so chunking must
+ *  budget against it — the raw UTF-8 length undercounts every ", \, and
+ *  control char, letting a maxChunk-sized piece inflate into an oversized
+ *  GMCP frame that overflows the server's telnet buffer. */
+function jsonByteCost(ch: string): number {
+    const code = ch.codePointAt(0)!;
+    if (code === 0x22 || code === 0x5c) return 2;              // \" \\
+    if (code === 8 || code === 9 || code === 10 || code === 12 || code === 13) return 2; // \b \t \n \f \r
+    if (code < 0x20) return 6;                                 // \u00XX
+    return ch.length > 1 ? 4 : code < 0x80 ? 1 : code < 0x800 ? 2 : 3; // raw UTF-8
+}
+
+/** Split into pieces whose JSON-escaped form is at most maxBytes bytes, never
+ *  splitting a code point. maxBytes must already reserve the frame envelope. */
 export function chunkString(content: string, maxBytes: number): string[] {
-    const enc = new TextEncoder();
-    if (enc.encode(content).length <= maxBytes) return [content];
+    let total = 0;
+    for (const ch of content) total += jsonByteCost(ch);
+    if (total <= maxBytes) return [content];
     const out: string[] = [];
     let piece = "";
     let pieceBytes = 0;
     for (const ch of content) { // iterates by code point, keeps surrogate pairs whole
-        const chBytes = ch.length > 1 ? 4 : ch.charCodeAt(0) < 0x80 ? 1 : ch.charCodeAt(0) < 0x800 ? 2 : 3;
+        const chBytes = jsonByteCost(ch);
         if (pieceBytes + chBytes > maxBytes && piece.length > 0) {
             out.push(piece);
             piece = "";
@@ -380,6 +395,9 @@ export class IdeClient {
         if (hash !== null) base.hash = hash;
         if (baseHash !== null) base.baseHash = baseHash;
 
+        // maxChunk is the server's budget for a chunk's data field. chunkString
+        // measures the JSON-escaped size (what actually goes on the wire), so a
+        // ", \ or newline-heavy chunk can't inflate past maxChunk.
         const pieces = chunkString(content, maxChunk);
         if (pieces.length === 1) {
             return this.request<IdeSaveResult>("Save", { ...base, data: content }, SAVE_TIMEOUT);
