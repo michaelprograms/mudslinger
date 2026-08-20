@@ -173,6 +173,11 @@ interface Pending {
 const DEFAULT_TIMEOUT = 15000;
 const SAVE_TIMEOUT = 60000;
 
+// The server advertises maxChunk=32768 but its inbound websocket read drops
+// ~32KB frames (abnormal close 1006), so cap outbound chunks to a frame size
+// the server's ws layer can actually ingest.
+const MAX_SAFE_CHUNK = 10240;
+
 export class IdeClient {
     public EvtEvent = new EventHook<IdeEvent>();
     public EvtError = new EventHook<IdeError>();       // unsolicited errors
@@ -388,7 +393,7 @@ export class IdeClient {
      * chunked transaction flow when content exceeds the negotiated maxChunk.
      */
     public async save(path: string, content: string, baseHash: string | null, noReload = false): Promise<IdeSaveResult> {
-        const maxChunk = this.welcome_?.limits.maxChunk ?? 32768;
+        const maxChunk = Math.min(this.welcome_?.limits.maxChunk ?? 32768, MAX_SAFE_CHUNK);
         const algo = this.welcome_?.limits.hashAlgo ?? "sha256";
         const hash = await contentHash(content, algo);
         const base: Record<string, unknown> = { path, noReload };
