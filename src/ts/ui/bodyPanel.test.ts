@@ -44,4 +44,10 @@ describe("bodyRowsHtml", () => {
         expect(bodyRowsHtml({})).toBe("");
         expect(bodyRowsHtml({ limbs: {} })).toBe("");
     });
+
+    // Merentha's evolve sends non-array falsy fields (severed: 0) on body reset.
+    it("tolerates non-array severed (evolve reset)", () => {
+        expect(bodyRowsHtml({ limbs: {}, severed: 0 as any })).toBe("");
+        expect(bodyRowsHtml({ limbs: 0 as any, severed: 0 as any })).toBe("");
+    });
 });

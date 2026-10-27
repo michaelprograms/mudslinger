@@ -33,7 +33,7 @@ export function bodyRowsHtml(data: BodyData): string {
             `<td class="body-num">${mag}</td></tr>`
         );
     }
-    for (const name of data?.severed ?? []) {
+    for (const name of Array.isArray(data?.severed) ? data.severed : []) {
         rows.push(
             `<tr class="body-severed"><td class="body-limb">${escapeHtml(cap(name))}</td>` +
             `<td class="body-num" colspan="3">severed</td></tr>`
